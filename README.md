@@ -1,5 +1,5 @@
 # Fast finite field arithmetic in Golang
-[![License](https://img.shields.io/badge/license-Apache%202-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202-blue)](LICENSE)  [![Go Report Card](https://goreportcard.com/badge/github.com/consensys/goff)](https://goreportcard.com/badge/github.com/consensys/goff)
 
 **goff** (go **f**inite **f**ield) is a unix-like tool that generates fast field arithmetic in Go.
 
