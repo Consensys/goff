@@ -15,7 +15,7 @@ In particular, **goff** modular multiplication is blazingly fast. ["Faster big-i
 **goff** generates code optimized for 64bits architectures
 
 <img style="display: block;margin: auto;" width="80%"
-src="https://i.imgur.com/UUppBSP.png">
+src="banner_goff.png">
 
 ## Getting started
 
@@ -36,7 +36,7 @@ cd goff && make
 ```bash
 $ goff
 
-running goff version 1.0.0-alpha
+running goff version 0.1.0-alpha
 
 Usage:
   goff [flags]
