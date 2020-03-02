@@ -302,12 +302,12 @@ func (z *Element) Inverse(x *Element) *Element {
 
 // SetRandom sets z to a random element < q
 func (z *Element) SetRandom() *Element {
-	bytes := make([]byte, 256)
+	bytes := make([]byte, 32)
 	io.ReadFull(rand.Reader, bytes)
-	z[0] = binary.BigEndian.Uint64(bytes[0:64])
-	z[1] = binary.BigEndian.Uint64(bytes[64:128])
-	z[2] = binary.BigEndian.Uint64(bytes[128:192])
-	z[3] = binary.BigEndian.Uint64(bytes[192:256])
+	z[0] = binary.BigEndian.Uint64(bytes[0:8])
+	z[1] = binary.BigEndian.Uint64(bytes[8:16])
+	z[2] = binary.BigEndian.Uint64(bytes[16:24])
+	z[3] = binary.BigEndian.Uint64(bytes[24:32])
 	z[3] %= 3486998266802970665
 
 	// if z > q --> z -= q

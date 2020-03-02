@@ -11,7 +11,7 @@ import (
     mrand "math/rand"
 )
 
-func Test{{toUpper .ElementName}}CorrectessAgainstBigInt(t *testing.T) {
+func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
     modulus, _ := new(big.Int).SetString("{{.Modulus}}", 10)
 	cmpEandB := func(e *{{.ElementName}}, b *big.Int, name string) {
 		var _e big.Int
