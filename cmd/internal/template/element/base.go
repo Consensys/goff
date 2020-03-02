@@ -219,11 +219,11 @@ func (z *{{.ElementName}}) Inverse(x *{{.ElementName}}) *{{.ElementName}} {
 
 // SetRandom sets z to a random element < q
 func (z *{{.ElementName}}) SetRandom() *{{.ElementName}} {
-	bytes := make([]byte, {{mul 64 .NbWords}})
+	bytes := make([]byte, {{mul 8 .NbWords}})
 	io.ReadFull(rand.Reader, bytes)
 	{{- range $i :=  .NbWordsIndexesFull}}
 		{{- $k := add $i 1}}
-		z[{{$i}}] = binary.BigEndian.Uint64(bytes[{{mul $i 64}}:{{mul $k 64}}]) 
+		z[{{$i}}] = binary.BigEndian.Uint64(bytes[{{mul $i 8}}:{{mul $k 8}}]) 
 	{{- end}}
 	z[{{$.NbWordsLastIndex}}] %= {{index $.Q $.NbWordsLastIndex}}
 
