@@ -1,25 +1,25 @@
 # Fast finite field arithmetic in Golang
 [![License](https://img.shields.io/badge/license-Apache%202-blue)](LICENSE)  [![Go Report Card](https://goreportcard.com/badge/github.com/consensys/goff)](https://goreportcard.com/badge/github.com/consensys/goff)
 
-**goff** (go **f**inite **f**ield) is a unix-like tool that generates fast field arithmetic in Go.
+`goff` (go **f**inite **f**ield) is a unix-like tool that generates fast field arithmetic in Go.
 
-We introduced **goff** [in this article](https://hackmd.io/@zkteam/goff): the project came from the need to have performant field operations in Go.
-For most moduli, **goff** outperforms `math/big` and optimized libraries written in C++ or Rust.
+We introduced `goff` [in this article](https://hackmd.io/@zkteam/goff): the project came from the need to have performant field operations in Go.
+For most moduli, `goff` outperforms `math/big` and optimized libraries written in C++ or Rust.
 
-In particular, **goff** modular multiplication is blazingly fast. ["Faster big-integer modular multiplication for most moduli"](https://hackmd.io/@zkteam/modular_multiplication) explains the algorithmic optimization we discovered and implemented, and presents some [benchmarks](https://hackmd.io/@zkteam/modular_multiplication#Benchmarks).
+In particular, `goff` modular multiplication is blazingly fast. ["Faster big-integer modular multiplication for most moduli"](https://hackmd.io/@zkteam/modular_multiplication) explains the algorithmic optimization we discovered and implemented, and presents some [benchmarks](https://hackmd.io/@zkteam/modular_multiplication#Benchmarks).
 
 
 ## Warning
-**goff** has not been audited and is provided as-is, use at your own risk. In particular, **goff** makes no security guarantees such as constant time implementation or side-channel attack resistance.
+**`goff` has not been audited and is provided as-is, use at your own risk. In particular, `goff` makes no security guarantees such as constant time implementation or side-channel attack resistance.**
 
-**goff** generates code optimized for 64bits architectures
+`goff` generates code optimized for 64bits architectures
 
 <img style="display: block;margin: auto;" width="80%"
 src="banner_goff.png">
 
 ## Getting started
 
-### Install goff
+### Install `goff`
 
 ```bash
 # dependencies
@@ -51,7 +51,7 @@ Flags:
       --version          version for goff
 ```
 
-### **goff** -- a short example
+### `goff` -- a short example
 
 Running 
 ```bash

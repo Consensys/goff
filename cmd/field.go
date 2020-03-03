@@ -53,9 +53,10 @@ func newField(packageName, elementName, modulus string, benches bool) (*field, e
 		ElementName: elementName,
 		Modulus:     modulus,
 		Benches:     benches,
-		Version:     buildString(),
 	}
-
+	if Version != "" {
+		F.Version = buildString()
+	}
 	// pre compute field constants
 	F.NbBits = bModulus.BitLen()
 	F.NbWords = len(bModulus.Bits())
