@@ -425,18 +425,31 @@ func (z *Element) SubAssign(x *Element) *Element {
 	return z
 }
 
-// Exp z = x^e mod q
-func (z *Element) Exp(x Element, e uint64) *Element {
-	if e == 0 {
+// Exp z = x^exponent mod q
+// (not optimized)
+// exponent (non-montgomery form) is ordered from least significant word to most significant word
+func (z *Element) Exp(x Element, exponent ...uint64) *Element {
+	r := 0
+	msb := 0
+	for i := len(exponent) - 1; i >= 0; i-- {
+		if exponent[i] == 0 {
+			r++
+		} else {
+			msb = (i * 64) + bits.Len64(exponent[i])
+			break
+		}
+	}
+	exponent = exponent[:len(exponent)-r]
+	if len(exponent) == 0 {
 		return z.SetOne()
 	}
 
 	z.Set(&x)
 
-	l := bits.Len64(e) - 2
+	l := msb - 2
 	for i := l; i >= 0; i-- {
 		z.Square(z)
-		if e&(1<<uint(i)) != 0 {
+		if exponent[i/64]&(1<<uint(i%64)) != 0 {
 			z.MulAssign(&x)
 		}
 	}
@@ -711,6 +724,49 @@ func (z *Element) MulAssign(x *Element) *Element {
 		z[3], _ = bits.Sub64(z[3], 3486998266802970665, b)
 	}
 	return z
+}
+
+func (z *Element) Legendre() int {
+	var l Element
+	// z^((p-1)/2)
+	l.Exp(*z,
+		11389680472494603939,
+		14681934109093717318,
+		15863968012492123182,
+		1743499133401485332,
+	)
+
+	if l.IsZero() {
+		return 0
+	}
+
+	// if l == 1
+	if (l[3] == 1011752739694698287) && (l[2] == 7381016538464732716) && (l[1] == 754611498739239741) && (l[0] == 15230403791020821917) {
+		return 1
+	}
+	return -1
+}
+
+// Sqrt z = √x mod q
+// if the square root doesn't exist (x is not a square mod q)
+// Sqrt leaves z unchanged and returns nil
+func (z *Element) Sqrt(x *Element) *Element {
+	switch x.Legendre() {
+	case -1:
+		return nil
+	case 0:
+		return z.SetZero()
+	case 1:
+		break
+	}
+	// q ≡ 3 (mod 4)
+	// using  z ≡ ± x^((p+1)/4) (mod q)
+	return z.Exp(*x,
+		5694840236247301970,
+		7340967054546858659,
+		7931984006246061591,
+		871749566700742666,
+	)
 }
 
 // Square z = x * x mod q

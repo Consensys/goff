@@ -28,10 +28,13 @@ type field struct {
 	NbWordsIndexesNoZero []int
 	NbWordsIndexesFull   []int
 	IdxFIPS              []int
+	Q3Mod4               bool
+	Q3Mod4SqrtExponent   []uint64
 	Q                    []uint64
 	QInverse             []uint64
 	RSquare              []uint64
 	One                  []uint64
+	LegendreExponent     []uint64
 	NoCarry              bool
 	NoCarrySquare        bool // used if NoCarry is set, but some op may overflow in square optimization
 	Benches              bool
@@ -113,7 +116,7 @@ func newField(packageName, elementName, modulus string, benches bool) (*field, e
 		}
 	}
 
-	// See https:// TODO blog post link
+	// See https://hackmd.io/@zkteam/modular_multiplication
 	// if the last word of the modulus is smaller or equal to B,
 	// we can simplify the montgomery multiplication
 	const B = (^uint64(0) >> 1) - 1
@@ -123,6 +126,39 @@ func newField(packageName, elementName, modulus string, benches bool) (*field, e
 
 	for i := F.NbWords; i <= 2*F.NbWords-2; i++ {
 		F.IdxFIPS = append(F.IdxFIPS, i)
+	}
+
+	// Legendre exponent (p-1)/2
+	var legendreExponent big.Int
+	legendreExponent.SetUint64(1)
+	legendreExponent.Sub(&bModulus, &legendreExponent)
+	legendreExponent.Rsh(&legendreExponent, 1)
+	F.LegendreExponent = make([]uint64, len(legendreExponent.Bits()))
+	for i, v := range legendreExponent.Bits() {
+		F.LegendreExponent[i] = (uint64)(v)
+	}
+
+	// check q mod 4
+	var qMod4 big.Int
+	qMod4.SetUint64(4)
+	qMod4.Mod(&bModulus, &qMod4)
+	var three big.Int
+	three.SetUint64(3)
+	if qMod4.Cmp(&three) == 0 {
+		// q ≡ 3 (mod 4)
+		// using  z ≡ ± x^((p+1)/4) (mod q)
+		F.Q3Mod4 = true
+		var sqrtExponent big.Int
+		sqrtExponent.SetUint64(1)
+		sqrtExponent.Add(&bModulus, &sqrtExponent)
+		sqrtExponent.Rsh(&sqrtExponent, 2)
+		F.Q3Mod4SqrtExponent = make([]uint64, len(sqrtExponent.Bits()))
+		for i, v := range sqrtExponent.Bits() {
+			F.Q3Mod4SqrtExponent[i] = (uint64)(v)
+		}
+	} else {
+		// q ≡ 1 (mod 4)
+
 	}
 
 	return F, nil

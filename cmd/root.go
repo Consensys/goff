@@ -95,6 +95,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		element.MulFIPS,
 		element.MulNoCarry,
 		element.MontgomeryMultiplication,
+		element.Sqrt,
 	}
 
 	if F.NoCarrySquare {

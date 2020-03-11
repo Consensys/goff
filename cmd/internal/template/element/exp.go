@@ -1,21 +1,35 @@
 package element
 
 const Exp = `
-// Exp z = x^e mod q
-func (z *{{.ElementName}}) Exp(x {{.ElementName}}, e uint64) *{{.ElementName}} {
-	if e == 0 {
-		return z.SetOne()
+// Exp z = x^exponent mod q
+// (not optimized)
+// exponent (non-montgomery form) is ordered from least significant word to most significant word
+func (z *{{.ElementName}}) Exp(x {{.ElementName}}, exponent ...uint64) *{{.ElementName}} {
+	r := 0
+	msb := 0
+	for i := len(exponent) - 1; i>=0; i-- {
+		if exponent[i] == 0 {
+			r++
+		} else {
+			msb = (i * 64) + bits.Len64(exponent[i])
+			break
+		}
 	} 
+	exponent = exponent[:len(exponent)-r]
+	if len(exponent) == 0 {
+		return z.SetOne()
+	}
 
 	z.Set(&x)
 
-	l := bits.Len64(e) - 2
+	l := msb - 2
 	for i := l; i >= 0; i-- {
 		z.Square(z)
-		if e&(1<<uint(i)) != 0 {
+		if exponent[i / 64]&(1<<uint(i%64)) != 0 {
 			z.MulAssign(&x)
 		}
 	}
 	return z
 }
+
 `

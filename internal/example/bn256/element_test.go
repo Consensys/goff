@@ -57,10 +57,10 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 
 		rbExp := new(big.Int).SetUint64(rExp)
 
-		var bMul, bAdd, bSub, bDiv, bNeg, bLsh, bInv, bExp, bSquare big.Int
+		var bMul, bAdd, bSub, bDiv, bNeg, bLsh, bInv, bExp, bExp2, bSquare big.Int
 
 		// e1 = mont(b1), e2 = mont(b2)
-		var e1, e2, eMul, eAdd, eSub, eDiv, eNeg, eLsh, eInv, eExp, eSquare, eMulAssign, eSubAssign, eAddAssign Element
+		var e1, e2, eMul, eAdd, eSub, eDiv, eNeg, eLsh, eInv, eExp, eExp2, eSquare, eMulAssign, eSubAssign, eAddAssign Element
 		e1.SetBigInt(b1)
 		e2.SetBigInt(b2)
 
@@ -79,6 +79,12 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 		eNeg.Neg(&e1)
 		eInv.Inverse(&e1)
 		eExp.Exp(e1, rExp)
+		bits := b2.Bits()
+		exponent := make([]uint64, len(bits))
+		for k := 0; k < len(bits); k++ {
+			exponent[k] = uint64(bits[k])
+		}
+		eExp2.Exp(e1, exponent...)
 		eLsh.Double(&e1)
 
 		// same operations with big int
@@ -93,6 +99,7 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 
 		bInv.ModInverse(b1, modulus)
 		bExp.Exp(b1, rbExp, modulus)
+		bExp2.Exp(b1, b2, modulus)
 		bLsh.Lsh(b1, 1).Mod(&bLsh, modulus)
 
 		cmpEandB(&eSquare, &bSquare, "Square")
@@ -106,7 +113,23 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 		cmpEandB(&eNeg, &bNeg, "Neg")
 		cmpEandB(&eInv, &bInv, "Inv")
 		cmpEandB(&eExp, &bExp, "Exp")
+		cmpEandB(&eExp2, &bExp2, "Exp multi words")
 		cmpEandB(&eLsh, &bLsh, "Lsh")
+
+		// legendre symbol
+		if e1.Legendre() != big.Jacobi(b1, modulus) {
+			t.Fatal("legendre symbol computation failed")
+		}
+		if e2.Legendre() != big.Jacobi(b2, modulus) {
+			t.Fatal("legendre symbol computation failed")
+		}
+
+		// sqrt
+		var eSqrt Element
+		var bSqrt big.Int
+		bSqrt.ModSqrt(b1, modulus)
+		eSqrt.Sqrt(&e1)
+		cmpEandB(&eSqrt, &bSqrt, "Sqrt")
 	}
 }
 

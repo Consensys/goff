@@ -125,6 +125,7 @@ func (z *{{.ElementName}}) IsZero() bool {
 }
 
 
+
 // field modulus stored as big.Int 
 var _{{toLower .ElementName}}ModulusBigInt big.Int 
 var once{{toLower .ElementName}}Modulus sync.Once
