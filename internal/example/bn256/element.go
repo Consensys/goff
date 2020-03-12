@@ -587,6 +587,7 @@ func (z *Element) SetString(s string) *Element {
 }
 
 // Mul z = x * y mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Mul(x, y *Element) *Element {
 
 	var t [4]uint64
@@ -657,6 +658,7 @@ func (z *Element) Mul(x, y *Element) *Element {
 }
 
 // MulAssign z = z * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) MulAssign(x *Element) *Element {
 
 	var t [4]uint64
@@ -726,6 +728,7 @@ func (z *Element) MulAssign(x *Element) *Element {
 	return z
 }
 
+// Legendre returns the Legendre symbol of z (either +1, -1, or 0.)
 func (z *Element) Legendre() int {
 	var l Element
 	// z^((q-1)/2)
@@ -760,16 +763,16 @@ func (z *Element) Sqrt(x *Element) *Element {
 		7931984006246061591,
 		871749566700742666,
 	)
-	// TODO is this needed? seems cheaper than computing the Legendre symbol
+	// as we didn't compute the legendre symbol, ensure we found y such that y * y = x
 	square.Square(&y)
 	if square.Equal(x) {
 		return z.Set(&y)
-	} else {
-		return nil
 	}
+	return nil
 }
 
 // Square z = x * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Square(x *Element) *Element {
 
 	var p [4]uint64

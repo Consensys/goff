@@ -1,6 +1,7 @@
 package element
 
 const Sqrt = `
+// Legendre returns the Legendre symbol of z (either +1, -1, or 0.)
 func (z *{{.ElementName}}) Legendre() int {
 	var l {{.ElementName}}
 	// z^((q-1)/2)
@@ -30,13 +31,33 @@ func (z *{{.ElementName}}) Sqrt(x *{{.ElementName}}) *{{.ElementName}} {
 		y.Exp(*x, {{range $i := .SqrtQ3Mod4Exponent}}
 			{{$i}},{{end}}
 		)
-		// TODO is this needed? seems cheaper than computing the Legendre symbol 
+		// as we didn't compute the legendre symbol, ensure we found y such that y * y = x
 		square.Square(&y)
 		if square.Equal(x) {
 			return z.Set(&y)
-		} else {
-			return nil
+		} 
+		return nil
+	{{- else if .SqrtAtkin}}
+		// q ≡ 5 (mod 8)
+		// see modSqrt5Mod8Prime in math/big/int.go
+		var one, alpha, beta, tx, square {{.ElementName}}
+		one.SetOne()
+		tx.Double(x)
+		alpha.Exp(tx, {{range $i := .SqrtAtkinExponent}}
+			{{$i}},{{end}}
+		)
+		beta.Square(&alpha).
+			MulAssign(&tx).
+			SubAssign(&one).
+			MulAssign(x).
+			MulAssign(&alpha)
+		
+		// as we didn't compute the legendre symbol, ensure we found beta such that beta * beta = x
+		square.Square(&beta)
+		if square.Equal(x) {
+			return z.Set(&beta)
 		}
+		return nil
 	{{- else if .SqrtTonelliShanks}}
 		// q ≡ 1 (mod 4)
 		// see modSqrtTonelliShanks in math/big/int.go
@@ -63,7 +84,7 @@ func (z *{{.ElementName}}) Sqrt(x *{{.ElementName}}) *{{.ElementName}} {
 
 		// compute legendre symbol
 		// t = x^((q-1)/2) = r-1 squaring of x^s
-		t.Set(&b)
+		t = b
 		for i:=uint64(0); i < r-1; i++ {
 			t.Square(&t)
 		}
@@ -76,7 +97,7 @@ func (z *{{.ElementName}}) Sqrt(x *{{.ElementName}}) *{{.ElementName}} {
 		}
 		for {
 			var m uint64
-			t.Set(&b)
+			t = b 
 
 			// for t != 1
 			for !({{- range $i :=  reverse .NbWordsIndexesNoZero}}(t[{{$i}}] == {{index $.One $i}}) &&{{end}}(t[0] == {{index $.One 0}})) {
@@ -101,28 +122,6 @@ func (z *{{.ElementName}}) Sqrt(x *{{.ElementName}}) *{{.ElementName}} {
 			r = m
 		}
 
-	{{- else if .SqrtAtkin}}
-		// q ≡ 5 (mod 8)
-		// see modSqrt5Mod8Prime in math/big/int.go
-		var one, alpha, beta, tx, square {{.ElementName}}
-		one.SetOne()
-		tx.Double(x)
-		alpha.Exp(tx, {{range $i := .SqrtAtkinExponent}}
-			{{$i}},{{end}}
-		)
-		beta.Square(&alpha).
-			MulAssign(&tx).
-			SubAssign(&one).
-			MulAssign(x).
-			MulAssign(&alpha)
-		
-		// TODO is this needed? seems cheaper than computing the Legendre symbol 
-		square.Square(&beta)
-		if square.Equal(x) {
-			return z.Set(&beta)
-		} else {
-			return nil
-		}
 	{{- else}}
 		panic("not implemented")	
 	{{- end}}

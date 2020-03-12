@@ -145,7 +145,7 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 }
 
 func Test{{toUpper .ElementName}}IsRandom(t *testing.T) {
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 50; i++ {
 		var x, y {{.ElementName}}
 		x.SetRandom()
 		y.SetRandom()
@@ -159,7 +159,6 @@ func Test{{toUpper .ElementName}}IsRandom(t *testing.T) {
 // benchmarks
 // most benchmarks are rudimentary and should sample a large number of random inputs
 // or be run multiple times to ensure it didn't measure the fastest path of the function
-// TODO: clean up and push benchmarking branch
 
 var benchRes{{.ElementName}} {{.ElementName}}
 

@@ -699,6 +699,7 @@ func (z *Element) SetString(s string) *Element {
 }
 
 // Mul z = x * y mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Mul(x, y *Element) *Element {
 
 	var t [6]uint64
@@ -821,6 +822,7 @@ func (z *Element) Mul(x, y *Element) *Element {
 }
 
 // MulAssign z = z * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) MulAssign(x *Element) *Element {
 
 	var t [6]uint64
@@ -942,6 +944,7 @@ func (z *Element) MulAssign(x *Element) *Element {
 	return z
 }
 
+// Legendre returns the Legendre symbol of z (either +1, -1, or 0.)
 func (z *Element) Legendre() int {
 	var l Element
 	// z^((q-1)/2)
@@ -1003,7 +1006,7 @@ func (z *Element) Sqrt(x *Element) *Element {
 
 	// compute legendre symbol
 	// t = x^((q-1)/2) = r-1 squaring of x^s
-	t.Set(&b)
+	t = b
 	for i := uint64(0); i < r-1; i++ {
 		t.Square(&t)
 	}
@@ -1016,7 +1019,7 @@ func (z *Element) Sqrt(x *Element) *Element {
 	}
 	for {
 		var m uint64
-		t.Set(&b)
+		t = b
 
 		// for t != 1
 		for !((t[5] == 39800542322357402) && (t[4] == 5545221690922665192) && (t[3] == 8885205928937022213) && (t[2] == 11492539364873682930) && (t[1] == 5854854902718660529) && (t[0] == 202099033278250856)) {
@@ -1043,6 +1046,7 @@ func (z *Element) Sqrt(x *Element) *Element {
 }
 
 // Square z = x * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Square(x *Element) *Element {
 
 	var p [6]uint64
