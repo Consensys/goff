@@ -24,7 +24,14 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 
 	modulusMinusOne.Sub(modulus, &one)
 
-    for i := 0; i < 1000; i++ {
+	var n int
+	if testing.Short() {
+		n = 10
+	} else {
+		n = 500
+	}
+
+    for i := 0; i < n; i++ {
 
         // sample 2 random big int
         b1, _ := rand.Int(rand.Reader, modulus)
