@@ -10,7 +10,7 @@ import (
 )
 
 func TestELEMENT02CorrectnessAgainstBigInt(t *testing.T) {
-	modulus, _ := new(big.Int).SetString("142058175019518691532453823507013741127", 10)
+	modulus, _ := new(big.Int).SetString("129856197364256253209561557591625303651", 10)
 	cmpEandB := func(e *Element02, b *big.Int, name string) {
 		var _e big.Int
 		if e.FromMont().ToBigInt(&_e).Cmp(b) != 0 {
@@ -250,10 +250,19 @@ func BenchmarkSquareELEMENT02(b *testing.B) {
 	}
 }
 
+func BenchmarkSqrtELEMENT02(b *testing.B) {
+	var a Element02
+	a.SetRandom()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchResElement02.Sqrt(&a)
+	}
+}
+
 func BenchmarkMulAssignELEMENT02(b *testing.B) {
 	x := Element02{
-		7227440822177956209,
-		3181730786732464008,
+		16481814031003893252,
+		5055852363843979973,
 	}
 	benchResElement02.SetOne()
 	b.ResetTimer()
@@ -277,13 +286,13 @@ func (z *Element02) mulCIOS(x *Element02) *Element02 {
 	D = C
 
 	// m = t[0]n'[0] mod W
-	m = t[0] * 8720243672556904585
+	m = t[0] * 6652727478993638581
 
 	// -----------------------------------
 	// Second loop
-	C = madd0(m, 12052675084854667847, t[0])
+	C = madd0(m, 16677635217464493667, t[0])
 
-	C, t[0] = madd3(m, 7700989098774409080, t[1], C, t[2])
+	C, t[0] = madd3(m, 7039518564651653224, t[1], C, t[2])
 
 	t[1], t[2] = bits.Add64(D, C, 0)
 	// -----------------------------------
@@ -295,21 +304,21 @@ func (z *Element02) mulCIOS(x *Element02) *Element02 {
 	D = C
 
 	// m = t[0]n'[0] mod W
-	m = t[0] * 8720243672556904585
+	m = t[0] * 6652727478993638581
 
 	// -----------------------------------
 	// Second loop
-	C = madd0(m, 12052675084854667847, t[0])
+	C = madd0(m, 16677635217464493667, t[0])
 
-	C, t[0] = madd3(m, 7700989098774409080, t[1], C, t[2])
+	C, t[0] = madd3(m, 7039518564651653224, t[1], C, t[2])
 
 	t[1], t[2] = bits.Add64(D, C, 0)
 
 	if t[2] != 0 {
 		// we need to reduce, we have a result on 3 words
 		var b uint64
-		z[0], b = bits.Sub64(t[0], 12052675084854667847, 0)
-		z[1], _ = bits.Sub64(t[1], 7700989098774409080, b)
+		z[0], b = bits.Sub64(t[0], 16677635217464493667, 0)
+		z[1], _ = bits.Sub64(t[1], 7039518564651653224, b)
 		return z
 	}
 
@@ -319,10 +328,10 @@ func (z *Element02) mulCIOS(x *Element02) *Element02 {
 
 	// if z > q --> z -= q
 	// note: this is NOT constant time
-	if !(z[1] < 7700989098774409080 || (z[1] == 7700989098774409080 && (z[0] < 12052675084854667847))) {
+	if !(z[1] < 7039518564651653224 || (z[1] == 7039518564651653224 && (z[0] < 16677635217464493667))) {
 		var b uint64
-		z[0], b = bits.Sub64(z[0], 12052675084854667847, 0)
-		z[1], _ = bits.Sub64(z[1], 7700989098774409080, b)
+		z[0], b = bits.Sub64(z[0], 16677635217464493667, 0)
+		z[1], _ = bits.Sub64(z[1], 7039518564651653224, b)
 	}
 	return z
 }
@@ -335,27 +344,27 @@ func (z *Element02) mulNoCarry(x *Element02) *Element02 {
 		// round 0
 		v := z[0]
 		c[1], c[0] = bits.Mul64(v, x[0])
-		m := c[0] * 8720243672556904585
-		c[2] = madd0(m, 12052675084854667847, c[0])
+		m := c[0] * 6652727478993638581
+		c[2] = madd0(m, 16677635217464493667, c[0])
 		c[1], c[0] = madd1(v, x[1], c[1])
-		t[1], t[0] = madd3(m, 7700989098774409080, c[0], c[2], c[1])
+		t[1], t[0] = madd3(m, 7039518564651653224, c[0], c[2], c[1])
 	}
 	{
 		// round 1
 		v := z[1]
 		c[1], c[0] = madd1(v, x[0], t[0])
-		m := c[0] * 8720243672556904585
-		c[2] = madd0(m, 12052675084854667847, c[0])
+		m := c[0] * 6652727478993638581
+		c[2] = madd0(m, 16677635217464493667, c[0])
 		c[1], c[0] = madd2(v, x[1], c[1], t[1])
-		z[1], z[0] = madd3(m, 7700989098774409080, c[0], c[2], c[1])
+		z[1], z[0] = madd3(m, 7039518564651653224, c[0], c[2], c[1])
 	}
 
 	// if z > q --> z -= q
 	// note: this is NOT constant time
-	if !(z[1] < 7700989098774409080 || (z[1] == 7700989098774409080 && (z[0] < 12052675084854667847))) {
+	if !(z[1] < 7039518564651653224 || (z[1] == 7039518564651653224 && (z[0] < 16677635217464493667))) {
 		var b uint64
-		z[0], b = bits.Sub64(z[0], 12052675084854667847, 0)
-		z[1], _ = bits.Sub64(z[1], 7700989098774409080, b)
+		z[0], b = bits.Sub64(z[0], 16677635217464493667, 0)
+		z[1], _ = bits.Sub64(z[1], 7039518564651653224, b)
 	}
 	return z
 }
@@ -365,15 +374,15 @@ func (z *Element02) mulFIPS(x *Element02) *Element02 {
 	var p [2]uint64
 	var t, u, v uint64
 	u, v = bits.Mul64(z[0], x[0])
-	p[0] = v * 8720243672556904585
-	u, v, _ = madd(p[0], 12052675084854667847, 0, u, v)
+	p[0] = v * 6652727478993638581
+	u, v, _ = madd(p[0], 16677635217464493667, 0, u, v)
 	t, u, v = madd(z[0], x[1], 0, u, v)
-	t, u, v = madd(p[0], 7700989098774409080, t, u, v)
+	t, u, v = madd(p[0], 7039518564651653224, t, u, v)
 	t, u, v = madd(z[1], x[0], t, u, v)
-	p[1] = v * 8720243672556904585
-	u, v, _ = madd(p[1], 12052675084854667847, t, u, v)
+	p[1] = v * 6652727478993638581
+	u, v, _ = madd(p[1], 16677635217464493667, t, u, v)
 	t, u, v = madd(z[1], x[1], t, u, v)
-	u, v, p[0] = madd(p[1], 7700989098774409080, t, u, v)
+	u, v, p[0] = madd(p[1], 7039518564651653224, t, u, v)
 
 	p[1] = v
 	z[1] = p[1]
@@ -382,18 +391,18 @@ func (z *Element02) mulFIPS(x *Element02) *Element02 {
 
 	// if z > q --> z -= q
 	// note: this is NOT constant time
-	if !(z[1] < 7700989098774409080 || (z[1] == 7700989098774409080 && (z[0] < 12052675084854667847))) {
+	if !(z[1] < 7039518564651653224 || (z[1] == 7039518564651653224 && (z[0] < 16677635217464493667))) {
 		var b uint64
-		z[0], b = bits.Sub64(z[0], 12052675084854667847, 0)
-		z[1], _ = bits.Sub64(z[1], 7700989098774409080, b)
+		z[0], b = bits.Sub64(z[0], 16677635217464493667, 0)
+		z[1], _ = bits.Sub64(z[1], 7039518564651653224, b)
 	}
 	return z
 }
 
 func BenchmarkMulCIOSELEMENT02(b *testing.B) {
 	x := Element02{
-		7227440822177956209,
-		3181730786732464008,
+		16481814031003893252,
+		5055852363843979973,
 	}
 	benchResElement02.SetOne()
 	b.ResetTimer()
@@ -404,8 +413,8 @@ func BenchmarkMulCIOSELEMENT02(b *testing.B) {
 
 func BenchmarkMulFIPSELEMENT02(b *testing.B) {
 	x := Element02{
-		7227440822177956209,
-		3181730786732464008,
+		16481814031003893252,
+		5055852363843979973,
 	}
 	benchResElement02.SetOne()
 	b.ResetTimer()
@@ -416,8 +425,8 @@ func BenchmarkMulFIPSELEMENT02(b *testing.B) {
 
 func BenchmarkMulNoCarryELEMENT02(b *testing.B) {
 	x := Element02{
-		7227440822177956209,
-		3181730786732464008,
+		16481814031003893252,
+		5055852363843979973,
 	}
 	benchResElement02.SetOne()
 	b.ResetTimer()

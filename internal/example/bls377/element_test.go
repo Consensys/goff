@@ -132,6 +132,11 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 		}
 
 		// sqrt
+		var eSqrt Element
+		var bSqrt big.Int
+		bSqrt.ModSqrt(b1, modulus)
+		eSqrt.Sqrt(&e1)
+		cmpEandB(&eSqrt, &bSqrt, "Sqrt")
 	}
 }
 
@@ -241,6 +246,15 @@ func BenchmarkSquareELEMENT(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		benchResElement.Square(&benchResElement)
+	}
+}
+
+func BenchmarkSqrtELEMENT(b *testing.B) {
+	var a Element
+	a.SetRandom()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchResElement.Sqrt(&a)
 	}
 }
 

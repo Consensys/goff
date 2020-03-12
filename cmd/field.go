@@ -28,8 +28,6 @@ type field struct {
 	NbWordsIndexesNoZero []int
 	NbWordsIndexesFull   []int
 	IdxFIPS              []int
-	Q3Mod4               bool
-	Q3Mod4SqrtExponent   []uint64
 	Q                    []uint64
 	QInverse             []uint64
 	RSquare              []uint64
@@ -38,6 +36,16 @@ type field struct {
 	NoCarry              bool
 	NoCarrySquare        bool // used if NoCarry is set, but some op may overflow in square optimization
 	Benches              bool
+	SqrtQ3Mod4           bool
+	SqrtAtkin            bool
+	SqrtTonelliShanks    bool
+	SqrtE                uint64
+	SqrtS                []uint64
+	SqrtAtkinExponent    []uint64
+	SqrtSMinusOneOver2   []uint64
+	SqrtG                []uint64 // NonResidue ^  SqrtR (montgomery form)
+	SqrtQ3Mod4Exponent   []uint64
+	NonResidue           []uint64 // (montgomery form)
 	Version              string
 }
 
@@ -138,27 +146,83 @@ func newField(packageName, elementName, modulus string, benches bool) (*field, e
 		F.LegendreExponent[i] = (uint64)(v)
 	}
 
-	// check q mod 4
-	var qMod4 big.Int
-	qMod4.SetUint64(4)
-	qMod4.Mod(&bModulus, &qMod4)
-	var three big.Int
-	three.SetUint64(3)
-	if qMod4.Cmp(&three) == 0 {
+	// Sqrt pre computes
+	var qMod big.Int
+	qMod.SetUint64(4)
+	if qMod.Mod(&bModulus, &qMod).Cmp(new(big.Int).SetUint64(3)) == 0 {
 		// q ≡ 3 (mod 4)
 		// using  z ≡ ± x^((p+1)/4) (mod q)
-		F.Q3Mod4 = true
+		F.SqrtQ3Mod4 = true
 		var sqrtExponent big.Int
 		sqrtExponent.SetUint64(1)
 		sqrtExponent.Add(&bModulus, &sqrtExponent)
 		sqrtExponent.Rsh(&sqrtExponent, 2)
-		F.Q3Mod4SqrtExponent = make([]uint64, len(sqrtExponent.Bits()))
+		F.SqrtQ3Mod4Exponent = make([]uint64, len(sqrtExponent.Bits()))
 		for i, v := range sqrtExponent.Bits() {
-			F.Q3Mod4SqrtExponent[i] = (uint64)(v)
+			F.SqrtQ3Mod4Exponent[i] = (uint64)(v)
 		}
 	} else {
 		// q ≡ 1 (mod 4)
+		qMod.SetUint64(8)
+		if qMod.Mod(&bModulus, &qMod).Cmp(new(big.Int).SetUint64(5)) == 0 {
+			// q ≡ 5 (mod 8)
+			// use Atkin's algorithm
+			// see modSqrt5Mod8Prime in math/big/int.go
+			F.SqrtAtkin = true
+			e := new(big.Int).Rsh(&bModulus, 3) // e = (q - 5) / 8
+			F.SqrtAtkinExponent = make([]uint64, len(e.Bits()))
+			for i, v := range e.Bits() {
+				F.SqrtAtkinExponent[i] = (uint64)(v)
+			}
+		} else {
+			// use Tonelli-Shanks
+			F.SqrtTonelliShanks = true
 
+			// Write q-1 =2^e * s , s odd
+			var s big.Int
+			one.SetUint64(1)
+			s.Sub(&bModulus, &one)
+
+			e := s.TrailingZeroBits()
+			s.Rsh(&s, e)
+			F.SqrtE = uint64(e)
+			F.SqrtS = make([]uint64, len(s.Bits()))
+			for i, v := range s.Bits() {
+				F.SqrtS[i] = (uint64)(v)
+			}
+
+			// find non residue
+			var nonResidue big.Int
+			nonResidue.SetInt64(2)
+			one.SetUint64(1)
+			for big.Jacobi(&nonResidue, &bModulus) != -1 {
+				nonResidue.Add(&nonResidue, &one)
+			}
+
+			// g = nonresidue ^ s
+			var g big.Int
+			g.Exp(&nonResidue, &s, &bModulus)
+			// store g in montgomery form
+			g.Lsh(&g, uint(F.NbWords)*64).Mod(&g, &bModulus)
+			F.SqrtG = make([]uint64, len(g.Bits()))
+			for i, v := range g.Bits() {
+				F.SqrtG[i] = (uint64)(v)
+			}
+
+			// store non residue in montgomery form
+			nonResidue.Lsh(&nonResidue, uint(F.NbWords)*64).Mod(&nonResidue, &bModulus)
+			F.NonResidue = make([]uint64, len(nonResidue.Bits()))
+			for i, v := range nonResidue.Bits() {
+				F.NonResidue[i] = (uint64)(v)
+			}
+
+			// (s+1) /2
+			s.Sub(&s, &one).Rsh(&s, 1)
+			F.SqrtSMinusOneOver2 = make([]uint64, len(s.Bits()))
+			for i, v := range s.Bits() {
+				F.SqrtSMinusOneOver2[i] = (uint64)(v)
+			}
+		}
 	}
 
 	return F, nil

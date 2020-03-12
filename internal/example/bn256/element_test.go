@@ -249,6 +249,15 @@ func BenchmarkSquareELEMENT(b *testing.B) {
 	}
 }
 
+func BenchmarkSqrtELEMENT(b *testing.B) {
+	var a Element
+	a.SetRandom()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchResElement.Sqrt(&a)
+	}
+}
+
 func BenchmarkMulAssignELEMENT(b *testing.B) {
 	x := Element{
 		17522657719365597833,

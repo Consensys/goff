@@ -136,13 +136,11 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 		}
 
 		// sqrt 
-		{{- if .Q3Mod4}}
-			var eSqrt {{.ElementName}}
-			var bSqrt big.Int
-			bSqrt.ModSqrt(b1, modulus)
-			eSqrt.Sqrt(&e1)
-			cmpEandB(&eSqrt, &bSqrt, "Sqrt")
-		{{- end}}
+		var eSqrt {{.ElementName}}
+		var bSqrt big.Int
+		bSqrt.ModSqrt(b1, modulus)
+		eSqrt.Sqrt(&e1)
+		cmpEandB(&eSqrt, &bSqrt, "Sqrt")
 	}
 }
 
@@ -258,6 +256,14 @@ func BenchmarkSquare{{toUpper .ElementName}}(b *testing.B) {
 	}
 }
 
+func BenchmarkSqrt{{toUpper .ElementName}}(b *testing.B) {
+	var a {{.ElementName}}
+	a.SetRandom()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchRes{{.ElementName}}.Sqrt(&a)
+	}
+}
 
 func BenchmarkMulAssign{{toUpper .ElementName}}(b *testing.B) {
 	x := {{.ElementName}}{

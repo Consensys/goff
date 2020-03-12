@@ -944,7 +944,7 @@ func (z *Element) MulAssign(x *Element) *Element {
 
 func (z *Element) Legendre() int {
 	var l Element
-	// z^((p-1)/2)
+	// z^((q-1)/2)
 	l.Exp(*z,
 		4793061456545316864,
 		830261717530312704,
@@ -969,15 +969,77 @@ func (z *Element) Legendre() int {
 // if the square root doesn't exist (x is not a square mod q)
 // Sqrt leaves z unchanged and returns nil
 func (z *Element) Sqrt(x *Element) *Element {
-	switch x.Legendre() {
-	case -1:
-		return nil
-	case 0:
-		return z.SetZero()
-	case 1:
-		break
+	// q ≡ 1 (mod 4)
+	// see modSqrtTonelliShanks in math/big/int.go
+	// using https://www.maa.org/sites/default/files/pdf/upload_library/22/Polya/07468342.di020786.02p0470a.pdf
+
+	var y, b, t, w Element
+	// w = x^((s-1)/2))
+	w.Exp(*x,
+		13441098641003579921,
+		14150156177295552022,
+		12963050682622819814,
+		828901211384460357,
+		8398139675458767990,
+		860,
+	)
+
+	// y = x^((s+1)/2)) = w * x
+	y.Mul(x, &w)
+
+	// b = x^s = w * w * x = y * x
+	b.Mul(&w, &y)
+
+	// g = nonResidue ^ s
+	var g = Element{
+		7563926049028936178,
+		2688164645460651601,
+		12112688591437172399,
+		3177973240564633687,
+		14764383749841851163,
+		52487407124055189,
 	}
-	panic("not implemented")
+	r := uint64(46)
+
+	// compute legendre symbol
+	// t = x^((q-1)/2) = r-1 squaring of x^s
+	t.Set(&b)
+	for i := uint64(0); i < r-1; i++ {
+		t.Square(&t)
+	}
+	if t.IsZero() {
+		return z.SetZero()
+	}
+	if !((t[5] == 39800542322357402) && (t[4] == 5545221690922665192) && (t[3] == 8885205928937022213) && (t[2] == 11492539364873682930) && (t[1] == 5854854902718660529) && (t[0] == 202099033278250856)) {
+		// t != 1, we don't have a square root
+		return nil
+	}
+	for {
+		var m uint64
+		t.Set(&b)
+
+		// for t != 1
+		for !((t[5] == 39800542322357402) && (t[4] == 5545221690922665192) && (t[3] == 8885205928937022213) && (t[2] == 11492539364873682930) && (t[1] == 5854854902718660529) && (t[0] == 202099033278250856)) {
+			t.Square(&t)
+			m++
+		}
+
+		if m == 0 {
+			return z.Set(&y)
+		}
+		// t = g^(2^(r-m-1)) mod q
+		ge := int(r - m - 1)
+		t = g
+		for ge > 0 {
+			t.Square(&t)
+			ge--
+		}
+
+		g.Square(&t)
+		y.MulAssign(&t)
+		b.MulAssign(&g)
+		r = m
+	}
 }
 
 // Square z = x * x mod q

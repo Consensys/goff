@@ -29,7 +29,7 @@ func TestIntegration(t *testing.T) {
 	parentDir := "./internal/tests/integration"
 	os.RemoveAll(parentDir)
 	err := os.Mkdir(parentDir, 0700)
-	defer os.RemoveAll(parentDir)
+	// defer os.RemoveAll(parentDir)
 	if err != nil {
 		t.Fatal(err)
 	}

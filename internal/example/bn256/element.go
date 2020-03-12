@@ -728,7 +728,7 @@ func (z *Element) MulAssign(x *Element) *Element {
 
 func (z *Element) Legendre() int {
 	var l Element
-	// z^((p-1)/2)
+	// z^((q-1)/2)
 	l.Exp(*z,
 		11389680472494603939,
 		14681934109093717318,
@@ -751,22 +751,22 @@ func (z *Element) Legendre() int {
 // if the square root doesn't exist (x is not a square mod q)
 // Sqrt leaves z unchanged and returns nil
 func (z *Element) Sqrt(x *Element) *Element {
-	switch x.Legendre() {
-	case -1:
-		return nil
-	case 0:
-		return z.SetZero()
-	case 1:
-		break
-	}
 	// q ≡ 3 (mod 4)
 	// using  z ≡ ± x^((p+1)/4) (mod q)
-	return z.Exp(*x,
+	var y, square Element
+	y.Exp(*x,
 		5694840236247301970,
 		7340967054546858659,
 		7931984006246061591,
 		871749566700742666,
 	)
+	// TODO is this needed? seems cheaper than computing the Legendre symbol
+	square.Square(&y)
+	if square.Equal(x) {
+		return z.Set(&y)
+	} else {
+		return nil
+	}
 }
 
 // Square z = x * x mod q
