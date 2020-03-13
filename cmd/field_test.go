@@ -29,13 +29,24 @@ func TestIntegration(t *testing.T) {
 	parentDir := "./internal/tests/integration"
 	os.RemoveAll(parentDir)
 	err := os.Mkdir(parentDir, 0700)
+	// defer os.RemoveAll(parentDir)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// defer os.RemoveAll(parentDir)
+
+	var bits []int
+	if testing.Short() {
+		for i := 128; i <= 448; i += 64 {
+			bits = append(bits, i-3, i-2, i-1, i)
+		}
+	} else {
+		for i := 120; i < 704; i++ {
+			bits = append(bits, i)
+		}
+	}
 
 	moduli := make(map[string]string)
-	for i := 120; i < 704; i++ {
+	for _, i := range bits {
 		var q *big.Int
 		var nbWords int
 		if i%64 == 0 {

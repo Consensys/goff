@@ -2,6 +2,7 @@ package element
 
 const SquareCIOSNoCarry = `
 // Square z = x * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) Square(x *{{.ElementName}}) *{{.ElementName}} {
 	{{if .NoCarrySquare}}
 		{{ template "square" dict "all" . "V1" "x"}}
