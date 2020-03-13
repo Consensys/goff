@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"math/bits"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -49,6 +50,10 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&fOutputDir, "output", "o", "", "destination path to create output files")
 	rootCmd.PersistentFlags().StringVarP(&fPackageName, "package", "p", "", "package name in generated files")
 	rootCmd.PersistentFlags().BoolVarP(&fBenches, "benches", "b", false, "set to true to generate montgomery multiplication (CIOS, FIPS, noCarry) benchmarks")
+
+	if bits.UintSize != 64 {
+		panic("goff only supports 64bits architectures")
+	}
 }
 
 func cmdGenerate(cmd *cobra.Command, args []string) {
@@ -95,6 +100,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		element.MulFIPS,
 		element.MulNoCarry,
 		element.MontgomeryMultiplication,
+		element.Sqrt,
 	}
 
 	if F.NoCarrySquare {

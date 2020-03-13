@@ -3,6 +3,7 @@ package element
 const MontgomeryMultiplication = `
 
 // Mul z = x * y mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
 	{{ if .NoCarry}}
 		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "y"}}
@@ -14,6 +15,7 @@ func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
 }
 
 // MulAssign z = z * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) MulAssign(x *{{.ElementName}}) *{{.ElementName}} {
 	{{ if .NoCarry}}
 		{{ template "mul_nocarry" dict "all" . "V1" "z" "V2" "x"}}
