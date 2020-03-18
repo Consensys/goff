@@ -241,6 +241,38 @@ func (z *{{.ElementName}}) SetRandom() *{{.ElementName}} {
 	return z
 }
 
+{{ if .NoCollidingNames}}
+{{ else}}
+func One() {{.ElementName}} {
+	var one {{.ElementName}}
+	one.SetOne()
+	return one
+}
+
+func FromInterface(i1 interface{}) {{.ElementName}} {
+	var val {{.ElementName}}
+
+	switch c1 := i1.(type) {
+	case uint64:
+		val.SetUint64(c1)
+	case int:
+		val.SetString(strconv.Itoa(c1))
+	case string:
+		val.SetString(c1)
+	case {{.ElementName}}:
+		val = c1
+	case *{{.ElementName}}:
+		val.Set(c1)
+	// TODO add big.Int convertions
+	default:
+		panic("invalid type")
+	}
+
+	return val
+}
+{{end}}
+
+
 {{ define "bigger" }}
 	// {{$.V1}} >= {{$.V2}}
 	bigger = !({{- range $i := reverse $.all.NbWordsIndexesNoZero}} {{$.V1}}[{{$i}}] < {{$.V2}}[{{$i}}] || ( {{$.V1}}[{{$i}}] == {{$.V2}}[{{$i}}] && (

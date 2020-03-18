@@ -33,6 +33,7 @@ import (
 	"io"
 	"math/big"
 	"math/bits"
+	"strconv"
 	"sync"
 
 	"unsafe"
@@ -384,6 +385,34 @@ func (z *Element) SetRandom() *Element {
 	}
 
 	return z
+}
+
+func One() Element {
+	var one Element
+	one.SetOne()
+	return one
+}
+
+func FromInterface(i1 interface{}) Element {
+	var val Element
+
+	switch c1 := i1.(type) {
+	case uint64:
+		val.SetUint64(c1)
+	case int:
+		val.SetString(strconv.Itoa(c1))
+	case string:
+		val.SetString(c1)
+	case Element:
+		val = c1
+	case *Element:
+		val.Set(c1)
+	// TODO add big.Int convertions
+	default:
+		panic("invalid type")
+	}
+
+	return val
 }
 
 // Add z = x + y mod q

@@ -74,15 +74,15 @@ func cmdGenerate(cmd *cobra.Command, args []string) {
 	}
 
 	// generate code
-	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, fBenches); err != nil {
+	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, fBenches, false); err != nil {
 		fmt.Printf("\n%s\n", err.Error())
 		os.Exit(-1)
 	}
 }
 
-func GenerateFF(packageName, elementName, modulus, outputDir string, benches bool) error {
+func GenerateFF(packageName, elementName, modulus, outputDir string, benches bool, noCollidingNames bool) error {
 	// compute field constants
-	F, err := newField(packageName, elementName, modulus, benches)
+	F, err := newField(packageName, elementName, modulus, benches, noCollidingNames)
 	if err != nil {
 		return err
 	}

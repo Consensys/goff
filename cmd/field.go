@@ -47,11 +47,12 @@ type field struct {
 	SqrtQ3Mod4Exponent   []uint64
 	NonResidue           []uint64 // (montgomery form)
 	Version              string
+	NoCollidingNames     bool // if multiple elements are generated in the same package, triggers name collisions
 }
 
 // -------------------------------------------------------------------------------------------------
 // Field data precompute functions
-func newField(packageName, elementName, modulus string, benches bool) (*field, error) {
+func newField(packageName, elementName, modulus string, benches bool, noCollidingNames bool) (*field, error) {
 	// parse modulus
 	var bModulus big.Int
 	if _, ok := bModulus.SetString(modulus, 10); !ok {
@@ -60,10 +61,11 @@ func newField(packageName, elementName, modulus string, benches bool) (*field, e
 
 	// field info
 	F := &field{
-		PackageName: packageName,
-		ElementName: elementName,
-		Modulus:     modulus,
-		Benches:     benches,
+		PackageName:      packageName,
+		ElementName:      elementName,
+		Modulus:          modulus,
+		Benches:          benches,
+		NoCollidingNames: noCollidingNames,
 	}
 	if Version != "" {
 		F.Version = buildString()
