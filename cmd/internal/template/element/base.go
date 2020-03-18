@@ -40,8 +40,9 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"io"
-	{{if eq .NoCarry false }}"sync"{{end}}
+	"sync"
 	"unsafe"
+	{{if eq .NoCollidingNames false}}"strconv"{{- end}}
 )
 
 // {{.ElementName}} represents a field element stored on {{.NbWords}} words (uint64)
