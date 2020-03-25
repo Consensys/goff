@@ -26,8 +26,7 @@ src="banner_goff.png">
 go get golang.org/x/tools/cmd/goimports
 
 # goff
-git clone https://github.com/consensys/goff.git
-cd goff && make
+go install github.com/consensys/goff
 ```
 
 

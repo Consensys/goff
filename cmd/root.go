@@ -31,7 +31,7 @@ var rootCmd = &cobra.Command{
 	Use:     "goff",
 	Short:   "goff generates arithmetic operations for any moduli",
 	Run:     cmdGenerate,
-	Version: buildString(),
+	Version: Version,
 }
 
 // flags

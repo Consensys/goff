@@ -67,9 +67,7 @@ func newField(packageName, elementName, modulus string, benches bool, noCollidin
 		Benches:          benches,
 		NoCollidingNames: noCollidingNames,
 	}
-	if Version != "" {
-		F.Version = buildString()
-	}
+	F.Version = Version
 	// pre compute field constants
 	F.NbBits = bModulus.BitLen()
 	F.NbWords = len(bModulus.Bits())
