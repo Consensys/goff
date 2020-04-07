@@ -84,7 +84,7 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 		var bMul, bAdd, bSub, bDiv, bNeg, bLsh, bInv, bExp, bExp2, bSquare big.Int
 
 		// e1 = mont(b1), e2 = mont(b2)
-		var e1, e2, eMul, eAdd, eSub, eDiv, eNeg, eLsh, eInv, eExp, eExp2, eSquare, eMulAssign, eSubAssign, eAddAssign Element
+		var e1, e2, eMul, eAdd, eSub, eDiv, eNeg, eLsh, eInv, eExp, eSquare, eMulAssign, eSubAssign, eAddAssign Element
 		e1.SetBigInt(b1)
 		e2.SetBigInt(b2)
 
@@ -103,12 +103,6 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 		eNeg.Neg(&e1)
 		eInv.Inverse(&e1)
 		eExp.Exp(e1, rExp)
-		bits := b2.Bits()
-		exponent := make([]uint64, len(bits))
-		for k := 0; k < len(bits); k++ {
-			exponent[k] = uint64(bits[k])
-		}
-		eExp2.Exp(e1, exponent...)
 		eLsh.Double(&e1)
 
 		// same operations with big int
@@ -123,7 +117,6 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 
 		bInv.ModInverse(b1, modulus)
 		bExp.Exp(b1, rbExp, modulus)
-		bExp2.Exp(b1, b2, modulus)
 		bLsh.Lsh(b1, 1).Mod(&bLsh, modulus)
 
 		cmpEandB(&eSquare, &bSquare, "Square")
@@ -137,7 +130,7 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 		cmpEandB(&eNeg, &bNeg, "Neg")
 		cmpEandB(&eInv, &bInv, "Inv")
 		cmpEandB(&eExp, &bExp, "Exp")
-		cmpEandB(&eExp2, &bExp2, "Exp multi words")
+
 		cmpEandB(&eLsh, &bLsh, "Lsh")
 
 		// legendre symbol
@@ -148,12 +141,24 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 			t.Fatal("legendre symbol computation failed")
 		}
 
-		// sqrt
-		var eSqrt Element
-		var bSqrt big.Int
-		bSqrt.ModSqrt(b1, modulus)
-		eSqrt.Sqrt(&e1)
-		cmpEandB(&eSqrt, &bSqrt, "Sqrt")
+		// these are slow, killing circle ci
+		if n <= 3 {
+			// sqrt
+			var eSqrt, eExp2 Element
+			var bSqrt big.Int
+			bSqrt.ModSqrt(b1, modulus)
+			eSqrt.Sqrt(&e1)
+			cmpEandB(&eSqrt, &bSqrt, "Sqrt")
+
+			bits := b2.Bits()
+			exponent := make([]uint64, len(bits))
+			for k := 0; k < len(bits); k++ {
+				exponent[k] = uint64(bits[k])
+			}
+			eExp2.Exp(e1, exponent...)
+			bExp2.Exp(b1, b2, modulus)
+			cmpEandB(&eExp2, &bExp2, "Exp multi words")
+		}
 	}
 }
 
@@ -308,14 +313,8 @@ func BenchmarkMulAsmELEMENT(b *testing.B) {
 }
 
 func TestELEMENTMulAsm(t *testing.T) {
-	var n int
-	if testing.Short() {
-		n = 10
-	} else {
-		n = 500
-	}
-	modulus, _ := new(big.Int).SetString("21888242871839275222246405745257275088696311157297823662689037894645226208583", 10)
-	for i := 0; i < n; i++ {
+	modulus, _ := new(big.Int).SetString("258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177", 10)
+	for i := 0; i < 500; i++ {
 		// sample 2 random big int
 		b1, _ := rand.Int(rand.Reader, modulus)
 		b2, _ := rand.Int(rand.Reader, modulus)
