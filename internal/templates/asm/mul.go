@@ -20,7 +20,7 @@ TEXT ·mulAsm{{.ElementName}}(SB), NOSPLIT, $0-16
 	{{- $regM := $iReg}}  {{- $iReg = add 1 $iReg}}
 	{{- $regYi := $iReg}}  {{- $iReg = add 1 $iReg}}
 
-	MOVQ x+0(FP), {{reg $regX}}
+	MOVQ res+0(FP), {{reg $regX}}
 	MOVQ y+8(FP), {{reg $regY}}
 
 	// test if we have adx

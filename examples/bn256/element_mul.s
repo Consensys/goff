@@ -8,7 +8,7 @@
 // see https://hackmd.io/@zkteam/modular_multiplication
 TEXT ·mulAsmElement(SB), NOSPLIT, $0-16
 
-	MOVQ x+0(FP), DI
+	MOVQ res+0(FP), DI
 	MOVQ y+8(FP), R8
 
 	// test if we have adx
