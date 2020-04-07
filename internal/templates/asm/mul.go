@@ -43,18 +43,22 @@ TEXT ·MulAssign{{.ElementName}}(SB), NOSPLIT, $0-16
     // 		t[N-1] = C + A
 
 	{{- range $i := .NbWordsIndexesFull}}
-	
+
+	// ---------------------------------------------------------------------------------------------
+	// outter loop {{$i}}
+
 	// clear up the carry flags
 	XORQ {{reg $regA}} , {{reg $regA}}
 
-	// y[{{$i}}] in {{reg $regYi}}
+	// {{reg $regYi}} = y[{{$i}}]
 	MOVQ {{mul $i 8}}({{reg $regY}}), {{reg $regYi}}
 
 	// for j=0 to N-1
 	//    (A,t[j])  := t[j] + x[j]*y[i] + A
 	{{- range $j := $.NbWordsIndexesFull}}
-		// res[{{$j}}] in DX
-		MOVQ {{mul $j 8}}({{reg $regX}}), DX
+
+		// DX = res[{{$j}}]
+		MOVQ {{mul $j 8}}({{reg $regX}}), DX 
 		{{- if eq $j 0}}
 			{{- if eq $i 0}}
 				MULXQ {{reg $regYi}}, {{reg $regt0 $j}} ,  {{reg $regA}}
@@ -72,6 +76,7 @@ TEXT ·MulAssign{{.ElementName}}(SB), NOSPLIT, $0-16
 			ADOXQ AX, {{reg $regt0 $j}} 
 		{{- end}}
 	{{- end}}
+
 	// add the last carries to {{reg $regA}} 
 	MOVQ $0, DX
 	ADCXQ DX, {{reg $regA}} 
@@ -123,94 +128,100 @@ reduce:
 	{{- /* temporary register to store moduli word for SBBQ */ -}}
 	{{- $regQ := add $regY $k}}
 	{{- range $i := .NbWordsIndexesFull}}
-	{{- if eq $i 0}}
-	MOVQ {{reg $regt0}}, DX
-	{{- else}}
-	{{- $k := sub $i 1}}
-	MOVQ {{reg $regt0 $i}}, {{reg $regu1 $k}}
-	{{- end}}
+		{{- if eq $i 0}}
+			MOVQ {{reg $regt0}}, DX
+		{{- else}}
+			{{- $k := sub $i 1}}
+			MOVQ {{reg $regt0 $i}}, {{reg $regu1 $k}}
+		{{- end}}
 	{{- end }}
 
 	{{- range $i := .NbWordsIndexesFull}}
-	MOVQ {{ index $.ASMQ $i }}, {{reg $regQ}}
-	{{- if eq $i 0}}
-	SUBQ  {{reg $regQ}}, DX
-	{{- else}}
-	{{- $k := sub $i 1}}
-	SBBQ  {{reg $regQ}}, {{reg $regu1 $k}}
-	{{- end}}
+		MOVQ {{ index $.ASMQ $i }}, {{reg $regQ}}
+		{{- if eq $i 0}}
+			SUBQ  {{reg $regQ}}, DX
+		{{- else}}
+			{{- $k := sub $i 1}}
+			SBBQ  {{reg $regQ}}, {{reg $regu1 $k}}
+		{{- end}}
 	{{- end}}
 	JCS t_is_smaller // no borrow, we return t
+
+	// borrow is set, we return u
 	MOVQ DX, ({{reg $regX}})
 	{{- range $i := .NbWordsIndexesNoZero}}
-	{{- $j := sub $i 1}}
-	MOVQ {{reg $regu1 $j}}, {{mul $i 8}}({{reg $regX}})
+		{{- $j := sub $i 1}}
+		MOVQ {{reg $regu1 $j}}, {{mul $i 8}}({{reg $regX}})
 	{{- end}}
 	RET
 t_is_smaller:
 	{{- range $i := .NbWordsIndexesFull}}
-	MOVQ {{reg $regt0 $i}}, {{mul $i 8}}({{reg $regX}})
+		MOVQ {{reg $regt0 $i}}, {{mul $i 8}}({{reg $regX}})
 	{{- end}}
 	RET
 
 no_adx:
 	{{- range $i := .NbWordsIndexesFull}}
-	// (A,t[0]) := t[0] + x[0]*y[{{$i}}]
-	MOVQ ({{ reg $regX}}), AX // x[0]
-	MOVQ {{mul $i 8}}({{reg $regY}}), {{reg $regYi}}
-	MULQ {{reg $regYi}} // x[0] * y[{{$i}}]
-	{{- if ne $i 0}}
-	ADDQ AX, {{ reg $regt0}} 
-	ADCQ $0, DX
-	{{- end}}	
-	MOVQ DX, {{ reg $regA}} 
-	{{- if eq $i 0}}
-	MOVQ AX, {{ reg $regt0}}
-	{{end}}
+
+		// ---------------------------------------------------------------------------------------------
+		// outter loop {{$i}}
+
+		// (A,t[0]) := t[0] + x[0]*y[{{$i}}]
+		MOVQ ({{ reg $regX}}), AX // x[0]
+		MOVQ {{mul $i 8}}({{reg $regY}}), {{reg $regYi}}
+		MULQ {{reg $regYi}} // x[0] * y[{{$i}}]
+		{{- if ne $i 0}}
+			ADDQ AX, {{ reg $regt0}} 
+			ADCQ $0, DX
+		{{- end}}	
+		MOVQ DX, {{ reg $regA}} 
+		{{- if eq $i 0}}
+			MOVQ AX, {{ reg $regt0}}
+		{{end}}
 	
 	
-	// m := t[0]*q'[0] mod W
-	MOVQ {{ $.ASMQInv0 }}, {{ reg $regM}}
-	IMULQ {{reg $regt0}} , {{ reg $regM}}
+		// m := t[0]*q'[0] mod W
+		MOVQ {{ $.ASMQInv0 }}, {{ reg $regM}}
+		IMULQ {{reg $regt0}} , {{ reg $regM}}
 
-	// C,_ := t[0] + m*q[0]
-	MOVQ {{ index $.ASMQ 0 }}, AX
-	MULQ {{ reg $regM}}
-	ADDQ {{ reg $regt0}} ,AX
-	ADCQ $0, DX
-	MOVQ  DX, {{ reg $regC}}
+		// C,_ := t[0] + m*q[0]
+		MOVQ {{ index $.ASMQ 0 }}, AX
+		MULQ {{ reg $regM}}
+		ADDQ {{ reg $regt0}} ,AX
+		ADCQ $0, DX
+		MOVQ  DX, {{ reg $regC}}
 
-	// for j=1 to N-1
-	//    (A,t[j])  := t[j] + x[j]*y[i] + A
-    //    (C,t[j-1]) := t[j] + m*q[j] + C
-	{{- range $j := $.NbWordsIndexesNoZero}}
-	MOVQ {{mul $j 8}}({{ reg $regX}}), AX
-	MULQ {{reg $regYi}} // x[{{$j}}] * y[{{$i}}]
-	{{- if ne $i 0}}
-	ADDQ {{ reg $regA}}, {{reg $regt0 $j}}
-	ADCQ $0, DX
-	ADDQ AX, {{reg $regt0 $j}}
-	ADCQ $0, DX
-	{{- else}}
-	MOVQ {{ reg $regA}}, {{reg $regt0 $j}}
-	ADDQ AX, {{reg $regt0 $j}}
-	ADCQ $0, DX
-	{{- end}}
-	MOVQ DX, {{ reg $regA}}
+		// for j=1 to N-1
+		//    (A,t[j])  := t[j] + x[j]*y[i] + A
+		//    (C,t[j-1]) := t[j] + m*q[j] + C
+		{{- range $j := $.NbWordsIndexesNoZero}}
+			MOVQ {{mul $j 8}}({{ reg $regX}}), AX
+			MULQ {{reg $regYi}} // x[{{$j}}] * y[{{$i}}]
+			{{- if ne $i 0}}
+				ADDQ {{ reg $regA}}, {{reg $regt0 $j}}
+				ADCQ $0, DX
+				ADDQ AX, {{reg $regt0 $j}}
+				ADCQ $0, DX
+			{{- else}}
+				MOVQ {{ reg $regA}}, {{reg $regt0 $j}}
+				ADDQ AX, {{reg $regt0 $j}}
+				ADCQ $0, DX
+			{{- end}}
+			MOVQ DX, {{ reg $regA}}
 
-	MOVQ {{ index $.ASMQ $j }}, AX
-	MULQ {{ reg $regM}}
-	ADDQ  {{reg $regt0 $j}}, {{ reg $regC}}
-	ADCQ $0, DX
-	ADDQ AX, {{ reg $regC}}
-	ADCQ $0, DX
-	{{$k := sub $j 1}}
-	MOVQ {{ reg $regC}}, {{reg $regt0 $k}}
-	MOVQ DX, {{ reg $regC}}
-	{{- end}}
+			MOVQ {{ index $.ASMQ $j }}, AX
+			MULQ {{ reg $regM}}
+			ADDQ  {{reg $regt0 $j}}, {{ reg $regC}}
+			ADCQ $0, DX
+			ADDQ AX, {{ reg $regC}}
+			ADCQ $0, DX
+			{{$k := sub $j 1}}
+			MOVQ {{ reg $regC}}, {{reg $regt0 $k}}
+			MOVQ DX, {{ reg $regC}}
+		{{- end}}
 
-	ADDQ {{ reg $regC}}, {{ reg $regA}}
-	MOVQ {{ reg $regA}}, {{reg $regt0 $.NbWordsLastIndex}}
+		ADDQ {{ reg $regC}}, {{ reg $regA}}
+		MOVQ {{ reg $regA}}, {{reg $regt0 $.NbWordsLastIndex}}
 
 	{{- end}}
 

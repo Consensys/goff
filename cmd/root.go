@@ -149,7 +149,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		if err := bavard.Generate(pathMulAsm, asm, F,
 			bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
 			bavard.Import(false),
-			bavard.Format(false),
+			bavard.Format(true),
 			bavard.Funcs(template.FuncMap{
 				"reg": reg,
 			})); err != nil {
