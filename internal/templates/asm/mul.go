@@ -5,7 +5,8 @@ const Mul = `
 #include "textflag.h"
 
 // func mulAsm{{.ElementName}}(res,y *{{.ElementName}})
-// see https://hackmd.io/@zkteam/modular_multiplication
+// montgomery multiplication of res by y 
+// stores the result in res
 TEXT ·mulAsm{{.ElementName}}(SB), NOSPLIT, $0-16
 	{{- /* do not change the order */ -}} 
 	{{- $iReg := 0}}
@@ -20,21 +21,38 @@ TEXT ·mulAsm{{.ElementName}}(SB), NOSPLIT, $0-16
 	{{- $regM := $iReg}}  {{- $iReg = add 1 $iReg}}
 	{{- $regYi := $iReg}}  {{- $iReg = add 1 $iReg}}
 
+	// dereference our parameters
 	MOVQ res+0(FP), {{reg $regX}}
 	MOVQ y+8(FP), {{reg $regY}}
 
-	// test if we have adx
+	// check if we support adx and mulx
 	CMPB ·support_adx_{{.ElementName}}(SB), $1
- 	JNE no_adx
+	JNE no_adx
+	 
+	// the algorithm is described here
+	// https://hackmd.io/@zkteam/modular_multiplication
+	// however, to benefit from the ADCX and ADOX carry chains
+	// we split the inner loops in 2:
+	// for i=0 to N-1
+    // 		for j=0 to N-1
+    // 		    (A,t[j])  := t[j] + a[j]*b[i] + A
+    // 		m := t[0]*q'[0] mod W
+    // 		C,_ := t[0] + m*q[0]
+    // 		for j=1 to N-1
+    // 		    (C,t[j-1]) := t[j] + m*q[j] + C
+    // 		t[N-1] = C + A
 
 	{{- range $i := .NbWordsIndexesFull}}
-	XORQ {{reg $regA}} , {{reg $regA}} // TODO if A + C can't overflow we can get rid of that one
+	// clear up the carry flags
+	XORQ {{reg $regA}} , {{reg $regA}}
 
+	// y[{{$i}}] in {{reg $regYi}}
 	MOVQ {{mul $i 8}}({{reg $regY}}), {{reg $regYi}}
+
 	// for j=0 to N-1
 	//    (A,t[j])  := t[j] + x[j]*y[i] + A
 	{{- range $j := $.NbWordsIndexesFull}}
-		
+		// res[{{$j}}] in DX
 		MOVQ {{mul $j 8}}({{reg $regX}}), DX
 		{{- if eq $j 0}}
 			{{- if eq $i 0}}
@@ -53,21 +71,22 @@ TEXT ·mulAsm{{.ElementName}}(SB), NOSPLIT, $0-16
 			ADOXQ AX, {{reg $regt0 $j}} 
 		{{- end}}
 	{{- end}}
+	// add the last carries to {{reg $regA}} 
 	MOVQ $0, DX
 	ADCXQ DX, {{reg $regA}} 
 	ADOXQ DX, {{reg $regA}} 
 	
 	// m := t[0]*q'[0] mod W
-	MOVQ {{ $.ASMQInv0 }}, DX // {{reg $regM}}
+	MOVQ {{ $.ASMQInv0 }}, DX
 	MULXQ {{reg $regt0}},{{reg $regM}}, DX
 
-	
-	XORQ DX, DX // TODO if A + 2 (carries) can't overflow we can get rid of that one
+	// clear the carry flags
+	XORQ DX, DX 
+
 	// C,_ := t[0] + m*q[0]
 	MOVQ {{ index $.ASMQ 0 }}, DX
 	MULXQ {{reg $regM}}, AX, {{reg $regC}}
 	ADCXQ {{reg $regt0}} ,AX
-	
 
 	// for j=1 to N-1
     //    (C,t[j-1]) := t[j] + m*q[j] + C
@@ -88,18 +107,20 @@ TEXT ·mulAsm{{.ElementName}}(SB), NOSPLIT, $0-16
 			MOVQ DX, {{reg $regC}}
 		{{- end}}
 	{{- end}}
-	
 
 	{{- end}}
 
 reduce:
-	// reduce if needed, should do a full comparaison, right now doing the constant time version
+	// reduce, constant time version
+	// first we copy registers storing t in a separate set of registers
+	// as SUBQ modifies the 2nd operand
+	{{- /* registers after regY are not needed anymore */ -}}
+	{{- /* u0 will be stored in DX */ -}}
 	{{- $regu1 := $regY}}
-	{{- $k := sub $.NbWords 1}} // number of register used by u
-	// u1 starts at {{$regY}}
+	{{- $k := sub $.NbWords 1}}
 
+	{{- /* temporary register to store moduli word for SBBQ */ -}}
 	{{- $regQ := add $regY $k}}
-	// Q starts at {{$regQ}}
 	{{- range $i := .NbWordsIndexesFull}}
 	{{- if eq $i 0}}
 	MOVQ {{reg $regt0}}, DX

@@ -75,11 +75,20 @@ func TestIntegration(t *testing.T) {
 	}
 
 	// run go test
-	cmd := exec.Command("go", "test", "./"+parentDir)
-	out, err := cmd.Output()
-	fmt.Println(string(out))
-	if err != nil {
-		t.Fatal(err)
+	if testing.Short() {
+		cmd := exec.Command("go", "test", "-short", "./"+parentDir)
+		out, err := cmd.Output()
+		fmt.Println(string(out))
+		if err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		cmd := exec.Command("go", "test", "./"+parentDir)
+		out, err := cmd.Output()
+		fmt.Println(string(out))
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 
 }

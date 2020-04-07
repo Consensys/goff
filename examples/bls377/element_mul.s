@@ -5,63 +5,82 @@
 #include "textflag.h"
 
 // func mulAsmElement(res,y *Element)
-// see https://hackmd.io/@zkteam/modular_multiplication
+// montgomery multiplication of res by y 
+// stores the result in res
 TEXT ·mulAsmElement(SB), NOSPLIT, $0-16
 
+	// dereference our parameters
 	MOVQ res+0(FP), R9
 	MOVQ y+8(FP), R10
 
-	// test if we have adx
+	// check if we support adx and mulx
 	CMPB ·support_adx_Element(SB), $1
- 	JNE no_adx
-	XORQ R11 , R11 // TODO if A + C can't overflow we can get rid of that one
+	JNE no_adx
+	 
+	// the algorithm is described here
+	// https://hackmd.io/@zkteam/modular_multiplication
+	// however, to benefit from the ADCX and ADOX carry chains
+	// we split the inner loops in 2:
+	// for i=0 to N-1
+    // 		for j=0 to N-1
+    // 		    (A,t[j])  := t[j] + a[j]*b[i] + A
+    // 		m := t[0]*q'[0] mod W
+    // 		C,_ := t[0] + m*q[0]
+    // 		for j=1 to N-1
+    // 		    (C,t[j-1]) := t[j] + m*q[j] + C
+    // 		t[N-1] = C + A
+	// clear up the carry flags
+	XORQ R11 , R11
 
+	// y[0] in R14
 	MOVQ 0(R10), R14
+
 	// for j=0 to N-1
 	//    (A,t[j])  := t[j] + x[j]*y[i] + A
-		
+		// res[0] in DX
 		MOVQ 0(R9), DX
 				MULXQ R14, CX ,  R11
-		
+		// res[1] in DX
 		MOVQ 8(R9), DX
 				MOVQ R11, BX
 			MULXQ R14, AX,  R11
 			ADOXQ AX, BX
-		
+		// res[2] in DX
 		MOVQ 16(R9), DX
 				MOVQ R11, BP
 			MULXQ R14, AX,  R11
 			ADOXQ AX, BP
-		
+		// res[3] in DX
 		MOVQ 24(R9), DX
 				MOVQ R11, SI
 			MULXQ R14, AX,  R11
 			ADOXQ AX, SI
-		
+		// res[4] in DX
 		MOVQ 32(R9), DX
 				MOVQ R11, DI
 			MULXQ R14, AX,  R11
 			ADOXQ AX, DI
-		
+		// res[5] in DX
 		MOVQ 40(R9), DX
 				MOVQ R11, R8
 			MULXQ R14, AX,  R11
 			ADOXQ AX, R8
+	// add the last carries to R11 
 	MOVQ $0, DX
 	ADCXQ DX, R11 
 	ADOXQ DX, R11 
 	
 	// m := t[0]*q'[0] mod W
-	MOVQ $0x8508bfffffffffff, DX // R13
+	MOVQ $0x8508bfffffffffff, DX
 	MULXQ CX,R13, DX
 
-	
-	XORQ DX, DX // TODO if A + 2 (carries) can't overflow we can get rid of that one
+	// clear the carry flags
+	XORQ DX, DX 
+
 	// C,_ := t[0] + m*q[0]
 	MOVQ $0x8508c00000000001, DX
 	MULXQ R13, AX, R12
 	ADCXQ CX ,AX
-	
 
 	// for j=1 to N-1
     //    (C,t[j-1]) := t[j] + m*q[j] + C
@@ -103,55 +122,59 @@ TEXT ·mulAsmElement(SB), NOSPLIT, $0-16
 			ADCXQ AX, DX
 			ADOXQ DX, R11
 			MOVQ R11, R8
-	XORQ R11 , R11 // TODO if A + C can't overflow we can get rid of that one
+	// clear up the carry flags
+	XORQ R11 , R11
 
+	// y[1] in R14
 	MOVQ 8(R10), R14
+
 	// for j=0 to N-1
 	//    (A,t[j])  := t[j] + x[j]*y[i] + A
-		
+		// res[0] in DX
 		MOVQ 0(R9), DX
 				MULXQ R14, AX,  R11
 				ADOXQ AX, CX
-		
+		// res[1] in DX
 		MOVQ 8(R9), DX
 				ADCXQ R11, BX
 			MULXQ R14, AX,  R11
 			ADOXQ AX, BX
-		
+		// res[2] in DX
 		MOVQ 16(R9), DX
 				ADCXQ R11, BP
 			MULXQ R14, AX,  R11
 			ADOXQ AX, BP
-		
+		// res[3] in DX
 		MOVQ 24(R9), DX
 				ADCXQ R11, SI
 			MULXQ R14, AX,  R11
 			ADOXQ AX, SI
-		
+		// res[4] in DX
 		MOVQ 32(R9), DX
 				ADCXQ R11, DI
 			MULXQ R14, AX,  R11
 			ADOXQ AX, DI
-		
+		// res[5] in DX
 		MOVQ 40(R9), DX
 				ADCXQ R11, R8
 			MULXQ R14, AX,  R11
 			ADOXQ AX, R8
+	// add the last carries to R11 
 	MOVQ $0, DX
 	ADCXQ DX, R11 
 	ADOXQ DX, R11 
 	
 	// m := t[0]*q'[0] mod W
-	MOVQ $0x8508bfffffffffff, DX // R13
+	MOVQ $0x8508bfffffffffff, DX
 	MULXQ CX,R13, DX
 
-	
-	XORQ DX, DX // TODO if A + 2 (carries) can't overflow we can get rid of that one
+	// clear the carry flags
+	XORQ DX, DX 
+
 	// C,_ := t[0] + m*q[0]
 	MOVQ $0x8508c00000000001, DX
 	MULXQ R13, AX, R12
 	ADCXQ CX ,AX
-	
 
 	// for j=1 to N-1
     //    (C,t[j-1]) := t[j] + m*q[j] + C
@@ -193,55 +216,59 @@ TEXT ·mulAsmElement(SB), NOSPLIT, $0-16
 			ADCXQ AX, DX
 			ADOXQ DX, R11
 			MOVQ R11, R8
-	XORQ R11 , R11 // TODO if A + C can't overflow we can get rid of that one
+	// clear up the carry flags
+	XORQ R11 , R11
 
+	// y[2] in R14
 	MOVQ 16(R10), R14
+
 	// for j=0 to N-1
 	//    (A,t[j])  := t[j] + x[j]*y[i] + A
-		
+		// res[0] in DX
 		MOVQ 0(R9), DX
 				MULXQ R14, AX,  R11
 				ADOXQ AX, CX
-		
+		// res[1] in DX
 		MOVQ 8(R9), DX
 				ADCXQ R11, BX
 			MULXQ R14, AX,  R11
 			ADOXQ AX, BX
-		
+		// res[2] in DX
 		MOVQ 16(R9), DX
 				ADCXQ R11, BP
 			MULXQ R14, AX,  R11
 			ADOXQ AX, BP
-		
+		// res[3] in DX
 		MOVQ 24(R9), DX
 				ADCXQ R11, SI
 			MULXQ R14, AX,  R11
 			ADOXQ AX, SI
-		
+		// res[4] in DX
 		MOVQ 32(R9), DX
 				ADCXQ R11, DI
 			MULXQ R14, AX,  R11
 			ADOXQ AX, DI
-		
+		// res[5] in DX
 		MOVQ 40(R9), DX
 				ADCXQ R11, R8
 			MULXQ R14, AX,  R11
 			ADOXQ AX, R8
+	// add the last carries to R11 
 	MOVQ $0, DX
 	ADCXQ DX, R11 
 	ADOXQ DX, R11 
 	
 	// m := t[0]*q'[0] mod W
-	MOVQ $0x8508bfffffffffff, DX // R13
+	MOVQ $0x8508bfffffffffff, DX
 	MULXQ CX,R13, DX
 
-	
-	XORQ DX, DX // TODO if A + 2 (carries) can't overflow we can get rid of that one
+	// clear the carry flags
+	XORQ DX, DX 
+
 	// C,_ := t[0] + m*q[0]
 	MOVQ $0x8508c00000000001, DX
 	MULXQ R13, AX, R12
 	ADCXQ CX ,AX
-	
 
 	// for j=1 to N-1
     //    (C,t[j-1]) := t[j] + m*q[j] + C
@@ -283,55 +310,59 @@ TEXT ·mulAsmElement(SB), NOSPLIT, $0-16
 			ADCXQ AX, DX
 			ADOXQ DX, R11
 			MOVQ R11, R8
-	XORQ R11 , R11 // TODO if A + C can't overflow we can get rid of that one
+	// clear up the carry flags
+	XORQ R11 , R11
 
+	// y[3] in R14
 	MOVQ 24(R10), R14
+
 	// for j=0 to N-1
 	//    (A,t[j])  := t[j] + x[j]*y[i] + A
-		
+		// res[0] in DX
 		MOVQ 0(R9), DX
 				MULXQ R14, AX,  R11
 				ADOXQ AX, CX
-		
+		// res[1] in DX
 		MOVQ 8(R9), DX
 				ADCXQ R11, BX
 			MULXQ R14, AX,  R11
 			ADOXQ AX, BX
-		
+		// res[2] in DX
 		MOVQ 16(R9), DX
 				ADCXQ R11, BP
 			MULXQ R14, AX,  R11
 			ADOXQ AX, BP
-		
+		// res[3] in DX
 		MOVQ 24(R9), DX
 				ADCXQ R11, SI
 			MULXQ R14, AX,  R11
 			ADOXQ AX, SI
-		
+		// res[4] in DX
 		MOVQ 32(R9), DX
 				ADCXQ R11, DI
 			MULXQ R14, AX,  R11
 			ADOXQ AX, DI
-		
+		// res[5] in DX
 		MOVQ 40(R9), DX
 				ADCXQ R11, R8
 			MULXQ R14, AX,  R11
 			ADOXQ AX, R8
+	// add the last carries to R11 
 	MOVQ $0, DX
 	ADCXQ DX, R11 
 	ADOXQ DX, R11 
 	
 	// m := t[0]*q'[0] mod W
-	MOVQ $0x8508bfffffffffff, DX // R13
+	MOVQ $0x8508bfffffffffff, DX
 	MULXQ CX,R13, DX
 
-	
-	XORQ DX, DX // TODO if A + 2 (carries) can't overflow we can get rid of that one
+	// clear the carry flags
+	XORQ DX, DX 
+
 	// C,_ := t[0] + m*q[0]
 	MOVQ $0x8508c00000000001, DX
 	MULXQ R13, AX, R12
 	ADCXQ CX ,AX
-	
 
 	// for j=1 to N-1
     //    (C,t[j-1]) := t[j] + m*q[j] + C
@@ -373,55 +404,59 @@ TEXT ·mulAsmElement(SB), NOSPLIT, $0-16
 			ADCXQ AX, DX
 			ADOXQ DX, R11
 			MOVQ R11, R8
-	XORQ R11 , R11 // TODO if A + C can't overflow we can get rid of that one
+	// clear up the carry flags
+	XORQ R11 , R11
 
+	// y[4] in R14
 	MOVQ 32(R10), R14
+
 	// for j=0 to N-1
 	//    (A,t[j])  := t[j] + x[j]*y[i] + A
-		
+		// res[0] in DX
 		MOVQ 0(R9), DX
 				MULXQ R14, AX,  R11
 				ADOXQ AX, CX
-		
+		// res[1] in DX
 		MOVQ 8(R9), DX
 				ADCXQ R11, BX
 			MULXQ R14, AX,  R11
 			ADOXQ AX, BX
-		
+		// res[2] in DX
 		MOVQ 16(R9), DX
 				ADCXQ R11, BP
 			MULXQ R14, AX,  R11
 			ADOXQ AX, BP
-		
+		// res[3] in DX
 		MOVQ 24(R9), DX
 				ADCXQ R11, SI
 			MULXQ R14, AX,  R11
 			ADOXQ AX, SI
-		
+		// res[4] in DX
 		MOVQ 32(R9), DX
 				ADCXQ R11, DI
 			MULXQ R14, AX,  R11
 			ADOXQ AX, DI
-		
+		// res[5] in DX
 		MOVQ 40(R9), DX
 				ADCXQ R11, R8
 			MULXQ R14, AX,  R11
 			ADOXQ AX, R8
+	// add the last carries to R11 
 	MOVQ $0, DX
 	ADCXQ DX, R11 
 	ADOXQ DX, R11 
 	
 	// m := t[0]*q'[0] mod W
-	MOVQ $0x8508bfffffffffff, DX // R13
+	MOVQ $0x8508bfffffffffff, DX
 	MULXQ CX,R13, DX
 
-	
-	XORQ DX, DX // TODO if A + 2 (carries) can't overflow we can get rid of that one
+	// clear the carry flags
+	XORQ DX, DX 
+
 	// C,_ := t[0] + m*q[0]
 	MOVQ $0x8508c00000000001, DX
 	MULXQ R13, AX, R12
 	ADCXQ CX ,AX
-	
 
 	// for j=1 to N-1
     //    (C,t[j-1]) := t[j] + m*q[j] + C
@@ -463,55 +498,59 @@ TEXT ·mulAsmElement(SB), NOSPLIT, $0-16
 			ADCXQ AX, DX
 			ADOXQ DX, R11
 			MOVQ R11, R8
-	XORQ R11 , R11 // TODO if A + C can't overflow we can get rid of that one
+	// clear up the carry flags
+	XORQ R11 , R11
 
+	// y[5] in R14
 	MOVQ 40(R10), R14
+
 	// for j=0 to N-1
 	//    (A,t[j])  := t[j] + x[j]*y[i] + A
-		
+		// res[0] in DX
 		MOVQ 0(R9), DX
 				MULXQ R14, AX,  R11
 				ADOXQ AX, CX
-		
+		// res[1] in DX
 		MOVQ 8(R9), DX
 				ADCXQ R11, BX
 			MULXQ R14, AX,  R11
 			ADOXQ AX, BX
-		
+		// res[2] in DX
 		MOVQ 16(R9), DX
 				ADCXQ R11, BP
 			MULXQ R14, AX,  R11
 			ADOXQ AX, BP
-		
+		// res[3] in DX
 		MOVQ 24(R9), DX
 				ADCXQ R11, SI
 			MULXQ R14, AX,  R11
 			ADOXQ AX, SI
-		
+		// res[4] in DX
 		MOVQ 32(R9), DX
 				ADCXQ R11, DI
 			MULXQ R14, AX,  R11
 			ADOXQ AX, DI
-		
+		// res[5] in DX
 		MOVQ 40(R9), DX
 				ADCXQ R11, R8
 			MULXQ R14, AX,  R11
 			ADOXQ AX, R8
+	// add the last carries to R11 
 	MOVQ $0, DX
 	ADCXQ DX, R11 
 	ADOXQ DX, R11 
 	
 	// m := t[0]*q'[0] mod W
-	MOVQ $0x8508bfffffffffff, DX // R13
+	MOVQ $0x8508bfffffffffff, DX
 	MULXQ CX,R13, DX
 
-	
-	XORQ DX, DX // TODO if A + 2 (carries) can't overflow we can get rid of that one
+	// clear the carry flags
+	XORQ DX, DX 
+
 	// C,_ := t[0] + m*q[0]
 	MOVQ $0x8508c00000000001, DX
 	MULXQ R13, AX, R12
 	ADCXQ CX ,AX
-	
 
 	// for j=1 to N-1
     //    (C,t[j-1]) := t[j] + m*q[j] + C
@@ -555,9 +594,9 @@ TEXT ·mulAsmElement(SB), NOSPLIT, $0-16
 			MOVQ R11, R8
 
 reduce:
-	// reduce if needed, should do a full comparaison, right now doing the constant time version // number of register used by u
-	// u1 starts at 7
-	// Q starts at 12
+	// reduce, constant time version
+	// first we copy registers storing t in a separate set of registers
+	// as SUBQ modifies the 2nd operand
 	MOVQ CX, DX
 	MOVQ BX, R10
 	MOVQ BP, R11
