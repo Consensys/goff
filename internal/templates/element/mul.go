@@ -15,7 +15,7 @@ func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
 	{{ if .NoCarry}}
 		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "y"}}
 	{{ else }}
-		{{ template "mul_cios" dict "all" . "V1" "x" "V2" "y"}}
+		{{ template "mul_cios" dict "all" . "V1" "x" "V2" "y" "NoReturn" false}}
 	{{ end }}
 	{{ template "reduce" . }}
 	return z 
@@ -27,7 +27,7 @@ func (z *{{.ElementName}}) MulAssign(x *{{.ElementName}}) *{{.ElementName}} {
 	{{ if .NoCarry}}
 		{{ template "mul_nocarry" dict "all" . "V1" "z" "V2" "x"}}
 	{{ else }}
-		{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x"}}
+		{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x" "NoReturn" false}}
 	{{ end }}
 	{{ template "reduce" . }}
 	return z 
@@ -39,10 +39,9 @@ func MulAssign{{.ElementName}}(z,x *{{.ElementName}}) {
 	{{ if .NoCarry}}
 		{{ template "mul_nocarry" dict "all" . "V1" "z" "V2" "x"}}
 	{{ else }}
-		{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x"}}
+		{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x" "NoReturn" true}}
 	{{ end }}
 	{{ template "reduce" . }}
-	return z 
 }
 {{- end}}
 

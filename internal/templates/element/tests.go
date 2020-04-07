@@ -333,7 +333,7 @@ func (z *{{.ElementName}}) testMulAssign(x *{{.ElementName}}) *{{.ElementName}} 
 {{ if .Benches}}
 // Montgomery multiplication benchmarks
 func (z *{{.ElementName}}) mulCIOS(x *{{.ElementName}}) *{{.ElementName}} {
-	{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x"}}
+	{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x" "NoReturn" false}}
 	{{ template "reduce" . }}
 	return z 
 }
