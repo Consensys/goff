@@ -20,6 +20,7 @@ package bn256
 import (
 	"crypto/rand"
 	"math/big"
+	"math/bits"
 	mrand "math/rand"
 	"testing"
 )
@@ -285,4 +286,112 @@ func BenchmarkMulAssignELEMENT(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		benchResElement.MulAssign(&x)
 	}
+}
+
+func BenchmarkMulAsmELEMENT(b *testing.B) {
+	x := Element{
+		17522657719365597833,
+		13107472804851548667,
+		5164255478447964150,
+		493319470278259999,
+	}
+	benchResElement.SetOne()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		mulAsmElement(&benchResElement, &x)
+		// benchResElement.MulAssign(&x)
+	}
+}
+
+func TestELEMENTMulAsm(t *testing.T) {
+	modulus, _ := new(big.Int).SetString("21888242871839275222246405745257275088696311157297823662689037894645226208583", 10)
+	for i := 0; i < 1000; i++ {
+		// sample 2 random big int
+		b1, _ := rand.Int(rand.Reader, modulus)
+		b2, _ := rand.Int(rand.Reader, modulus)
+
+		// e1 = mont(b1), e2 = mont(b2)
+		var e1, e2, eMul, eMulAsm Element
+		e1.SetBigInt(b1)
+		e2.SetBigInt(b2)
+
+		eMul = e1
+		eMul.testMulAssign(&e2)
+		eMulAsm = e1
+		eMulAsm.MulAssign(&e2)
+
+		if !eMul.Equal(&eMulAsm) {
+			t.Fatal("inconsisntencies between MulAssign and testMulAssign --> check if MulAssign is calling ASM implementaiton on amd64")
+		}
+	}
+}
+
+// this is here for consistency purposes, to ensure MulAssign on AMD64 using asm implementation gives consistent results
+func (z *Element) testMulAssign(x *Element) *Element {
+
+	var t [4]uint64
+	var c [3]uint64
+	{
+		// round 0
+		v := z[0]
+		c[1], c[0] = bits.Mul64(v, x[0])
+		m := c[0] * 9786893198990664585
+		c[2] = madd0(m, 4332616871279656263, c[0])
+		c[1], c[0] = madd1(v, x[1], c[1])
+		c[2], t[0] = madd2(m, 10917124144477883021, c[2], c[0])
+		c[1], c[0] = madd1(v, x[2], c[1])
+		c[2], t[1] = madd2(m, 13281191951274694749, c[2], c[0])
+		c[1], c[0] = madd1(v, x[3], c[1])
+		t[3], t[2] = madd3(m, 3486998266802970665, c[0], c[2], c[1])
+	}
+	{
+		// round 1
+		v := z[1]
+		c[1], c[0] = madd1(v, x[0], t[0])
+		m := c[0] * 9786893198990664585
+		c[2] = madd0(m, 4332616871279656263, c[0])
+		c[1], c[0] = madd2(v, x[1], c[1], t[1])
+		c[2], t[0] = madd2(m, 10917124144477883021, c[2], c[0])
+		c[1], c[0] = madd2(v, x[2], c[1], t[2])
+		c[2], t[1] = madd2(m, 13281191951274694749, c[2], c[0])
+		c[1], c[0] = madd2(v, x[3], c[1], t[3])
+		t[3], t[2] = madd3(m, 3486998266802970665, c[0], c[2], c[1])
+	}
+	{
+		// round 2
+		v := z[2]
+		c[1], c[0] = madd1(v, x[0], t[0])
+		m := c[0] * 9786893198990664585
+		c[2] = madd0(m, 4332616871279656263, c[0])
+		c[1], c[0] = madd2(v, x[1], c[1], t[1])
+		c[2], t[0] = madd2(m, 10917124144477883021, c[2], c[0])
+		c[1], c[0] = madd2(v, x[2], c[1], t[2])
+		c[2], t[1] = madd2(m, 13281191951274694749, c[2], c[0])
+		c[1], c[0] = madd2(v, x[3], c[1], t[3])
+		t[3], t[2] = madd3(m, 3486998266802970665, c[0], c[2], c[1])
+	}
+	{
+		// round 3
+		v := z[3]
+		c[1], c[0] = madd1(v, x[0], t[0])
+		m := c[0] * 9786893198990664585
+		c[2] = madd0(m, 4332616871279656263, c[0])
+		c[1], c[0] = madd2(v, x[1], c[1], t[1])
+		c[2], z[0] = madd2(m, 10917124144477883021, c[2], c[0])
+		c[1], c[0] = madd2(v, x[2], c[1], t[2])
+		c[2], z[1] = madd2(m, 13281191951274694749, c[2], c[0])
+		c[1], c[0] = madd2(v, x[3], c[1], t[3])
+		z[3], z[2] = madd3(m, 3486998266802970665, c[0], c[2], c[1])
+	}
+
+	// if z > q --> z -= q
+	// note: this is NOT constant time
+	if !(z[3] < 3486998266802970665 || (z[3] == 3486998266802970665 && (z[2] < 13281191951274694749 || (z[2] == 13281191951274694749 && (z[1] < 10917124144477883021 || (z[1] == 10917124144477883021 && (z[0] < 4332616871279656263))))))) {
+		var b uint64
+		z[0], b = bits.Sub64(z[0], 4332616871279656263, 0)
+		z[1], b = bits.Sub64(z[1], 10917124144477883021, b)
+		z[2], b = bits.Sub64(z[2], 13281191951274694749, b)
+		z[3], _ = bits.Sub64(z[3], 3486998266802970665, b)
+	}
+	return z
 }

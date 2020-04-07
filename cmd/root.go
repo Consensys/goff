@@ -20,8 +20,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/consensys/bavard"
+	"github.com/consensys/goff/internal/templates/asm"
 	"github.com/consensys/goff/internal/templates/element"
 	"github.com/spf13/cobra"
 )
@@ -93,7 +95,6 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		element.MulCIOS,
 		element.MulFIPS,
 		element.MulNoCarry,
-		element.MontgomeryMultiplication,
 		element.Sqrt,
 	}
 
@@ -116,6 +117,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 	eName := strings.ToLower(elementName)
 
 	pathSrc := filepath.Join(outputDir, eName+".go")
+	pathMulAsm := filepath.Join(outputDir, eName+"_mul.s")
 	pathSrcArith := filepath.Join(outputDir, "arith.go")
 	pathTest := filepath.Join(outputDir, eName+"_test.go")
 
@@ -139,7 +141,76 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		return err
 	}
 
+	if F.ASM { // max words without having to deal with spilling
+		// generate mul asm
+		asm := []string{
+			asm.Mul,
+		}
+
+		if err := bavard.Generate(pathMulAsm, asm, F,
+			bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
+			bavard.Import(false),
+			bavard.Format(false),
+			bavard.Funcs(template.FuncMap{
+				"reg": reg,
+			})); err != nil {
+			return err
+		}
+
+		// generate mul_amd64.go
+		src := []string{
+			element.MontgomeryMultiplicationAMD64,
+		}
+		pathSrc := filepath.Join(outputDir, eName+"_mul_amd64.go")
+		if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
+			return err
+		}
+
+	}
+
+	{
+		// generate mul.go
+		src := []string{
+			element.MontgomeryMultiplication,
+			element.MulCIOS,
+			element.MulNoCarry,
+			element.Reduce,
+		}
+		pathSrc := filepath.Join(outputDir, eName+"_mul.go")
+		bavardOptsCpy := make([]func(*bavard.Bavard) error, len(bavardOpts))
+		copy(bavardOptsCpy, bavardOpts)
+		if F.ASM {
+			bavardOptsCpy = append(bavardOptsCpy, bavard.BuildTag("!amd64"))
+		}
+		if err := bavard.Generate(pathSrc, src, F, bavardOptsCpy...); err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+var registers = []string{ // AX and DX are reserved for MUL operations
+	"CX",
+	"BX",
+	"BP", // maybe not.
+	"SI",
+	"DI",
+	"R8",
+	"R9",
+	"R10",
+	"R11",
+	"R12",
+	"R13",
+	"R14",
+	"R15",
+}
+
+func reg(i int, offset ...int) string {
+	if len(offset) == 1 {
+		i += offset[0]
+	}
+	return registers[i]
 }
 
 func parseFlags(cmd *cobra.Command) error {

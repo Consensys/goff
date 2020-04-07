@@ -5,7 +5,9 @@ const Test = `
 import (
     "crypto/rand"
 	"math/big"
-    "testing"
+	"math/bits"
+	"testing"
+	"fmt"
     mrand "math/rand"
 )
 
@@ -69,13 +71,13 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
         var bMul, bAdd, bSub, bDiv, bNeg, bLsh, bInv, bExp, bExp2,  bSquare big.Int
 
         // e1 = mont(b1), e2 = mont(b2)
-        var e1, e2, eMul, eAdd, eSub, eDiv, eNeg, eLsh, eInv, eExp, eExp2, eSquare, eMulAssign, eSubAssign, eAddAssign {{.ElementName}}
+        var e1, e2, eMul,  eAdd, eSub, eDiv, eNeg, eLsh, eInv, eExp, eExp2, eSquare, eMulAssign, eSubAssign, eAddAssign {{.ElementName}}
         e1.SetBigInt(b1)
         e2.SetBigInt(b2)
 
         // (e1*e2).FromMont() === b1*b2 mod q ... etc
         eSquare.Square(&e1)
-        eMul.Mul(&e1, &e2)
+		eMul.Mul(&e1, &e2)
         eMulAssign.Set(&e1)
         eMulAssign.MulAssign(&e2)
         eAdd.Add(&e1, &e2)
@@ -112,7 +114,7 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
         bLsh.Lsh(b1, 1).Mod(&bLsh, modulus)
 
         cmpEandB(&eSquare, &bSquare, "Square")
-        cmpEandB(&eMul, &bMul, "Mul")
+		cmpEandB(&eMul, &bMul, "Mul")
         cmpEandB(&eMulAssign, &bMul, "MulAssign")
         cmpEandB(&eAdd, &bAdd, "Add")
         cmpEandB(&eAddAssign, &bAdd, "AddAssign")
@@ -272,6 +274,56 @@ func BenchmarkMulAssign{{toUpper .ElementName}}(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		benchRes{{.ElementName}}.MulAssign(&x)
 	}
+}
+
+{{ if .ASM}}
+func BenchmarkMulAsm{{toUpper .ElementName}}(b *testing.B) {
+	x := {{.ElementName}}{
+		{{- range $i := .RSquare}}
+		{{$i}},{{end}}
+	}
+	benchRes{{.ElementName}}.SetOne()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		mulAsm{{.ElementName}}(&benchRes{{.ElementName}}, &x)
+		// benchRes{{.ElementName}}.MulAssign(&x)
+	}
+}
+{{ end}}
+
+
+func Test{{toUpper .ElementName}}MulAsm(t *testing.T) {
+	modulus, _ := new(big.Int).SetString("21888242871839275222246405745257275088696311157297823662689037894645226208583", 10)
+	for i := 0; i < 1000; i++ {
+		// sample 2 random big int
+		b1, _ := rand.Int(rand.Reader, modulus)
+		b2, _ := rand.Int(rand.Reader, modulus)
+
+		// e1 = mont(b1), e2 = mont(b2)
+		var e1, e2, eMul, eMulAsm {{.ElementName}}
+		e1.SetBigInt(b1)
+		e2.SetBigInt(b2)
+
+		eMul = e1
+		eMul.testMulAssign(&e2)
+		eMulAsm = e1
+		eMulAsm.MulAssign(&e2)
+
+		if !eMul.Equal(&eMulAsm) {
+			t.Fatal("inconsisntencies between MulAssign and testMulAssign --> check if MulAssign is calling ASM implementaiton on amd64")
+		}
+	}
+}
+
+// this is here for consistency purposes, to ensure MulAssign on AMD64 using asm implementation gives consistent results 
+func (z *{{.ElementName}}) testMulAssign(x *{{.ElementName}}) *{{.ElementName}} {
+	{{ if .NoCarry}}
+		{{ template "mul_nocarry" dict "all" . "V1" "z" "V2" "x"}}
+	{{ else }}
+		{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x"}}
+	{{ end }}
+	{{ template "reduce" . }}
+	return z 
 }
 
 {{ if .Benches}}

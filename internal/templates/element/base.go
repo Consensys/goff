@@ -32,6 +32,8 @@ const {{.ElementName}}Limbs = {{.NbWords}}
 // {{.ElementName}}Bits number bits needed to represent {{.ElementName}}
 const {{.ElementName}}Bits = {{.NbBits}}
 
+var support_adx_{{.ElementName}} = cpu.X86.HasADX && cpu.X86.HasBMI2
+
 // SetUint64 z = v, sets z LSB to v (non-Montgomery form) and convert z to Montgomery form
 func (z *{{.ElementName}}) SetUint64(v uint64) *{{.ElementName}} {
 	z[0] = v
