@@ -117,7 +117,6 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 	eName := strings.ToLower(elementName)
 
 	pathSrc := filepath.Join(outputDir, eName+".go")
-	pathMulAsm := filepath.Join(outputDir, eName+"_mul.s")
 	pathSrcArith := filepath.Join(outputDir, "arith.go")
 	pathTest := filepath.Join(outputDir, eName+"_test.go")
 
@@ -146,7 +145,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		asm := []string{
 			asm.Mul,
 		}
-
+		pathMulAsm := filepath.Join(outputDir, eName+"_mul_amd64.s")
 		if err := bavard.Generate(pathMulAsm, asm, F,
 			bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
 			bavard.Import(false),

@@ -295,7 +295,7 @@ func BenchmarkMulAssignELEMENT(b *testing.B) {
 	}
 }
 
-func BenchmarkMulAsmELEMENT(b *testing.B) {
+func BenchmarkMulAssignASMELEMENT(b *testing.B) {
 	x := Element{
 		13224372171368877346,
 		227991066186625457,
@@ -307,12 +307,11 @@ func BenchmarkMulAsmELEMENT(b *testing.B) {
 	benchResElement.SetOne()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		mulAsmElement(&benchResElement, &x)
-		// benchResElement.MulAssign(&x)
+		MulAssignElement(&benchResElement, &x)
 	}
 }
 
-func TestELEMENTMulAsm(t *testing.T) {
+func TestELEMENTMulAssign(t *testing.T) {
 	modulus, _ := new(big.Int).SetString("258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177", 10)
 	for i := 0; i < 500; i++ {
 		// sample 2 random big int
@@ -320,16 +319,16 @@ func TestELEMENTMulAsm(t *testing.T) {
 		b2, _ := rand.Int(rand.Reader, modulus)
 
 		// e1 = mont(b1), e2 = mont(b2)
-		var e1, e2, eMul, eMulAsm Element
+		var e1, e2, eMul, eMulAssign Element
 		e1.SetBigInt(b1)
 		e2.SetBigInt(b2)
 
 		eMul = e1
 		eMul.testMulAssign(&e2)
-		eMulAsm = e1
-		eMulAsm.MulAssign(&e2)
+		eMulAssign = e1
+		eMulAssign.MulAssign(&e2)
 
-		if !eMul.Equal(&eMulAsm) {
+		if !eMul.Equal(&eMulAssign) {
 			t.Fatal("inconsisntencies between MulAssign and testMulAssign --> check if MulAssign is calling ASM implementaiton on amd64")
 		}
 	}

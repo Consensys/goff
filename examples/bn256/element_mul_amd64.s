@@ -4,10 +4,10 @@
 
 #include "textflag.h"
 
-// func mulAsmElement(res,y *Element)
+// func MulAssignElement(res,y *Element)
 // montgomery multiplication of res by y 
 // stores the result in res
-TEXT ·mulAsmElement(SB), NOSPLIT, $0-16
+TEXT ·MulAssignElement(SB), NOSPLIT, $0-16
 
 	// dereference our parameters
 	MOVQ res+0(FP), DI
@@ -29,6 +29,7 @@ TEXT ·mulAsmElement(SB), NOSPLIT, $0-16
     // 		for j=1 to N-1
     // 		    (C,t[j-1]) := t[j] + m*q[j] + C
     // 		t[N-1] = C + A
+	
 	// clear up the carry flags
 	XORQ R9 , R9
 
@@ -98,6 +99,7 @@ TEXT ·mulAsmElement(SB), NOSPLIT, $0-16
 			ADCXQ AX, DX
 			ADOXQ DX, R9
 			MOVQ R9, SI
+	
 	// clear up the carry flags
 	XORQ R9 , R9
 
@@ -168,6 +170,7 @@ TEXT ·mulAsmElement(SB), NOSPLIT, $0-16
 			ADCXQ AX, DX
 			ADOXQ DX, R9
 			MOVQ R9, SI
+	
 	// clear up the carry flags
 	XORQ R9 , R9
 
@@ -238,6 +241,7 @@ TEXT ·mulAsmElement(SB), NOSPLIT, $0-16
 			ADCXQ AX, DX
 			ADOXQ DX, R9
 			MOVQ R9, SI
+	
 	// clear up the carry flags
 	XORQ R9 , R9
 

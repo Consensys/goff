@@ -24,13 +24,13 @@ package bls377
 // /!\ WARNING /!\
 
 //go:noescape
-func mulAsmElement(res, y *Element)
+func MulAssignElement(res, y *Element)
 
 // Mul z = x * y mod q (constant time)
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Mul(x, y *Element) *Element {
 	res := *x
-	mulAsmElement(&res, y)
+	MulAssignElement(&res, y)
 	z.Set(&res)
 	return z
 }
@@ -38,6 +38,6 @@ func (z *Element) Mul(x, y *Element) *Element {
 // MulAssign z = z * x mod q (constant time)
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) MulAssign(x *Element) *Element {
-	mulAsmElement(z, x)
+	MulAssignElement(z, x)
 	return z
 }

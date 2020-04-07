@@ -4,10 +4,10 @@ const Mul = `
 
 #include "textflag.h"
 
-// func mulAsm{{.ElementName}}(res,y *{{.ElementName}})
+// func MulAssign{{.ElementName}}(res,y *{{.ElementName}})
 // montgomery multiplication of res by y 
 // stores the result in res
-TEXT ·mulAsm{{.ElementName}}(SB), NOSPLIT, $0-16
+TEXT ·MulAssign{{.ElementName}}(SB), NOSPLIT, $0-16
 	{{- /* do not change the order */ -}} 
 	{{- $iReg := 0}}
 	{{- $regt0 := $iReg}}  {{- $iReg = add 1 $iReg}}
@@ -43,6 +43,7 @@ TEXT ·mulAsm{{.ElementName}}(SB), NOSPLIT, $0-16
     // 		t[N-1] = C + A
 
 	{{- range $i := .NbWordsIndexesFull}}
+	
 	// clear up the carry flags
 	XORQ {{reg $regA}} , {{reg $regA}}
 

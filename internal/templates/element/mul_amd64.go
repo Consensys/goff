@@ -9,13 +9,13 @@ const MontgomeryMultiplicationAMD64 = `
 // /!\ WARNING /!\
 
 //go:noescape
-func mulAsm{{.ElementName}}(res,y *{{.ElementName}})
+func MulAssign{{.ElementName}}(res,y *{{.ElementName}})
 
 // Mul z = x * y mod q (constant time)
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
 	res := *x
-	mulAsm{{.ElementName}}(&res, y)
+	MulAssign{{.ElementName}}(&res, y)
 	z.Set(&res)
 	return z
 }
@@ -23,7 +23,7 @@ func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
 // MulAssign z = z * x mod q (constant time)
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) MulAssign(x *{{.ElementName}}) *{{.ElementName}} {
-	mulAsm{{.ElementName}}(z, x)
+	MulAssign{{.ElementName}}(z, x)
 	return z 
 }
 `
