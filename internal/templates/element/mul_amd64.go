@@ -8,6 +8,8 @@ const MontgomeryMultiplicationAMD64 = `
 // or side-channel attack resistance
 // /!\ WARNING /!\
 
+// MulAssign{{.ElementName}} z = z * x mod q (constant time)
+// calling this instead of z.MulAssign(x) is prefered for performance critical path
 //go:noescape
 func MulAssign{{.ElementName}}(res,y *{{.ElementName}})
 

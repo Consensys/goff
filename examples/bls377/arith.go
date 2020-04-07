@@ -19,7 +19,11 @@ package bls377
 
 import (
 	"math/bits"
+
+	"golang.org/x/sys/cpu"
 )
+
+var supportAdx = cpu.X86.HasADX && cpu.X86.HasBMI2
 
 func madd(a, b, t, u, v uint64) (uint64, uint64, uint64) {
 	var carry uint64

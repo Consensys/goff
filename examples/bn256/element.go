@@ -32,8 +32,6 @@ import (
 	"strconv"
 	"sync"
 	"unsafe"
-
-	"golang.org/x/sys/cpu"
 )
 
 // Element represents a field element stored on 4 words (uint64)
@@ -48,8 +46,6 @@ const ElementLimbs = 4
 
 // ElementBits number bits needed to represent Element
 const ElementBits = 254
-
-var support_adx_Element = cpu.X86.HasADX && cpu.X86.HasBMI2
 
 // SetUint64 z = v, sets z LSB to v (non-Montgomery form) and convert z to Montgomery form
 func (z *Element) SetUint64(v uint64) *Element {
@@ -331,12 +327,15 @@ func (z *Element) SetRandom() *Element {
 	return z
 }
 
+// One returns 1 (in montgommery form)
 func One() Element {
 	var one Element
 	one.SetOne()
 	return one
 }
 
+// FromInterface converts i1 from uint64, int, string, or Element, big.Int into Element
+// panic if provided type is not supported
 func FromInterface(i1 interface{}) Element {
 	var val Element
 
@@ -347,11 +346,12 @@ func FromInterface(i1 interface{}) Element {
 		val.SetString(strconv.Itoa(c1))
 	case string:
 		val.SetString(c1)
+	case big.Int:
+		val.SetBigInt(&c1)
 	case Element:
 		val = c1
 	case *Element:
 		val.Set(c1)
-	// TODO add big.Int convertions
 	default:
 		panic("invalid type")
 	}

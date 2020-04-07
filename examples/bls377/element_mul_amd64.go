@@ -23,6 +23,8 @@ package bls377
 // or side-channel attack resistance
 // /!\ WARNING /!\
 
+// MulAssignElement z = z * x mod q (constant time)
+// calling this instead of z.MulAssign(x) is prefered for performance critical path
 //go:noescape
 func MulAssignElement(res, y *Element)
 

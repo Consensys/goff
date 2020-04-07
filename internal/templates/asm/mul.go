@@ -26,7 +26,7 @@ TEXT ·MulAssign{{.ElementName}}(SB), NOSPLIT, $0-16
 	MOVQ y+8(FP), {{reg $regY}}
 
 	// check if we support adx and mulx
-	CMPB ·support_adx_{{.ElementName}}(SB), $1
+	CMPB ·supportAdx(SB), $1
 	JNE no_adx
 	 
 	// the algorithm is described here
