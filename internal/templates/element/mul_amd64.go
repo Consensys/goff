@@ -8,6 +8,7 @@ const MontgomeryMultiplicationAMD64 = `
 // or side-channel attack resistance
 // /!\ WARNING /!\
 
+//go:noescape
 func mulAsm{{.ElementName}}(res,y *{{.ElementName}})
 
 // Mul z = x * y mod q

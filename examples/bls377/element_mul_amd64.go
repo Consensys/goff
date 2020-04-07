@@ -23,6 +23,7 @@ package bls377
 // or side-channel attack resistance
 // /!\ WARNING /!\
 
+//go:noescape
 func mulAsmElement(res, y *Element)
 
 // Mul z = x * y mod q

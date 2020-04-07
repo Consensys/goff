@@ -304,8 +304,14 @@ func BenchmarkMulAsmELEMENT(b *testing.B) {
 }
 
 func TestELEMENTMulAsm(t *testing.T) {
+	var n int
+	if testing.Short() {
+		n = 10
+	} else {
+		n = 500
+	}
 	modulus, _ := new(big.Int).SetString("21888242871839275222246405745257275088696311157297823662689037894645226208583", 10)
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < n; i++ {
 		// sample 2 random big int
 		b1, _ := rand.Int(rand.Reader, modulus)
 		b2, _ := rand.Int(rand.Reader, modulus)
