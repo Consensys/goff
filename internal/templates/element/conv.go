@@ -66,6 +66,19 @@ func (z *{{.ElementName}}) SetBigInt(v *big.Int) *{{.ElementName}} {
 
 	zero := big.NewInt(0)
 	q := {{toLower .ElementName}}ModulusBigInt()
+
+	// fast path
+	c := v.Cmp(q)
+	if c == 0 {
+		return z
+	} else if c != 1 && v.Cmp(zero) != -1 {
+		// v should
+		vBits := v.Bits()
+		for i := 0; i < len(vBits); i++ {
+			z[i] = uint64(vBits[i])
+		}
+		return z.ToMont()
+	}
 	
 	// copy input
 	vv := new(big.Int).Set(v)

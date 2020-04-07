@@ -18,12 +18,11 @@ import (
 	"fmt"
 	"math/bits"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
-	"text/template"
 
-	"github.com/consensys/goff/cmd/internal/template/element"
+	"github.com/consensys/bavard"
+	"github.com/consensys/goff/internal/templates/element"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +30,7 @@ var rootCmd = &cobra.Command{
 	Use:     "goff",
 	Short:   "goff generates arithmetic operations for any moduli",
 	Run:     cmdGenerate,
-	Version: buildString(),
+	Version: Version,
 }
 
 // flags
@@ -58,12 +57,7 @@ func init() {
 
 func cmdGenerate(cmd *cobra.Command, args []string) {
 	fmt.Println()
-	if Version != "" {
-		fmt.Println("running goff version", Version)
-	} else {
-		fmt.Println("/!\\ running goff in DEV mode /!\\")
-	}
-
+	fmt.Println("running goff version", Version)
 	fmt.Println()
 
 	// parse flags
@@ -74,15 +68,15 @@ func cmdGenerate(cmd *cobra.Command, args []string) {
 	}
 
 	// generate code
-	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, fBenches); err != nil {
+	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, fBenches, false); err != nil {
 		fmt.Printf("\n%s\n", err.Error())
 		os.Exit(-1)
 	}
 }
 
-func GenerateFF(packageName, elementName, modulus, outputDir string, benches bool) error {
+func GenerateFF(packageName, elementName, modulus, outputDir string, benches bool, noCollidingNames bool) error {
 	// compute field constants
-	F, err := newField(packageName, elementName, modulus, benches)
+	F, err := newField(packageName, elementName, modulus, benches, noCollidingNames)
 	if err != nil {
 		return err
 	}
@@ -125,59 +119,27 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 	pathSrcArith := filepath.Join(outputDir, "arith.go")
 	pathTest := filepath.Join(outputDir, eName+"_test.go")
 
+	bavardOpts := []func(*bavard.Bavard) error{
+		bavard.Apache2("ConsenSys AG", 2020),
+		bavard.Package(F.PackageName, "contains field arithmetic operations"),
+		bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
+	}
+
 	// generate source file
-	if err := generateCode(pathSrc, src, F); err != nil {
+	if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
 		return err
 	}
 	// generate arithmetics source file
-	if err := generateCode(pathSrcArith, []string{element.Arith}, F); err != nil {
+	if err := bavard.Generate(pathSrcArith, []string{element.Arith}, F, bavardOpts...); err != nil {
 		return err
 	}
 
 	// generate test file
-	if err := generateCode(pathTest, tst, F); err != nil {
+	if err := bavard.Generate(pathTest, tst, F, bavardOpts...); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func generateCode(output string, templates []string, F *field) error {
-	// create output file
-	file, err := os.Create(output)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("generating %-70s\n", output)
-
-	// parse templates
-	tmpl := template.Must(template.New("").
-		Funcs(helpers()).
-		Parse(aggregate(templates)))
-
-	// execute template
-	if err = tmpl.Execute(file, F); err != nil {
-		file.Close()
-		return err
-	}
-	file.Close()
-
-	// run goformat to prettify output source
-	if err := exec.Command("gofmt", "-s", "-w", output).Run(); err != nil {
-		return err
-	}
-	if err := exec.Command("goimports", "-w", output).Run(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func aggregate(values []string) string {
-	var sb strings.Builder
-	for _, v := range values {
-		sb.WriteString(v)
-	}
-	return sb.String()
 }
 
 func parseFlags(cmd *cobra.Command) error {

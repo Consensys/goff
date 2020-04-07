@@ -26,10 +26,10 @@ import (
 // integration test will create modulus for various field sizes and run tests
 
 func TestIntegration(t *testing.T) {
-	parentDir := "./internal/tests/integration"
+	parentDir := "./integration_test"
 	os.RemoveAll(parentDir)
-	err := os.Mkdir(parentDir, 0700)
-	// defer os.RemoveAll(parentDir)
+	err := os.MkdirAll(parentDir, 0700)
+	defer os.RemoveAll(parentDir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func TestIntegration(t *testing.T) {
 
 	for elementName, modulus := range moduli {
 		// generate field
-		if err := GenerateFF("integration", elementName, modulus, parentDir, false); err != nil {
+		if err := GenerateFF("integration", elementName, modulus, parentDir, false, true); err != nil {
 			t.Fatal(elementName, err)
 		}
 	}
