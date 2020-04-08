@@ -92,7 +92,7 @@ b.Neg(b)
 
 ```bash
 # for BN256 or BLS377
-cd internal/example/bls377 # or cd internal/example/bn256
+cd examples/bls377 # or cd examples/bn256
 
 go test -c
 
