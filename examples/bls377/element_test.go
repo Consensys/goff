@@ -311,7 +311,8 @@ func BenchmarkMulAssignASMELEMENT(b *testing.B) {
 	}
 }
 
-func TestELEMENTMulAssign(t *testing.T) {
+func TestELEMENTAsm(t *testing.T) {
+	// ensure ASM implementations matches the ones using math/bits
 	modulus, _ := new(big.Int).SetString("258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177", 10)
 	for i := 0; i < 500; i++ {
 		// sample 2 random big int
@@ -319,17 +320,25 @@ func TestELEMENTMulAssign(t *testing.T) {
 		b2, _ := rand.Int(rand.Reader, modulus)
 
 		// e1 = mont(b1), e2 = mont(b2)
-		var e1, e2, eMul, eMulAssign Element
+		var e1, e2, eTestMul, eMulAssign, eSquare, eTestSquare Element
 		e1.SetBigInt(b1)
 		e2.SetBigInt(b2)
 
-		eMul = e1
-		eMul.testMulAssign(&e2)
+		eTestMul = e1
+		eTestMul.testMulAssign(&e2)
 		eMulAssign = e1
 		eMulAssign.MulAssign(&e2)
 
-		if !eMul.Equal(&eMulAssign) {
+		if !eTestMul.Equal(&eMulAssign) {
 			t.Fatal("inconsisntencies between MulAssign and testMulAssign --> check if MulAssign is calling ASM implementaiton on amd64")
+		}
+
+		// square
+		eSquare.Square(&e1)
+		eTestSquare.testSquare(&e1)
+
+		if !eTestSquare.Equal(&eSquare) {
+			t.Fatal("inconsisntencies between Square and testSquare --> check if Square is calling ASM implementaiton on amd64")
 		}
 	}
 }
@@ -454,4 +463,111 @@ func (z *Element) testMulAssign(x *Element) *Element {
 		z[5], _ = bits.Sub64(z[5], 121098312706494698, b)
 	}
 	return z
+}
+
+// this is here for consistency purposes, to ensure Square on AMD64 using asm implementation gives consistent results
+func (z *Element) testSquare(x *Element) *Element {
+
+	var p [6]uint64
+
+	var u, v uint64
+	{
+		// round 0
+		u, p[0] = bits.Mul64(x[0], x[0])
+		m := p[0] * 9586122913090633727
+		C := madd0(m, 9586122913090633729, p[0])
+		var t uint64
+		t, u, v = madd1sb(x[0], x[1], u)
+		C, p[0] = madd2(m, 1660523435060625408, v, C)
+		t, u, v = madd1s(x[0], x[2], t, u)
+		C, p[1] = madd2(m, 2230234197602682880, v, C)
+		t, u, v = madd1s(x[0], x[3], t, u)
+		C, p[2] = madd2(m, 1883307231910630287, v, C)
+		t, u, v = madd1s(x[0], x[4], t, u)
+		C, p[3] = madd2(m, 14284016967150029115, v, C)
+		_, u, v = madd1s(x[0], x[5], t, u)
+		p[5], p[4] = madd3(m, 121098312706494698, v, C, u)
+	}
+	{
+		// round 1
+		m := p[0] * 9586122913090633727
+		C := madd0(m, 9586122913090633729, p[0])
+		u, v = madd1(x[1], x[1], p[1])
+		C, p[0] = madd2(m, 1660523435060625408, v, C)
+		var t uint64
+		t, u, v = madd2sb(x[1], x[2], p[2], u)
+		C, p[1] = madd2(m, 2230234197602682880, v, C)
+		t, u, v = madd2s(x[1], x[3], p[3], t, u)
+		C, p[2] = madd2(m, 1883307231910630287, v, C)
+		t, u, v = madd2s(x[1], x[4], p[4], t, u)
+		C, p[3] = madd2(m, 14284016967150029115, v, C)
+		_, u, v = madd2s(x[1], x[5], p[5], t, u)
+		p[5], p[4] = madd3(m, 121098312706494698, v, C, u)
+	}
+	{
+		// round 2
+		m := p[0] * 9586122913090633727
+		C := madd0(m, 9586122913090633729, p[0])
+		C, p[0] = madd2(m, 1660523435060625408, p[1], C)
+		u, v = madd1(x[2], x[2], p[2])
+		C, p[1] = madd2(m, 2230234197602682880, v, C)
+		var t uint64
+		t, u, v = madd2sb(x[2], x[3], p[3], u)
+		C, p[2] = madd2(m, 1883307231910630287, v, C)
+		t, u, v = madd2s(x[2], x[4], p[4], t, u)
+		C, p[3] = madd2(m, 14284016967150029115, v, C)
+		_, u, v = madd2s(x[2], x[5], p[5], t, u)
+		p[5], p[4] = madd3(m, 121098312706494698, v, C, u)
+	}
+	{
+		// round 3
+		m := p[0] * 9586122913090633727
+		C := madd0(m, 9586122913090633729, p[0])
+		C, p[0] = madd2(m, 1660523435060625408, p[1], C)
+		C, p[1] = madd2(m, 2230234197602682880, p[2], C)
+		u, v = madd1(x[3], x[3], p[3])
+		C, p[2] = madd2(m, 1883307231910630287, v, C)
+		var t uint64
+		t, u, v = madd2sb(x[3], x[4], p[4], u)
+		C, p[3] = madd2(m, 14284016967150029115, v, C)
+		_, u, v = madd2s(x[3], x[5], p[5], t, u)
+		p[5], p[4] = madd3(m, 121098312706494698, v, C, u)
+	}
+	{
+		// round 4
+		m := p[0] * 9586122913090633727
+		C := madd0(m, 9586122913090633729, p[0])
+		C, p[0] = madd2(m, 1660523435060625408, p[1], C)
+		C, p[1] = madd2(m, 2230234197602682880, p[2], C)
+		C, p[2] = madd2(m, 1883307231910630287, p[3], C)
+		u, v = madd1(x[4], x[4], p[4])
+		C, p[3] = madd2(m, 14284016967150029115, v, C)
+		_, u, v = madd2sb(x[4], x[5], p[5], u)
+		p[5], p[4] = madd3(m, 121098312706494698, v, C, u)
+	}
+	{
+		// round 5
+		m := p[0] * 9586122913090633727
+		C := madd0(m, 9586122913090633729, p[0])
+		C, z[0] = madd2(m, 1660523435060625408, p[1], C)
+		C, z[1] = madd2(m, 2230234197602682880, p[2], C)
+		C, z[2] = madd2(m, 1883307231910630287, p[3], C)
+		C, z[3] = madd2(m, 14284016967150029115, p[4], C)
+		u, v = madd1(x[5], x[5], p[5])
+		z[5], z[4] = madd3(m, 121098312706494698, v, C, u)
+	}
+
+	// if z > q --> z -= q
+	// note: this is NOT constant time
+	if !(z[5] < 121098312706494698 || (z[5] == 121098312706494698 && (z[4] < 14284016967150029115 || (z[4] == 14284016967150029115 && (z[3] < 1883307231910630287 || (z[3] == 1883307231910630287 && (z[2] < 2230234197602682880 || (z[2] == 2230234197602682880 && (z[1] < 1660523435060625408 || (z[1] == 1660523435060625408 && (z[0] < 9586122913090633729))))))))))) {
+		var b uint64
+		z[0], b = bits.Sub64(z[0], 9586122913090633729, 0)
+		z[1], b = bits.Sub64(z[1], 1660523435060625408, b)
+		z[2], b = bits.Sub64(z[2], 2230234197602682880, b)
+		z[3], b = bits.Sub64(z[3], 1883307231910630287, b)
+		z[4], b = bits.Sub64(z[4], 14284016967150029115, b)
+		z[5], _ = bits.Sub64(z[5], 121098312706494698, b)
+	}
+	return z
+
 }

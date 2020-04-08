@@ -1,5 +1,6 @@
 package asm
 
+// TODO need to add the no_adx version in unit tests
 const Mul = `
 
 #include "textflag.h"
