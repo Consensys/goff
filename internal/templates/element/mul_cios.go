@@ -50,7 +50,11 @@ const MulCIOS = `
 				z[{{$i}}], b = bits.Sub64(t[{{$i}}], {{index $.all.Q $i}}, b)
 			{{- end}}
 		{{- end}}
+		{{if $.NoReturn }}
+		return
+		{{else}}
 		return z
+		{{end}}
 	}
 
 	// copy t into z 
