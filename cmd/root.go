@@ -18,12 +18,13 @@ import (
 	"fmt"
 	"math/bits"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
 
-	"github.com/consensys/goff/cmd/internal/template/element"
+	"github.com/consensys/bavard"
+	"github.com/consensys/goff/internal/templates/asm"
+	"github.com/consensys/goff/internal/templates/element"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +32,7 @@ var rootCmd = &cobra.Command{
 	Use:     "goff",
 	Short:   "goff generates arithmetic operations for any moduli",
 	Run:     cmdGenerate,
-	Version: buildString(),
+	Version: Version,
 }
 
 // flags
@@ -58,12 +59,7 @@ func init() {
 
 func cmdGenerate(cmd *cobra.Command, args []string) {
 	fmt.Println()
-	if Version != "" {
-		fmt.Println("running goff version", Version)
-	} else {
-		fmt.Println("/!\\ running goff in DEV mode /!\\")
-	}
-
+	fmt.Println("running goff version", Version)
 	fmt.Println()
 
 	// parse flags
@@ -74,15 +70,15 @@ func cmdGenerate(cmd *cobra.Command, args []string) {
 	}
 
 	// generate code
-	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, fBenches); err != nil {
+	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, fBenches, false); err != nil {
 		fmt.Printf("\n%s\n", err.Error())
 		os.Exit(-1)
 	}
 }
 
-func GenerateFF(packageName, elementName, modulus, outputDir string, benches bool) error {
+func GenerateFF(packageName, elementName, modulus, outputDir string, benches bool, noCollidingNames bool) error {
 	// compute field constants
-	F, err := newField(packageName, elementName, modulus, benches)
+	F, err := newField(packageName, elementName, modulus, benches, noCollidingNames)
 	if err != nil {
 		return err
 	}
@@ -99,14 +95,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		element.MulCIOS,
 		element.MulFIPS,
 		element.MulNoCarry,
-		element.MontgomeryMultiplication,
 		element.Sqrt,
-	}
-
-	if F.NoCarrySquare {
-		src = append(src, element.SquareCIOSNoCarry)
-	} else {
-		src = append(src, element.MontSquareCIOS)
 	}
 
 	// test file templates
@@ -114,6 +103,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		element.MulCIOS,
 		element.MulFIPS,
 		element.MulNoCarry,
+		element.SquareNoCarryTemplate,
 		element.Reduce,
 		element.Test,
 	}
@@ -125,59 +115,143 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 	pathSrcArith := filepath.Join(outputDir, "arith.go")
 	pathTest := filepath.Join(outputDir, eName+"_test.go")
 
+	bavardOpts := []func(*bavard.Bavard) error{
+		bavard.Apache2("ConsenSys AG", 2020),
+		bavard.Package(F.PackageName, "contains field arithmetic operations"),
+		bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
+	}
+
 	// generate source file
-	if err := generateCode(pathSrc, src, F); err != nil {
+	if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
 		return err
 	}
 	// generate arithmetics source file
-	if err := generateCode(pathSrcArith, []string{element.Arith}, F); err != nil {
+	if err := bavard.Generate(pathSrcArith, []string{element.Arith}, F, bavardOpts...); err != nil {
 		return err
 	}
 
 	// generate test file
-	if err := generateCode(pathTest, tst, F); err != nil {
+	if err := bavard.Generate(pathTest, tst, F, bavardOpts...); err != nil {
 		return err
+	}
+
+	if F.ASM { // max words without having to deal with spilling
+		// generate mul.s
+		{
+			asm := []string{
+				asm.Mul,
+			}
+			pathMulAsm := filepath.Join(outputDir, eName+"_mul_amd64.s")
+			if err := bavard.Generate(pathMulAsm, asm, F,
+				bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
+				bavard.Import(false),
+				bavard.Format(true),
+				bavard.Funcs(template.FuncMap{
+					"reg": reg,
+				})); err != nil {
+				return err
+			}
+
+			// generate mul_amd64.go
+			src := []string{
+				element.MontgomeryMultiplicationAMD64,
+			}
+			pathSrc := filepath.Join(outputDir, eName+"_mul_amd64.go")
+			if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
+				return err
+			}
+		}
+
+		if F.NoCarrySquare {
+			// generate square.s
+			// TODO this doesn't work well  for now as it's slower than mul
+			// asm := []string{
+			// 	asm.Square,
+			// }
+			// pathMulAsm := filepath.Join(outputDir, eName+"_square_amd64.s")
+			// if err := bavard.Generate(pathMulAsm, asm, F,
+			// 	bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
+			// 	bavard.Import(false),
+			// 	bavard.Format(true),
+			// 	bavard.Funcs(template.FuncMap{
+			// 		"reg": reg,
+			// 	})); err != nil {
+			// 	return err
+			// }
+
+			// generate square_amd64.go
+			src := []string{
+				element.SquareCIOSNoCarryAMD64,
+			}
+			pathSrc := filepath.Join(outputDir, eName+"_square_amd64.go")
+			if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	{
+		// generate mul.go
+		src := []string{
+			element.MontgomeryMultiplication,
+			element.MulCIOS,
+			element.MulNoCarry,
+			element.Reduce,
+		}
+		pathSrc := filepath.Join(outputDir, eName+"_mul.go")
+		bavardOptsCpy := make([]func(*bavard.Bavard) error, len(bavardOpts))
+		copy(bavardOptsCpy, bavardOpts)
+		if F.ASM {
+			bavardOptsCpy = append(bavardOptsCpy, bavard.BuildTag("!amd64"))
+		}
+		if err := bavard.Generate(pathSrc, src, F, bavardOptsCpy...); err != nil {
+			return err
+		}
+	}
+	{
+		// generate square.go
+		src := []string{
+			element.SquareCIOSNoCarry,
+			element.SquareNoCarryTemplate,
+			element.MulNoCarry,
+			element.Reduce,
+		}
+		pathSrc := filepath.Join(outputDir, eName+"_square.go")
+		bavardOptsCpy := make([]func(*bavard.Bavard) error, len(bavardOpts))
+		copy(bavardOptsCpy, bavardOpts)
+		if F.ASM && F.NoCarrySquare {
+			bavardOptsCpy = append(bavardOptsCpy, bavard.BuildTag("!amd64"))
+		}
+		if err := bavard.Generate(pathSrc, src, F, bavardOptsCpy...); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func generateCode(output string, templates []string, F *field) error {
-	// create output file
-	file, err := os.Create(output)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("generating %-70s\n", output)
-
-	// parse templates
-	tmpl := template.Must(template.New("").
-		Funcs(helpers()).
-		Parse(aggregate(templates)))
-
-	// execute template
-	if err = tmpl.Execute(file, F); err != nil {
-		file.Close()
-		return err
-	}
-	file.Close()
-
-	// run goformat to prettify output source
-	if err := exec.Command("gofmt", "-s", "-w", output).Run(); err != nil {
-		return err
-	}
-	if err := exec.Command("goimports", "-w", output).Run(); err != nil {
-		return err
-	}
-	return nil
+var registers = []string{ // AX and DX are reserved for MUL operations
+	"CX",
+	"BX",
+	"BP", // maybe not.
+	"SI",
+	"DI",
+	"R8",
+	"R9",
+	"R10",
+	"R11",
+	"R12",
+	"R13",
+	"R14",
+	"R15",
 }
 
-func aggregate(values []string) string {
-	var sb strings.Builder
-	for _, v := range values {
-		sb.WriteString(v)
+func reg(i int, offset ...int) string {
+	if len(offset) == 1 {
+		i += offset[0]
 	}
-	return sb.String()
+	return registers[i]
 }
 
 func parseFlags(cmd *cobra.Command) error {

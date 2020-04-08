@@ -31,7 +31,7 @@ func main() {
 	packageName := "generated"
 	for nbWords, prime := range primes {
 		elementName := fmt.Sprintf("Element%02d", nbWords)
-		if err := cmd.GenerateFF(packageName, elementName, prime.String(), parentDir, true); err != nil {
+		if err := cmd.GenerateFF(packageName, elementName, prime.String(), parentDir, true, true); err != nil {
 			log.Fatal(elementName, err)
 		}
 	}
