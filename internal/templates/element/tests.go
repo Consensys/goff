@@ -129,7 +129,7 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 		}
 
 		// these are slow, killing circle ci
-		if n <= 3 {
+		if n <= 5 {
 			// sqrt 
 			var eSqrt, eExp2 {{.ElementName}}
 			var bSqrt big.Int
