@@ -306,6 +306,18 @@ func BenchmarkMulAssignASMELEMENT(b *testing.B) {
 		MulAssignElement(&benchResElement, &x)
 	}
 }
+func BenchmarkSquareASMELEMENT(b *testing.B) {
+	benchResElement = Element{
+		17522657719365597833,
+		13107472804851548667,
+		5164255478447964150,
+		493319470278259999,
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		SquareElement(&benchResElement, &benchResElement)
+	}
+}
 
 func TestELEMENTAsm(t *testing.T) {
 	// ensure ASM implementations matches the ones using math/bits

@@ -147,7 +147,8 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 				bavard.Import(false),
 				bavard.Format(true),
 				bavard.Funcs(template.FuncMap{
-					"reg": reg,
+					"reg":    reg,
+					"maxReg": maxReg,
 				})); err != nil {
 				return err
 			}
@@ -165,19 +166,20 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		if F.NoCarrySquare {
 			// generate square.s
 			// TODO this doesn't work well  for now as it's slower than mul
-			// asm := []string{
-			// 	asm.Square,
-			// }
-			// pathMulAsm := filepath.Join(outputDir, eName+"_square_amd64.s")
-			// if err := bavard.Generate(pathMulAsm, asm, F,
-			// 	bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
-			// 	bavard.Import(false),
-			// 	bavard.Format(true),
-			// 	bavard.Funcs(template.FuncMap{
-			// 		"reg": reg,
-			// 	})); err != nil {
-			// 	return err
-			// }
+			asm := []string{
+				asm.Square,
+			}
+			pathMulAsm := filepath.Join(outputDir, eName+"_square_amd64.s")
+			if err := bavard.Generate(pathMulAsm, asm, F,
+				bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
+				bavard.Import(false),
+				bavard.Format(true),
+				bavard.Funcs(template.FuncMap{
+					"reg":    reg,
+					"maxReg": maxReg,
+				})); err != nil {
+				return err
+			}
 
 			// generate square_amd64.go
 			src := []string{
@@ -231,10 +233,10 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 	return nil
 }
 
-var registers = []string{ // AX and DX are reserved for MUL operations
+var registers = []string{ // AX and DX are reserved
 	"CX",
 	"BX",
-	"BP", // maybe not.
+	"BP",
 	"SI",
 	"DI",
 	"R8",
@@ -245,6 +247,10 @@ var registers = []string{ // AX and DX are reserved for MUL operations
 	"R13",
 	"R14",
 	"R15",
+}
+
+func maxReg() int {
+	return len(registers)
 }
 
 func reg(i int, offset ...int) string {

@@ -19,16 +19,16 @@ package bn256
 
 // SquareElement z = x * x mod q
 // calling this instead of z.Square(x) is prefered for performance critical path
-// go - noescape
-// func SquareElement(res,x *Element)
+//go:noescape
+func SquareElement(res, x *Element)
 
 // Square z = x * x mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Square(x *Element) *Element {
-	if z != x {
-		z.Set(x)
-	}
-	MulAssignElement(z, x)
-	// SquareElement(z, x)
+	// if z != x {
+	// 	z.Set(x)
+	// }
+	// MulAssignElement(z, x)
+	SquareElement(z, x)
 	return z
 }

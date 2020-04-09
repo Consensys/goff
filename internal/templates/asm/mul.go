@@ -18,10 +18,8 @@ TEXT ·MulAssign{{.ElementName}}(SB), NOSPLIT, $0-16
 	{{- $regX := $iReg}}  {{- $iReg = add 1 $iReg}}
 	{{- $regY := $iReg}}  {{- $iReg = add 1 $iReg}}
 	{{- $regA := $iReg}}  {{- $iReg = add 1 $iReg}}
-	{{- $regC := $iReg}}  {{- $iReg = add 1 $iReg}}
 	{{- $regM := $iReg}}  {{- $iReg = add 1 $iReg}}
-	{{- $regYi := $iReg}}  {{- $iReg = add 1 $iReg}}
-
+	
 	// dereference our parameters
 	MOVQ res+0(FP), {{reg $regX}}
 	MOVQ y+8(FP), {{reg $regY}}
@@ -29,7 +27,9 @@ TEXT ·MulAssign{{.ElementName}}(SB), NOSPLIT, $0-16
 	// check if we support adx and mulx
 	CMPB ·supportAdx(SB), $1
 	JNE no_adx
-	 
+
+
+
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
 	// however, to benefit from the ADCX and ADOX carry chains
@@ -51,31 +51,29 @@ TEXT ·MulAssign{{.ElementName}}(SB), NOSPLIT, $0-16
 	// clear up the carry flags
 	XORQ {{reg $regA}} , {{reg $regA}}
 
-	// {{reg $regYi}} = y[{{$i}}]
-	MOVQ {{mul $i 8}}({{reg $regY}}), {{reg $regYi}}
+	// DX = y[{{$i}}]
+	MOVQ {{mul $i 8}}({{reg $regY}}), DX
 
 	// for j=0 to N-1
 	//    (A,t[j])  := t[j] + x[j]*y[i] + A
 	{{- range $j := $.NbWordsIndexesFull}}
-
-		// DX = res[{{$j}}]
-		MOVQ {{mul $j 8}}({{reg $regX}}), DX 
-		{{- if eq $j 0}}
-			{{- if eq $i 0}}
-				MULXQ {{reg $regYi}}, {{reg $regt0 $j}} ,  {{reg $regA}}
-			{{- else}}
-				MULXQ {{reg $regYi}}, AX,  {{reg $regA}}
-				ADOXQ AX, {{reg $regt0 $j}} 
+		{{$k := add $j 1}}
+		{{$reg := reg $regA }}
+		{{- if eq $i 0}}
+			{{- if eq $j 0}}
+				MULXQ {{mul $j 8}}({{reg $regX}}), {{reg $regt0 $j}}, {{reg $regt0 $k}}
+			{{- else if ne $j $.NbWordsLastIndex}}
+				{{$reg = reg $regt0 $k}}
 			{{- end}}
-		{{- else}}
-			{{- if eq $i 0}}
-				MOVQ {{reg $regA}}, {{reg $regt0 $j}}
-			{{- else}}
-				ADCXQ {{reg $regA}}, {{reg $regt0 $j}}
-			{{- end}}
-			MULXQ {{reg $regYi}}, AX,  {{reg $regA}}
+		{{- else if ne $j 0}}
+			ADCXQ {{reg $regA}}, {{reg $regt0 $j}}
+		{{- end}}
+		
+		{{- if not (and (eq $i 0) (eq $j 0))}}
+			MULXQ {{mul $j 8}}({{reg $regX}}), AX, {{$reg}}
 			ADOXQ AX, {{reg $regt0 $j}} 
 		{{- end}}
+
 	{{- end}}
 
 	// add the last carries to {{reg $regA}} 
@@ -92,29 +90,22 @@ TEXT ·MulAssign{{.ElementName}}(SB), NOSPLIT, $0-16
 
 	// C,_ := t[0] + m*q[0]
 	MOVQ {{ index $.ASMQ 0 }}, DX
-	MULXQ {{reg $regM}}, AX, {{reg $regC}}
+	MULXQ {{reg $regM}}, AX, DX
 	ADCXQ {{reg $regt0}} ,AX
+	MOVQ DX, {{reg $regt0}}
 
 	// for j=1 to N-1
     //    (C,t[j-1]) := t[j] + m*q[j] + C
 	{{- range $j := $.NbWordsIndexesNoZero}}
 		{{- $k := sub $j 1}}
-		
 		MOVQ {{ index $.ASMQ $j }}, DX
-		MULXQ {{reg $regM}}, AX, DX
-		ADCXQ  {{reg $regt0 $j}}, {{reg $regC}} 
-		ADOXQ AX, {{reg $regC}}
-		MOVQ {{reg $regC}}, {{reg $regt0 $k}}
-		{{- if eq $j $.NbWordsLastIndex}}
-			MOVQ $0, AX
-			ADCXQ AX, DX
-			ADOXQ DX, {{reg $regA}}
-			MOVQ {{reg $regA}}, {{reg $regt0 $.NbWordsLastIndex}}
-		{{- else }}
-			MOVQ DX, {{reg $regC}}
-		{{- end}}
+		ADCXQ  {{reg $regt0 $j}}, {{reg $regt0 $k}}
+		MULXQ {{reg $regM}}, AX, {{reg $regt0 $j}}
+		ADOXQ AX, {{reg $regt0 $k}}
 	{{- end}}
-
+	MOVQ $0, AX
+	ADCXQ AX, {{reg $regt0 $.NbWordsLastIndex}}
+	ADOXQ {{reg $regA}}, {{reg $regt0 $.NbWordsLastIndex}}
 	{{- end}}
 
 reduce:
@@ -162,6 +153,9 @@ t_is_smaller:
 	RET
 
 no_adx:
+	{{- $regC := $iReg}} {{- $iReg = add 1 $iReg}}
+	{{- $regYi := $iReg}}  {{- $iReg = add 1 $iReg}}
+
 	{{- range $i := .NbWordsIndexesFull}}
 
 		// ---------------------------------------------------------------------------------------------

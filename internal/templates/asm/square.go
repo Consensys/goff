@@ -28,7 +28,6 @@ TEXT ·Square{{.ElementName}}(SB), NOSPLIT, $0-16
 	MOVQ x+8(FP), {{reg $regX}}
 
 
-
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
 	// for i=0 to N-1
@@ -43,12 +42,9 @@ TEXT ·Square{{.ElementName}}(SB), NOSPLIT, $0-16
 	// t[N-1] = C + A
 	
 	// check if we support adx and mulx
-	// CMPB ·supportAdx(SB), $1
-	// JNE no_adx
+	CMPB ·supportAdx(SB), $1
+	JNE no_adx
 
-	{{- range $i := .NbWordsIndexesFull}}
-		// XORQ {{reg $regt0 $i}}, {{reg $regt0 $i}}
-	{{- end}}
 
 	// for i=0 to N-1
 	{{- range $i := .NbWordsIndexesFull}}
@@ -60,50 +56,94 @@ TEXT ·Square{{.ElementName}}(SB), NOSPLIT, $0-16
 		XORQ {{reg $regP}}, {{reg $regP}}
 
 		// A, t[{{$i}}] = x[{{$i}}] * x[{{$i}}] + t[{{$i}}]
-		MOVQ {{mul $i 8}}({{reg $regX}}), {{reg $regXi}} 
-		MOVQ {{reg $regXi}}, DX
-		MULXQ DX, AX, {{reg $regA}}   // x[{{$i}}] * x[{{$i}}]
+		MOVQ {{mul $i 8}}({{reg $regX}}), DX
+		
 		{{if ne $i 0}}
+			MULXQ DX, AX, {{reg $regA}}   // x[{{$i}}] * x[{{$i}}]
 			ADCXQ AX, {{reg $regt0 $i}} 
 		{{else}}
-			MOVQ AX, {{reg $regt0 $i}} 
+			MULXQ DX, {{reg $regt0 $i}} , {{reg $regt0 1}}   // x[{{$i}}] * x[{{$i}}]
 		{{end}}
 		
 		// for j=i+1 to N-1
 		//     A,t[j] = x[j]*x[i] + t[j] + A
-		{{- range $j := $.NbWordsIndexesNoZero}}
-			{{- $doubling_round := gt $j $i}}
-			{{- if $doubling_round}}
-				MOVQ {{mul $j 8}}({{reg $regX}}), DX
-				{{- if eq $i 0}}
-					MOVQ {{reg $regA}}, {{reg $regt0 $j}}
-				{{- else}}
-					ADCXQ {{reg $regA}}, {{reg $regt0 $j}}
+		MOVQ $0, {{reg $regC}}
+		{{$regu0 := $regM}}
+		{{$m := 0}}
+
+		{{- if eq $i 0}}
+			{{- range $j := $.NbWordsIndexesNoZero}}
+				{{$k := add $j 1}}
+				{{$reg := add $regt0 $k}}
+				{{- $doubling_round := gt $j $i}}
+				{{- if $doubling_round}}
+					{{- if eq $j $.NbWordsLastIndex}}
+						{{$reg = $regA}}
+					{{- end}}
+					// MOVQ {{reg $regA}}, {{reg $regt0 $j}}
+					MULXQ {{mul $j 8}}({{reg $regX}}), AX,{{reg $reg}}
+
+					{{- if eq $j $.NbWordsLastIndex }}
+						MOVQ {{reg $reg}}, DX // saving hi bits
+					{{- else}}
+						MOVQ {{reg $reg}}, {{reg $regu0 $m}} // saving hi bits
+					{{- end}}
+
+					ADOXQ AX, AX // doubling lo bits
+					ADOXQ {{reg $regC}}, {{reg $reg}}
+					ADOXQ AX, {{reg $regt0 $j}} 
+
+					{{$m = add $m 1}}
 				{{- end}}
-				MULXQ {{reg $regXi}}, AX,  {{reg $regA}}
-				ADOXQ AX, {{reg $regt0 $j}} 
+			{{- end}}
+		{{- else}}
+			{{- range $j := $.NbWordsIndexesNoZero}}
+				{{$k := add $j 1}}
+				{{- $doubling_round := gt $j $i}}
+				{{- if $doubling_round}}
+					ADCXQ {{reg $regA}}, {{reg $regt0 $j}}
+					MULXQ {{mul $j 8}}({{reg $regX}}), AX, {{reg $regA}}
+
+					{{- if and (eq $j $.NbWordsLastIndex) (ne $i $.NbWordsLastIndex)}}
+						MOVQ {{reg $regA}}, DX // saving hi bits
+					{{- else}}
+						MOVQ {{reg $regA}}, {{reg $regu0 $m}} // saving hi bits
+					{{- end}}
+
+					ADOXQ AX, AX // doubling lo bits
+					ADOXQ {{reg $regC}}, {{reg $regA}}
+					ADOXQ AX, {{reg $regt0 $j}} 
+
+					{{$m = add $m 1}}
+				{{- end}}
 			{{- end}}
 		{{- end}}
+
+
 		// add the last carries to {{reg $regA}} 
-		MOVQ $0, DX
-		ADCXQ DX, {{reg $regA}} 
-		ADOXQ DX, {{reg $regA}} 
+		ADCXQ {{reg $regC}}, {{reg $regA}} 
+		ADOXQ {{reg $regC}}, {{reg $regA}} 
 
-		XORQ {{reg $regC}}, {{reg $regC}}
-
+		{{$m := 0}}
+		{{- $firstDoubling := true}}
 		{{- range $j := $.NbWordsIndexesNoZero}}
-			{{- $doubling_round := gt $j $i}}
+			{{- $k := add $i 1}}
+			{{- $doubling_round := gt $j $k}}
 			{{- if $doubling_round}}
-				MOVQ {{mul $j 8}}({{reg $regX}}), DX
-				ADCXQ {{reg $regC}}, {{reg $regt0 $j}}
-				MULXQ {{reg $regXi}}, AX,  {{reg $regC}}
-				ADOXQ AX, {{reg $regt0 $j}} 
+				{{- if $firstDoubling}}
+					{{- $firstDoubling = false}}
+					ADDQ {{reg $regu0 $m}}, {{reg $regt0 $j}}
+				{{- else}}
+					ADCQ {{reg $regu0 $m}}, {{reg $regt0 $j}}
+				{{- end}}
+				{{- $m = add $m 1}}
 			{{- end}}
 		{{- end}}
 
-		MOVQ $0, DX
-		ADOXQ DX, {{reg $regC}} 
-		ADCXQ {{reg $regC}}, {{reg $regA}}
+		{{- if ne $i $.NbWordsLastIndex}}
+			ADCQ DX, {{reg $regA}}
+		{{- end}}
+		
 
 
 		// m := t[0]*q'[0] mod W
@@ -115,30 +155,24 @@ TEXT ·Square{{.ElementName}}(SB), NOSPLIT, $0-16
 
 		// C,_ := t[0] + m*q[0]
 		MOVQ {{ index $.ASMQ 0 }}, DX
-		MULXQ {{reg $regM}}, AX, {{reg $regC}}
+		MULXQ {{reg $regM}}, AX, DX
 		ADCXQ {{reg $regt0}} ,AX
+		MOVQ DX, {{reg $regt0}}
 
 		// for j=1 to N-1
 		//    (C,t[j-1]) := t[j] + m*q[j] + C
 		{{- range $j := $.NbWordsIndexesNoZero}}
 			{{- $k := sub $j 1}}
-			
 			MOVQ {{ index $.ASMQ $j }}, DX
-			MULXQ {{reg $regM}}, AX, DX
-			ADCXQ  {{reg $regt0 $j}}, {{reg $regC}} 
-			ADOXQ AX, {{reg $regC}}
-			MOVQ {{reg $regC}}, {{reg $regt0 $k}}
-			{{- if eq $j $.NbWordsLastIndex}}
-				MOVQ $0, AX
-				ADCXQ AX, DX
-				ADOXQ DX, {{reg $regA}}
-				MOVQ {{reg $regA}}, {{reg $regt0 $.NbWordsLastIndex}}
-			{{- else }}
-				MOVQ DX, {{reg $regC}}
-			{{- end}}
+			ADCXQ  {{reg $regt0 $j}}, {{reg $regt0 $k}}
+			MULXQ {{reg $regM}}, AX, {{reg $regt0 $j}}
+			ADOXQ AX, {{reg $regt0 $k}}
 		{{- end}}
-
+		MOVQ $0, AX
+		ADCXQ AX, {{reg $regt0 $.NbWordsLastIndex}}
+		ADOXQ {{reg $regA}}, {{reg $regt0 $.NbWordsLastIndex}}
 	{{- end}}
+
 
 reduce:
 	// dereference result

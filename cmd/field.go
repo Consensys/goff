@@ -34,7 +34,6 @@ type field struct {
 	ASM                  bool
 	ASMQInv0             string
 	ASMQ                 []string
-	ASMQNeg              []string
 	RSquare              []uint64
 	One                  []uint64
 	LegendreExponent     []uint64
@@ -201,10 +200,6 @@ func newField(packageName, elementName, modulus string, benches bool, noCollidin
 	F.ASMQ = make([]string, len(F.Q))
 	for i := 0; i < len(F.Q); i++ {
 		F.ASMQ[i] = fmt.Sprintf("$%#016x", F.Q[i])
-	}
-	F.ASMQNeg = make([]string, len(F.Q))
-	for i := 0; i < len(F.Q); i++ {
-		F.ASMQNeg[i] = fmt.Sprintf("$%#016x", (^F.Q[i]))
 	}
 	F.ASM = F.NoCarry && F.NbWords <= 6 // max words without having to deal with spilling
 
