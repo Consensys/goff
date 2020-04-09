@@ -293,6 +293,7 @@ func BenchmarkMulAssignASM{{toUpper .ElementName}}(b *testing.B) {
 		MulAssign{{.ElementName}}(&benchRes{{.ElementName}}, &x)
 	}
 }
+{{ if .NoCarrySquare}}
 func BenchmarkSquareASM{{toUpper .ElementName}}(b *testing.B) {
 	benchRes{{.ElementName}} = {{.ElementName}}{
 		{{- range $i := .RSquare}}
@@ -303,6 +304,7 @@ func BenchmarkSquareASM{{toUpper .ElementName}}(b *testing.B) {
 		Square{{.ElementName}}(&benchRes{{.ElementName}}, &benchRes{{.ElementName}})
 	}
 }
+{{ end}}
 {{ end}}
 
 
