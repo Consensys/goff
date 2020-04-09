@@ -7,6 +7,9 @@ const MontgomeryMultiplicationAMD64 = `
 //go:noescape
 func MulAssign{{.ElementName}}(res,y *{{.ElementName}})
 
+//go:noescape
+func fromMont{{.ElementName}}(res *{{.ElementName}})
+
 // Mul z = x * y mod q (constant time)
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {

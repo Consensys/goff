@@ -221,4 +221,157 @@ no_adx:
 	{{- end}}
 
 	JMP reduce
+
+
+TEXT ·fromMont{{.ElementName}}(SB), NOSPLIT, $0-8
+	{{- /* do not change the order */ -}} 
+	{{- $iReg := 0}}
+	{{- $regt0 := $iReg}}  {{- $iReg = add 1 $iReg}}
+	{{- range $i := .NbWordsIndexesNoZero}}
+		{{- $iReg = add 1 $iReg}}
+	{{- end}}
+	{{- $regX := $iReg}}  {{- $iReg = add 1 $iReg}}
+	{{- $regA := $iReg}}  {{- $iReg = add 1 $iReg}}
+	{{- $regM := $iReg}}  {{- $iReg = add 1 $iReg}}
+	
+	// dereference our parameters
+	MOVQ res+0(FP), {{reg $regX}}
+
+	// 	for i=0 to N-1
+	//     t[i] = a[i]
+	{{- range $i := .NbWordsIndexesFull}}
+		MOVQ {{mul $i 8}}({{reg $regX}}), {{reg $regt0 $i}}
+	{{- end}}
+
+	// check if we support adx and mulx
+	CMPB ·supportAdx(SB), $1
+	JNE no_adx
+
+	// // for i=0 to N-1    
+	// m := t[0]*q'[0] mod W
+	// C,_ := t[0] + m*q[0]
+	// for j=1 to N-1
+	//     (C,t[j-1]) := t[j] + m*q[j] + C
+
+	// t[N-1] = C
+
+	{{- range $i := .NbWordsIndexesFull}}
+
+
+	// clear up the carry flags
+	XORQ {{reg $regA}} , {{reg $regA}}
+
+
+	// m := t[0]*q'[0] mod W
+	MOVQ {{ $.ASMQInv0 }}, DX
+	MULXQ {{reg $regt0}},{{reg $regM}}, DX
+
+	// clear the carry flags
+	XORQ DX, DX 
+
+	// C,_ := t[0] + m*q[0]
+	MOVQ {{ index $.ASMQ 0 }}, DX
+	MULXQ {{reg $regM}}, AX, DX
+	ADCXQ {{reg $regt0}} ,AX
+	MOVQ DX, {{reg $regt0}}
+
+	// for j=1 to N-1
+	//    (C,t[j-1]) := t[j] + m*q[j] + C
+	{{- range $j := $.NbWordsIndexesNoZero}}
+		{{- $k := sub $j 1}}
+		MOVQ {{ index $.ASMQ $j }}, DX
+		ADCXQ  {{reg $regt0 $j}}, {{reg $regt0 $k}}
+		MULXQ {{reg $regM}}, AX, {{reg $regt0 $j}}
+		ADOXQ AX, {{reg $regt0 $k}}
+	{{- end}}
+	MOVQ $0, AX
+	ADCXQ AX, {{reg $regt0 $.NbWordsLastIndex}}
+	ADOXQ AX, {{reg $regt0 $.NbWordsLastIndex}}
+	{{- end}}
+
+reduce:
+	// reduce, constant time version
+	// first we copy registers storing t in a separate set of registers
+	// as SUBQ modifies the 2nd operand
+	{{- /* registers after regY are not needed anymore */ -}}
+	{{- /* u0 will be stored in DX */ -}}
+	{{- $regu1 := $regA}}
+	{{- $k := sub $.NbWords 1}}
+
+	{{- /* temporary register to store moduli word for SBBQ */ -}}
+	{{- $regQ := add $regA $k}}
+	{{- range $i := .NbWordsIndexesFull}}
+		{{- if eq $i 0}}
+			MOVQ {{reg $regt0}}, DX
+		{{- else}}
+			{{- $k := sub $i 1}}
+			MOVQ {{reg $regt0 $i}}, {{reg $regu1 $k}}
+		{{- end}}
+	{{- end }}
+
+	{{- range $i := .NbWordsIndexesFull}}
+		MOVQ {{ index $.ASMQ $i }}, {{reg $regQ}}
+		{{- if eq $i 0}}
+			SUBQ  {{reg $regQ}}, DX
+		{{- else}}
+			{{- $k := sub $i 1}}
+			SBBQ  {{reg $regQ}}, {{reg $regu1 $k}}
+		{{- end}}
+	{{- end}}
+	JCS t_is_smaller // no borrow, we return t
+
+	// borrow is set, we return u
+	MOVQ DX, ({{reg $regX}})
+	{{- range $i := .NbWordsIndexesNoZero}}
+		{{- $j := sub $i 1}}
+		MOVQ {{reg $regu1 $j}}, {{mul $i 8}}({{reg $regX}})
+	{{- end}}
+	RET
+t_is_smaller:
+	{{- range $i := .NbWordsIndexesFull}}
+		MOVQ {{reg $regt0 $i}}, {{mul $i 8}}({{reg $regX}})
+	{{- end}}
+	RET
+
+no_adx:
+	// // for i=0 to N-1    
+	// m := t[0]*q'[0] mod W
+	// C,_ := t[0] + m*q[0]
+	// for j=1 to N-1
+	//     (C,t[j-1]) := t[j] + m*q[j] + C
+
+	// t[N-1] = C
+
+	{{- range $i := .NbWordsIndexesFull}}
+		// m := t[0]*q'[0] mod W
+		MOVQ {{ $.ASMQInv0 }}, {{ reg $regM}}
+		IMULQ {{reg $regt0}} , {{ reg $regM}}
+
+		// C,_ := t[0] + m*q[0]
+		MOVQ {{ index $.ASMQ 0 }}, AX
+		MULQ {{ reg $regM}}
+		ADDQ {{ reg $regt0}} ,AX
+		ADCQ $0, DX
+		MOVQ  DX, {{ reg $regA}}
+
+		// for j=1 to N-1
+		//    (C,t[j-1]) := t[j] + m*q[j] + C
+		{{- range $j := $.NbWordsIndexesNoZero}}
+
+			MOVQ {{ index $.ASMQ $j }}, AX
+			MULQ {{ reg $regM}}
+			ADDQ  {{reg $regt0 $j}}, {{ reg $regA}}
+			ADCQ $0, DX
+			ADDQ AX, {{ reg $regA}}
+			ADCQ $0, DX
+			{{$k := sub $j 1}}
+			MOVQ {{ reg $regA}}, {{reg $regt0 $k}}
+			MOVQ DX, {{ reg $regA}}
+		{{- end}}
+
+		MOVQ {{ reg $regA}}, {{reg $regt0 $.NbWordsLastIndex}}
+
+	{{- end}}
+
+	JMP reduce
 `

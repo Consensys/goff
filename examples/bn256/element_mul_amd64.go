@@ -22,6 +22,9 @@ package bn256
 //go:noescape
 func MulAssignElement(res, y *Element)
 
+//go:noescape
+func fromMontElement(res *Element)
+
 // Mul z = x * y mod q (constant time)
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Mul(x, y *Element) *Element {

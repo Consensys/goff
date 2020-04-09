@@ -1218,3 +1218,723 @@ TEXT ·MulAssignElement(SB), NOSPLIT, $0-16
     MOVQ R11, R8
     
     JMP reduce
+    
+    TEXT ·fromMontElement(SB), NOSPLIT, $0-8
+    
+    // dereference our parameters
+    MOVQ res+0(FP), R9
+    
+    // 	for i=0 to N-1
+    //     t[i] = a[i]
+    MOVQ 0(R9), CX
+    MOVQ 8(R9), BX
+    MOVQ 16(R9), BP
+    MOVQ 24(R9), SI
+    MOVQ 32(R9), DI
+    MOVQ 40(R9), R8
+    
+    // check if we support adx and mulx
+    CMPB ·supportAdx(SB), $1
+    JNE no_adx
+    
+    // // for i=0 to N-1
+    // m := t[0]*q'[0] mod W
+    // C,_ := t[0] + m*q[0]
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
+    
+    // t[N-1] = C
+    
+    // clear up the carry flags
+    XORQ R10 , R10
+    
+    // m := t[0]*q'[0] mod W
+    MOVQ $0x8508bfffffffffff, DX
+    MULXQ CX,R11, DX
+    
+    // clear the carry flags
+    XORQ DX, DX
+    
+    // C,_ := t[0] + m*q[0]
+    MOVQ $0x8508c00000000001, DX
+    MULXQ R11, AX, DX
+    ADCXQ CX ,AX
+    MOVQ DX, CX
+    
+    // for j=1 to N-1
+    //    (C,t[j-1]) := t[j] + m*q[j] + C
+    MOVQ $0x170b5d4430000000, DX
+    ADCXQ  BX, CX
+    MULXQ R11, AX, BX
+    ADOXQ AX, CX
+    MOVQ $0x1ef3622fba094800, DX
+    ADCXQ  BP, BX
+    MULXQ R11, AX, BP
+    ADOXQ AX, BX
+    MOVQ $0x1a22d9f300f5138f, DX
+    ADCXQ  SI, BP
+    MULXQ R11, AX, SI
+    ADOXQ AX, BP
+    MOVQ $0xc63b05c06ca1493b, DX
+    ADCXQ  DI, SI
+    MULXQ R11, AX, DI
+    ADOXQ AX, SI
+    MOVQ $0x01ae3a4617c510ea, DX
+    ADCXQ  R8, DI
+    MULXQ R11, AX, R8
+    ADOXQ AX, DI
+    MOVQ $0, AX
+    ADCXQ AX, R8
+    ADOXQ AX, R8
+    
+    // clear up the carry flags
+    XORQ R10 , R10
+    
+    // m := t[0]*q'[0] mod W
+    MOVQ $0x8508bfffffffffff, DX
+    MULXQ CX,R11, DX
+    
+    // clear the carry flags
+    XORQ DX, DX
+    
+    // C,_ := t[0] + m*q[0]
+    MOVQ $0x8508c00000000001, DX
+    MULXQ R11, AX, DX
+    ADCXQ CX ,AX
+    MOVQ DX, CX
+    
+    // for j=1 to N-1
+    //    (C,t[j-1]) := t[j] + m*q[j] + C
+    MOVQ $0x170b5d4430000000, DX
+    ADCXQ  BX, CX
+    MULXQ R11, AX, BX
+    ADOXQ AX, CX
+    MOVQ $0x1ef3622fba094800, DX
+    ADCXQ  BP, BX
+    MULXQ R11, AX, BP
+    ADOXQ AX, BX
+    MOVQ $0x1a22d9f300f5138f, DX
+    ADCXQ  SI, BP
+    MULXQ R11, AX, SI
+    ADOXQ AX, BP
+    MOVQ $0xc63b05c06ca1493b, DX
+    ADCXQ  DI, SI
+    MULXQ R11, AX, DI
+    ADOXQ AX, SI
+    MOVQ $0x01ae3a4617c510ea, DX
+    ADCXQ  R8, DI
+    MULXQ R11, AX, R8
+    ADOXQ AX, DI
+    MOVQ $0, AX
+    ADCXQ AX, R8
+    ADOXQ AX, R8
+    
+    // clear up the carry flags
+    XORQ R10 , R10
+    
+    // m := t[0]*q'[0] mod W
+    MOVQ $0x8508bfffffffffff, DX
+    MULXQ CX,R11, DX
+    
+    // clear the carry flags
+    XORQ DX, DX
+    
+    // C,_ := t[0] + m*q[0]
+    MOVQ $0x8508c00000000001, DX
+    MULXQ R11, AX, DX
+    ADCXQ CX ,AX
+    MOVQ DX, CX
+    
+    // for j=1 to N-1
+    //    (C,t[j-1]) := t[j] + m*q[j] + C
+    MOVQ $0x170b5d4430000000, DX
+    ADCXQ  BX, CX
+    MULXQ R11, AX, BX
+    ADOXQ AX, CX
+    MOVQ $0x1ef3622fba094800, DX
+    ADCXQ  BP, BX
+    MULXQ R11, AX, BP
+    ADOXQ AX, BX
+    MOVQ $0x1a22d9f300f5138f, DX
+    ADCXQ  SI, BP
+    MULXQ R11, AX, SI
+    ADOXQ AX, BP
+    MOVQ $0xc63b05c06ca1493b, DX
+    ADCXQ  DI, SI
+    MULXQ R11, AX, DI
+    ADOXQ AX, SI
+    MOVQ $0x01ae3a4617c510ea, DX
+    ADCXQ  R8, DI
+    MULXQ R11, AX, R8
+    ADOXQ AX, DI
+    MOVQ $0, AX
+    ADCXQ AX, R8
+    ADOXQ AX, R8
+    
+    // clear up the carry flags
+    XORQ R10 , R10
+    
+    // m := t[0]*q'[0] mod W
+    MOVQ $0x8508bfffffffffff, DX
+    MULXQ CX,R11, DX
+    
+    // clear the carry flags
+    XORQ DX, DX
+    
+    // C,_ := t[0] + m*q[0]
+    MOVQ $0x8508c00000000001, DX
+    MULXQ R11, AX, DX
+    ADCXQ CX ,AX
+    MOVQ DX, CX
+    
+    // for j=1 to N-1
+    //    (C,t[j-1]) := t[j] + m*q[j] + C
+    MOVQ $0x170b5d4430000000, DX
+    ADCXQ  BX, CX
+    MULXQ R11, AX, BX
+    ADOXQ AX, CX
+    MOVQ $0x1ef3622fba094800, DX
+    ADCXQ  BP, BX
+    MULXQ R11, AX, BP
+    ADOXQ AX, BX
+    MOVQ $0x1a22d9f300f5138f, DX
+    ADCXQ  SI, BP
+    MULXQ R11, AX, SI
+    ADOXQ AX, BP
+    MOVQ $0xc63b05c06ca1493b, DX
+    ADCXQ  DI, SI
+    MULXQ R11, AX, DI
+    ADOXQ AX, SI
+    MOVQ $0x01ae3a4617c510ea, DX
+    ADCXQ  R8, DI
+    MULXQ R11, AX, R8
+    ADOXQ AX, DI
+    MOVQ $0, AX
+    ADCXQ AX, R8
+    ADOXQ AX, R8
+    
+    // clear up the carry flags
+    XORQ R10 , R10
+    
+    // m := t[0]*q'[0] mod W
+    MOVQ $0x8508bfffffffffff, DX
+    MULXQ CX,R11, DX
+    
+    // clear the carry flags
+    XORQ DX, DX
+    
+    // C,_ := t[0] + m*q[0]
+    MOVQ $0x8508c00000000001, DX
+    MULXQ R11, AX, DX
+    ADCXQ CX ,AX
+    MOVQ DX, CX
+    
+    // for j=1 to N-1
+    //    (C,t[j-1]) := t[j] + m*q[j] + C
+    MOVQ $0x170b5d4430000000, DX
+    ADCXQ  BX, CX
+    MULXQ R11, AX, BX
+    ADOXQ AX, CX
+    MOVQ $0x1ef3622fba094800, DX
+    ADCXQ  BP, BX
+    MULXQ R11, AX, BP
+    ADOXQ AX, BX
+    MOVQ $0x1a22d9f300f5138f, DX
+    ADCXQ  SI, BP
+    MULXQ R11, AX, SI
+    ADOXQ AX, BP
+    MOVQ $0xc63b05c06ca1493b, DX
+    ADCXQ  DI, SI
+    MULXQ R11, AX, DI
+    ADOXQ AX, SI
+    MOVQ $0x01ae3a4617c510ea, DX
+    ADCXQ  R8, DI
+    MULXQ R11, AX, R8
+    ADOXQ AX, DI
+    MOVQ $0, AX
+    ADCXQ AX, R8
+    ADOXQ AX, R8
+    
+    // clear up the carry flags
+    XORQ R10 , R10
+    
+    // m := t[0]*q'[0] mod W
+    MOVQ $0x8508bfffffffffff, DX
+    MULXQ CX,R11, DX
+    
+    // clear the carry flags
+    XORQ DX, DX
+    
+    // C,_ := t[0] + m*q[0]
+    MOVQ $0x8508c00000000001, DX
+    MULXQ R11, AX, DX
+    ADCXQ CX ,AX
+    MOVQ DX, CX
+    
+    // for j=1 to N-1
+    //    (C,t[j-1]) := t[j] + m*q[j] + C
+    MOVQ $0x170b5d4430000000, DX
+    ADCXQ  BX, CX
+    MULXQ R11, AX, BX
+    ADOXQ AX, CX
+    MOVQ $0x1ef3622fba094800, DX
+    ADCXQ  BP, BX
+    MULXQ R11, AX, BP
+    ADOXQ AX, BX
+    MOVQ $0x1a22d9f300f5138f, DX
+    ADCXQ  SI, BP
+    MULXQ R11, AX, SI
+    ADOXQ AX, BP
+    MOVQ $0xc63b05c06ca1493b, DX
+    ADCXQ  DI, SI
+    MULXQ R11, AX, DI
+    ADOXQ AX, SI
+    MOVQ $0x01ae3a4617c510ea, DX
+    ADCXQ  R8, DI
+    MULXQ R11, AX, R8
+    ADOXQ AX, DI
+    MOVQ $0, AX
+    ADCXQ AX, R8
+    ADOXQ AX, R8
+    
+    reduce:
+    // reduce, constant time version
+    // first we copy registers storing t in a separate set of registers
+    // as SUBQ modifies the 2nd operand
+    MOVQ CX, DX
+    MOVQ BX, R10
+    MOVQ BP, R11
+    MOVQ SI, R12
+    MOVQ DI, R13
+    MOVQ R8, R14
+    MOVQ $0x8508c00000000001, R15
+    SUBQ  R15, DX
+    MOVQ $0x170b5d4430000000, R15
+    SBBQ  R15, R10
+    MOVQ $0x1ef3622fba094800, R15
+    SBBQ  R15, R11
+    MOVQ $0x1a22d9f300f5138f, R15
+    SBBQ  R15, R12
+    MOVQ $0xc63b05c06ca1493b, R15
+    SBBQ  R15, R13
+    MOVQ $0x01ae3a4617c510ea, R15
+    SBBQ  R15, R14
+    JCS t_is_smaller // no borrow, we return t
+    
+    // borrow is set, we return u
+    MOVQ DX, (R9)
+    MOVQ R10, 8(R9)
+    MOVQ R11, 16(R9)
+    MOVQ R12, 24(R9)
+    MOVQ R13, 32(R9)
+    MOVQ R14, 40(R9)
+    RET
+    t_is_smaller:
+    MOVQ CX, 0(R9)
+    MOVQ BX, 8(R9)
+    MOVQ BP, 16(R9)
+    MOVQ SI, 24(R9)
+    MOVQ DI, 32(R9)
+    MOVQ R8, 40(R9)
+    RET
+    
+    no_adx:
+    // // for i=0 to N-1
+    // m := t[0]*q'[0] mod W
+    // C,_ := t[0] + m*q[0]
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
+    
+    // t[N-1] = C
+    // m := t[0]*q'[0] mod W
+    MOVQ $0x8508bfffffffffff, R11
+    IMULQ CX , R11
+    
+    // C,_ := t[0] + m*q[0]
+    MOVQ $0x8508c00000000001, AX
+    MULQ R11
+    ADDQ CX ,AX
+    ADCQ $0, DX
+    MOVQ  DX, R10
+    
+    // for j=1 to N-1
+    //    (C,t[j-1]) := t[j] + m*q[j] + C
+    
+    MOVQ $0x170b5d4430000000, AX
+    MULQ R11
+    ADDQ  BX, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, CX
+    MOVQ DX, R10
+    
+    MOVQ $0x1ef3622fba094800, AX
+    MULQ R11
+    ADDQ  BP, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, BX
+    MOVQ DX, R10
+    
+    MOVQ $0x1a22d9f300f5138f, AX
+    MULQ R11
+    ADDQ  SI, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, BP
+    MOVQ DX, R10
+    
+    MOVQ $0xc63b05c06ca1493b, AX
+    MULQ R11
+    ADDQ  DI, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, SI
+    MOVQ DX, R10
+    
+    MOVQ $0x01ae3a4617c510ea, AX
+    MULQ R11
+    ADDQ  R8, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, DI
+    MOVQ DX, R10
+    
+    MOVQ R10, R8
+    // m := t[0]*q'[0] mod W
+    MOVQ $0x8508bfffffffffff, R11
+    IMULQ CX , R11
+    
+    // C,_ := t[0] + m*q[0]
+    MOVQ $0x8508c00000000001, AX
+    MULQ R11
+    ADDQ CX ,AX
+    ADCQ $0, DX
+    MOVQ  DX, R10
+    
+    // for j=1 to N-1
+    //    (C,t[j-1]) := t[j] + m*q[j] + C
+    
+    MOVQ $0x170b5d4430000000, AX
+    MULQ R11
+    ADDQ  BX, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, CX
+    MOVQ DX, R10
+    
+    MOVQ $0x1ef3622fba094800, AX
+    MULQ R11
+    ADDQ  BP, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, BX
+    MOVQ DX, R10
+    
+    MOVQ $0x1a22d9f300f5138f, AX
+    MULQ R11
+    ADDQ  SI, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, BP
+    MOVQ DX, R10
+    
+    MOVQ $0xc63b05c06ca1493b, AX
+    MULQ R11
+    ADDQ  DI, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, SI
+    MOVQ DX, R10
+    
+    MOVQ $0x01ae3a4617c510ea, AX
+    MULQ R11
+    ADDQ  R8, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, DI
+    MOVQ DX, R10
+    
+    MOVQ R10, R8
+    // m := t[0]*q'[0] mod W
+    MOVQ $0x8508bfffffffffff, R11
+    IMULQ CX , R11
+    
+    // C,_ := t[0] + m*q[0]
+    MOVQ $0x8508c00000000001, AX
+    MULQ R11
+    ADDQ CX ,AX
+    ADCQ $0, DX
+    MOVQ  DX, R10
+    
+    // for j=1 to N-1
+    //    (C,t[j-1]) := t[j] + m*q[j] + C
+    
+    MOVQ $0x170b5d4430000000, AX
+    MULQ R11
+    ADDQ  BX, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, CX
+    MOVQ DX, R10
+    
+    MOVQ $0x1ef3622fba094800, AX
+    MULQ R11
+    ADDQ  BP, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, BX
+    MOVQ DX, R10
+    
+    MOVQ $0x1a22d9f300f5138f, AX
+    MULQ R11
+    ADDQ  SI, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, BP
+    MOVQ DX, R10
+    
+    MOVQ $0xc63b05c06ca1493b, AX
+    MULQ R11
+    ADDQ  DI, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, SI
+    MOVQ DX, R10
+    
+    MOVQ $0x01ae3a4617c510ea, AX
+    MULQ R11
+    ADDQ  R8, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, DI
+    MOVQ DX, R10
+    
+    MOVQ R10, R8
+    // m := t[0]*q'[0] mod W
+    MOVQ $0x8508bfffffffffff, R11
+    IMULQ CX , R11
+    
+    // C,_ := t[0] + m*q[0]
+    MOVQ $0x8508c00000000001, AX
+    MULQ R11
+    ADDQ CX ,AX
+    ADCQ $0, DX
+    MOVQ  DX, R10
+    
+    // for j=1 to N-1
+    //    (C,t[j-1]) := t[j] + m*q[j] + C
+    
+    MOVQ $0x170b5d4430000000, AX
+    MULQ R11
+    ADDQ  BX, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, CX
+    MOVQ DX, R10
+    
+    MOVQ $0x1ef3622fba094800, AX
+    MULQ R11
+    ADDQ  BP, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, BX
+    MOVQ DX, R10
+    
+    MOVQ $0x1a22d9f300f5138f, AX
+    MULQ R11
+    ADDQ  SI, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, BP
+    MOVQ DX, R10
+    
+    MOVQ $0xc63b05c06ca1493b, AX
+    MULQ R11
+    ADDQ  DI, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, SI
+    MOVQ DX, R10
+    
+    MOVQ $0x01ae3a4617c510ea, AX
+    MULQ R11
+    ADDQ  R8, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, DI
+    MOVQ DX, R10
+    
+    MOVQ R10, R8
+    // m := t[0]*q'[0] mod W
+    MOVQ $0x8508bfffffffffff, R11
+    IMULQ CX , R11
+    
+    // C,_ := t[0] + m*q[0]
+    MOVQ $0x8508c00000000001, AX
+    MULQ R11
+    ADDQ CX ,AX
+    ADCQ $0, DX
+    MOVQ  DX, R10
+    
+    // for j=1 to N-1
+    //    (C,t[j-1]) := t[j] + m*q[j] + C
+    
+    MOVQ $0x170b5d4430000000, AX
+    MULQ R11
+    ADDQ  BX, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, CX
+    MOVQ DX, R10
+    
+    MOVQ $0x1ef3622fba094800, AX
+    MULQ R11
+    ADDQ  BP, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, BX
+    MOVQ DX, R10
+    
+    MOVQ $0x1a22d9f300f5138f, AX
+    MULQ R11
+    ADDQ  SI, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, BP
+    MOVQ DX, R10
+    
+    MOVQ $0xc63b05c06ca1493b, AX
+    MULQ R11
+    ADDQ  DI, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, SI
+    MOVQ DX, R10
+    
+    MOVQ $0x01ae3a4617c510ea, AX
+    MULQ R11
+    ADDQ  R8, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, DI
+    MOVQ DX, R10
+    
+    MOVQ R10, R8
+    // m := t[0]*q'[0] mod W
+    MOVQ $0x8508bfffffffffff, R11
+    IMULQ CX , R11
+    
+    // C,_ := t[0] + m*q[0]
+    MOVQ $0x8508c00000000001, AX
+    MULQ R11
+    ADDQ CX ,AX
+    ADCQ $0, DX
+    MOVQ  DX, R10
+    
+    // for j=1 to N-1
+    //    (C,t[j-1]) := t[j] + m*q[j] + C
+    
+    MOVQ $0x170b5d4430000000, AX
+    MULQ R11
+    ADDQ  BX, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, CX
+    MOVQ DX, R10
+    
+    MOVQ $0x1ef3622fba094800, AX
+    MULQ R11
+    ADDQ  BP, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, BX
+    MOVQ DX, R10
+    
+    MOVQ $0x1a22d9f300f5138f, AX
+    MULQ R11
+    ADDQ  SI, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, BP
+    MOVQ DX, R10
+    
+    MOVQ $0xc63b05c06ca1493b, AX
+    MULQ R11
+    ADDQ  DI, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, SI
+    MOVQ DX, R10
+    
+    MOVQ $0x01ae3a4617c510ea, AX
+    MULQ R11
+    ADDQ  R8, R10
+    ADCQ $0, DX
+    ADDQ AX, R10
+    ADCQ $0, DX
+    
+    MOVQ R10, DI
+    MOVQ DX, R10
+    
+    MOVQ R10, R8
+    
+    JMP reduce
