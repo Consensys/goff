@@ -33,7 +33,8 @@ func (z *{{.ElementName}}) ToMont() *{{.ElementName}} {
 		{{- range $i := .RSquare}}
 		{{$i}},{{end}}
 	}
-	return z.MulAssign(&rSquare)
+	MulAssign{{.ElementName}}(z, &rSquare)
+	return z
 }
 
 // ToRegular returns z in regular form (doesn't mutate z)
