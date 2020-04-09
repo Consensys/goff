@@ -82,19 +82,8 @@ func (z *{{.ElementName}}) SetBigInt(v *big.Int) *{{.ElementName}} {
 	
 	// copy input
 	vv := new(big.Int).Set(v)
-
-	// while v < 0, v+=q 
-	for vv.Cmp(zero) == -1 {
-		vv.Add(vv, q)
-	}
-	// while v > q, v-=q
-	for vv.Cmp(q) == 1 {
-		vv.Sub(vv, q)
-	}
-	// if v == q, return 0
-	if vv.Cmp(q) == 0 {
-		return z
-	}
+	vv.Mod(v, q)
+	
 	// v should
 	vBits := vv.Bits()
 	for i := 0; i < len(vBits); i++ {
