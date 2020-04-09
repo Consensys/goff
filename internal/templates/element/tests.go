@@ -293,6 +293,16 @@ func BenchmarkMulAssignASM{{toUpper .ElementName}}(b *testing.B) {
 		MulAssign{{.ElementName}}(&benchRes{{.ElementName}}, &x)
 	}
 }
+func BenchmarkSquareASM{{toUpper .ElementName}}(b *testing.B) {
+	benchRes{{.ElementName}} = {{.ElementName}}{
+		{{- range $i := .RSquare}}
+		{{$i}},{{end}}
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Square{{.ElementName}}(&benchRes{{.ElementName}}, &benchRes{{.ElementName}})
+	}
+}
 {{ end}}
 
 
