@@ -125,14 +125,14 @@ func (z *Element) IsZero() bool {
 }
 
 // field modulus stored as big.Int
-var _elementModulusBigInt big.Int
-var onceelementModulus sync.Once
+var _ElementModulus big.Int
+var onceElementModulus sync.Once
 
-func elementModulusBigInt() *big.Int {
-	onceelementModulus.Do(func() {
-		_elementModulusBigInt.SetString("258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177", 10)
+func ElementModulus() *big.Int {
+	onceElementModulus.Do(func() {
+		_ElementModulus.SetString("258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177", 10)
 	})
-	return &_elementModulusBigInt
+	return &_ElementModulus
 }
 
 // Inverse z = x^-1 mod q
@@ -616,7 +616,7 @@ func (z *Element) SetBigInt(v *big.Int) *Element {
 	z.SetZero()
 
 	zero := big.NewInt(0)
-	q := elementModulusBigInt()
+	q := ElementModulus()
 
 	// fast path
 	c := v.Cmp(q)
