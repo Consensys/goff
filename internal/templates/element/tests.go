@@ -26,13 +26,17 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 
 	var n int
 	if testing.Short() {
-		n = 10
+		n = 20
 	} else {
 		n = 500
 	}
 
-    for i := 0; i < n; i++ {
+	sAdx := supportAdx
 
+    for i := 0; i < n; i++ {
+		if i == n/2 && sAdx {
+			supportAdx = false // testing without adx instruction
+		}
         // sample 2 random big int
         b1, _ := rand.Int(rand.Reader, modulus)
         b2, _ := rand.Int(rand.Reader, modulus)
@@ -147,6 +151,7 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 			cmpEandB(&eExp2, &bExp2, "Exp multi words")
 		}
 	}
+	supportAdx = sAdx
 }
 
 func Test{{toUpper .ElementName}}IsRandom(t *testing.T) {
@@ -281,38 +286,17 @@ func BenchmarkMulAssign{{toUpper .ElementName}}(b *testing.B) {
 	}
 }
 
-{{ if .ASM}}
-func BenchmarkMulAssignASM{{toUpper .ElementName}}(b *testing.B) {
-	x := {{.ElementName}}{
-		{{- range $i := .RSquare}}
-		{{$i}},{{end}}
-	}
-	benchRes{{.ElementName}}.SetOne()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		MulAssign{{.ElementName}}(&benchRes{{.ElementName}}, &x)
-	}
-}
-{{ if .NoCarrySquare}}
-func BenchmarkSquareASM{{toUpper .ElementName}}(b *testing.B) {
-	benchRes{{.ElementName}} = {{.ElementName}}{
-		{{- range $i := .RSquare}}
-		{{$i}},{{end}}
-	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		Square{{.ElementName}}(&benchRes{{.ElementName}}, &benchRes{{.ElementName}})
-	}
-}
-{{ end}}
-{{ end}}
-
-
+{{if .ASM}}
 func Test{{toUpper .ElementName}}Asm(t *testing.T) {
 	// ensure ASM implementations matches the ones using math/bits
 	modulus, _ := new(big.Int).SetString("{{.Modulus}}", 10)
+	sadx := supportAdx
 	for i := 0; i < 500; i++ {
 		// sample 2 random big int
+		if i == 250 && sadx {
+			// going the no_adx path
+			supportAdx = false
+		}
 		b1, _ := rand.Int(rand.Reader, modulus)
 		b2, _ := rand.Int(rand.Reader, modulus)
 
@@ -327,7 +311,11 @@ func Test{{toUpper .ElementName}}Asm(t *testing.T) {
 		eMulAssign.MulAssign(&e2)
 
 		if !eTestMul.Equal(&eMulAssign) {
-			t.Fatal("inconsisntencies between MulAssign and testMulAssign --> check if MulAssign is calling ASM implementaiton on amd64")
+			if supportAdx {
+				t.Fatal("mul assembly implementation WITH adx instructions doesn't match non-assembly one")
+			} else {
+				t.Fatal("mul assembly implementation WITHOUT adx instructions doesn't match non-assembly one")
+			}
 		}
 
 		// square 
@@ -335,10 +323,16 @@ func Test{{toUpper .ElementName}}Asm(t *testing.T) {
 		eTestSquare.testSquare(&e1)
 
 		if !eTestSquare.Equal(&eSquare) {
-			t.Fatal("inconsisntencies between Square and testSquare --> check if Square is calling ASM implementaiton on amd64")
+			if supportAdx {
+				t.Fatal("square assembly implementation WITH adx instructions doesn't match non-assembly one")
+			} else {
+				t.Fatal("square assembly implementation WITHOUT adx instructions doesn't match non-assembly one")
+			}
 		}
 	}
+	supportAdx = sadx
 }
+{{end}}
 
 // this is here for consistency purposes, to ensure MulAssign on AMD64 using asm implementation gives consistent results 
 func (z *{{.ElementName}}) testMulAssign(x *{{.ElementName}}) *{{.ElementName}} {

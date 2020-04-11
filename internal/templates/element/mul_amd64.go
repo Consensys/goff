@@ -2,24 +2,39 @@ package element
 
 const MontgomeryMultiplicationAMD64 = `
 
-// MulAssign{{.ElementName}} z = z * x mod q (constant time)
-// calling this instead of z.MulAssign(x) is prefered for performance critical path
-//go:noescape
-func MulAssign{{.ElementName}}(res,y *{{.ElementName}})
+// /!\ WARNING /!\
+// this code has not been audited and is provided as-is. In particular, 
+// there is no security guarantees such as constant time implementation 
+// or side-channel attack resistance
+// /!\ WARNING /!\
 
-// Mul z = x * y mod q (constant time)
+//go:noescape
+func mulAssign{{.ElementName}}(res,y *{{.ElementName}})
+
+//go:noescape
+func fromMont{{.ElementName}}(res *{{.ElementName}}) 
+
+
+// Mul z = x * y mod q 
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
-	res := *x
-	MulAssign{{.ElementName}}(&res, y)
-	z.Set(&res)
-	return z
+	if z == x {
+		mulAssign{{.ElementName}}(z, y)
+		return z
+	} else if z == y {
+		mulAssign{{.ElementName}}(z, x)
+		return z
+	} else {
+		z.Set(x)
+		mulAssign{{.ElementName}}(z, y)
+		return z
+	}
 }
 
-// MulAssign z = z * x mod q (constant time)
+// MulAssign z = z * x mod q 
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) MulAssign(x *{{.ElementName}}) *{{.ElementName}} {
-	MulAssign{{.ElementName}}(z, x)
+	mulAssign{{.ElementName}}(z, x)
 	return z 
 }
 `
