@@ -26,13 +26,17 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 
 	var n int
 	if testing.Short() {
-		n = 10
+		n = 20
 	} else {
 		n = 500
 	}
 
-    for i := 0; i < n; i++ {
+	sAdx := supportAdx
 
+    for i := 0; i < n; i++ {
+		if i == n/2 && sAdx {
+			supportAdx = false // testing without adx instruction
+		}
         // sample 2 random big int
         b1, _ := rand.Int(rand.Reader, modulus)
         b2, _ := rand.Int(rand.Reader, modulus)
@@ -147,6 +151,7 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 			cmpEandB(&eExp2, &bExp2, "Exp multi words")
 		}
 	}
+	supportAdx = sAdx
 }
 
 func Test{{toUpper .ElementName}}IsRandom(t *testing.T) {

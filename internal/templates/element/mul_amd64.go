@@ -13,14 +13,14 @@ func fromMont{{.ElementName}}(z *{{.ElementName}})
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
 	if z == x {
-		mulAssignElement(z, y)
+		mulAssign{{.ElementName}}(z, y)
 		return z
 	} else if z == y {
-		mulAssignElement(z, x)
+		mulAssign{{.ElementName}}(z, x)
 		return z
 	} else {
 		z.Set(x)
-		mulAssignElement(z, y)
+		mulAssign{{.ElementName}}(z, y)
 		return z
 	}
 }
