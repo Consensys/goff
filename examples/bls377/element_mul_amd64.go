@@ -21,7 +21,7 @@ package bls377
 func mulAssignElement(res, y *Element)
 
 //go:noescape
-func fromMontElement(z *Element)
+func fromMontElement(res *Element)
 
 // Mul z = x * y mod q (constant time)
 // see https://hackmd.io/@zkteam/modular_multiplication

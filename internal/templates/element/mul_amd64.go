@@ -6,7 +6,7 @@ const MontgomeryMultiplicationAMD64 = `
 func mulAssign{{.ElementName}}(res,y *{{.ElementName}})
 
 //go:noescape
-func fromMont{{.ElementName}}(z *{{.ElementName}}) 
+func fromMont{{.ElementName}}(res *{{.ElementName}}) 
 
 
 // Mul z = x * y mod q (constant time)
