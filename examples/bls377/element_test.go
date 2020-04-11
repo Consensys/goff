@@ -291,46 +291,21 @@ func BenchmarkMulAssignELEMENT(b *testing.B) {
 	benchResElement.SetOne()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		benchResElement.MulAssign(&x)
+		x.Square(&x)
 	}
-}
-
-func BenchmarkMulAssignASMELEMENT(b *testing.B) {
-	x := Element{
-		13224372171368877346,
-		227991066186625457,
-		2496666625421784173,
-		13825906835078366124,
-		9475172226622360569,
-		30958721782860680,
-	}
-	benchResElement.SetOne()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		MulAssignElement(&benchResElement, &x)
-	}
-}
-
-func BenchmarkSquareASMELEMENT(b *testing.B) {
-	benchResElement = Element{
-		13224372171368877346,
-		227991066186625457,
-		2496666625421784173,
-		13825906835078366124,
-		9475172226622360569,
-		30958721782860680,
-	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		SquareElement(&benchResElement, &benchResElement)
-	}
+	benchResElement = x
 }
 
 func TestELEMENTAsm(t *testing.T) {
 	// ensure ASM implementations matches the ones using math/bits
 	modulus, _ := new(big.Int).SetString("258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177", 10)
+	sadx := supportAdx
 	for i := 0; i < 500; i++ {
 		// sample 2 random big int
+		if i == 250 && sadx {
+			// going the no_adx path
+			supportAdx = false
+		}
 		b1, _ := rand.Int(rand.Reader, modulus)
 		b2, _ := rand.Int(rand.Reader, modulus)
 
@@ -345,7 +320,11 @@ func TestELEMENTAsm(t *testing.T) {
 		eMulAssign.MulAssign(&e2)
 
 		if !eTestMul.Equal(&eMulAssign) {
-			t.Fatal("inconsisntencies between MulAssign and testMulAssign --> check if MulAssign is calling ASM implementaiton on amd64")
+			if supportAdx {
+				t.Fatal("mul assembly implementation WITH adx instructions doesn't match non-assembly one")
+			} else {
+				t.Fatal("mul assembly implementation WITHOUT adx instructions doesn't match non-assembly one")
+			}
 		}
 
 		// square
@@ -353,9 +332,14 @@ func TestELEMENTAsm(t *testing.T) {
 		eTestSquare.testSquare(&e1)
 
 		if !eTestSquare.Equal(&eSquare) {
-			t.Fatal("inconsisntencies between Square and testSquare --> check if Square is calling ASM implementaiton on amd64")
+			if supportAdx {
+				t.Fatal("square assembly implementation WITH adx instructions doesn't match non-assembly one")
+			} else {
+				t.Fatal("square assembly implementation WITHOUT adx instructions doesn't match non-assembly one")
+			}
 		}
 	}
+	supportAdx = sadx
 }
 
 // this is here for consistency purposes, to ensure MulAssign on AMD64 using asm implementation gives consistent results

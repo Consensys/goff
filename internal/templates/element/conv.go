@@ -18,7 +18,7 @@ func (z *{{.ElementName}}) ToMont() *{{.ElementName}} {
 		{{- range $i := .RSquare}}
 		{{$i}},{{end}}
 	}
-	MulAssign{{.ElementName}}(z, &rSquare)
+	mulAssign{{.ElementName}}(z, &rSquare)
 	return z
 }
 

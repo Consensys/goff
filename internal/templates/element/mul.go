@@ -34,8 +34,7 @@ func (z *{{.ElementName}}) MulAssign(x *{{.ElementName}}) *{{.ElementName}} {
 }
 
 {{- if eq .ASM false }}
-// MulAssign{{.ElementName}} z = z * x mod q
-func MulAssign{{.ElementName}}(z,x *{{.ElementName}}) {
+func mulAssign{{.ElementName}}(z,x *{{.ElementName}}) {
 	{{ if .NoCarry}}
 		{{ template "mul_nocarry" dict "all" . "V1" "z" "V2" "x"}}
 	{{ else }}

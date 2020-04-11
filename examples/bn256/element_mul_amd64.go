@@ -17,26 +17,31 @@
 // Package bn256 contains field arithmetic operations
 package bn256
 
-// MulAssignElement z = z * x mod q (constant time)
-// calling this instead of z.MulAssign(x) is prefered for performance critical path
 //go:noescape
-func MulAssignElement(res, y *Element)
+func mulAssignElement(res, y *Element)
 
 //go:noescape
-func fromMontElement(res *Element)
+func fromMontElement(z *Element)
 
 // Mul z = x * y mod q (constant time)
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Mul(x, y *Element) *Element {
-	res := *x
-	MulAssignElement(&res, y)
-	z.Set(&res)
-	return z
+	if z == x {
+		mulAssignElement(z, y)
+		return z
+	} else if z == y {
+		mulAssignElement(z, x)
+		return z
+	} else {
+		z.Set(x)
+		mulAssignElement(z, y)
+		return z
+	}
 }
 
 // MulAssign z = z * x mod q (constant time)
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) MulAssign(x *Element) *Element {
-	MulAssignElement(z, x)
+	mulAssignElement(z, x)
 	return z
 }

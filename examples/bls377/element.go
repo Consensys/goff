@@ -583,7 +583,7 @@ func (z *Element) ToMont() *Element {
 		9475172226622360569,
 		30958721782860680,
 	}
-	MulAssignElement(z, &rSquare)
+	mulAssignElement(z, &rSquare)
 	return z
 }
 
@@ -751,4 +751,16 @@ func (z *Element) Sqrt(x *Element) *Element {
 		b.MulAssign(&g)
 		r = m
 	}
+}
+
+// Square z = x * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *Element) Square(x *Element) *Element {
+
+	if z != x {
+		z.Set(x)
+	}
+	mulAssignElement(z, x)
+	return z
+
 }

@@ -20,10 +20,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 
 	"github.com/consensys/bavard"
-	"github.com/consensys/goff/internal/templates/asm"
 	"github.com/consensys/goff/internal/templates/element"
 	"github.com/spf13/cobra"
 )
@@ -96,6 +94,8 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		element.MulFIPS,
 		element.MulNoCarry,
 		element.Sqrt,
+		element.SquareCIOSNoCarry,
+		element.SquareNoCarryTemplate,
 	}
 
 	// test file templates
@@ -138,18 +138,18 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 	if F.ASM { // max words without having to deal with spilling
 		// generate mul.s
 		{
-			asm := []string{
-				asm.Mul,
-			}
 			pathMulAsm := filepath.Join(outputDir, eName+"_mul_amd64.s")
-			if err := bavard.Generate(pathMulAsm, asm, F,
-				bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
-				bavard.Import(false),
-				bavard.Format(true),
-				bavard.Funcs(template.FuncMap{
-					"reg":    reg,
-					"maxReg": maxReg,
-				})); err != nil {
+			f, err := os.Create(pathMulAsm)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			builder := newAsmBuilder(f)
+			builder.Write("#include \"textflag.h\"")
+			if err := builder.mulNoCarry(F, mulAssign); err != nil {
+				return err
+			}
+			if err := builder.mulNoCarry(F, fromMont); err != nil {
 				return err
 			}
 
@@ -158,34 +158,6 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 				element.MontgomeryMultiplicationAMD64,
 			}
 			pathSrc := filepath.Join(outputDir, eName+"_mul_amd64.go")
-			if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
-				return err
-			}
-		}
-
-		if F.NoCarrySquare {
-			// generate square.s
-			// TODO this doesn't work well  for now as it's slower than mul
-			asm := []string{
-				asm.Square,
-			}
-			pathMulAsm := filepath.Join(outputDir, eName+"_square_amd64.s")
-			if err := bavard.Generate(pathMulAsm, asm, F,
-				bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
-				bavard.Import(false),
-				bavard.Format(true),
-				bavard.Funcs(template.FuncMap{
-					"reg":    reg,
-					"maxReg": maxReg,
-				})); err != nil {
-				return err
-			}
-
-			// generate square_amd64.go
-			src := []string{
-				element.SquareCIOSNoCarryAMD64,
-			}
-			pathSrc := filepath.Join(outputDir, eName+"_square_amd64.go")
 			if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
 				return err
 			}
@@ -211,53 +183,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 			return err
 		}
 	}
-	{
-		// generate square.go
-		src := []string{
-			element.SquareCIOSNoCarry,
-			element.SquareNoCarryTemplate,
-			element.MulNoCarry,
-			element.Reduce,
-		}
-		pathSrc := filepath.Join(outputDir, eName+"_square.go")
-		bavardOptsCpy := make([]func(*bavard.Bavard) error, len(bavardOpts))
-		copy(bavardOptsCpy, bavardOpts)
-		if F.ASM && F.NoCarrySquare {
-			bavardOptsCpy = append(bavardOptsCpy, bavard.BuildTag("!amd64"))
-		}
-		if err := bavard.Generate(pathSrc, src, F, bavardOptsCpy...); err != nil {
-			return err
-		}
-	}
-
 	return nil
-}
-
-var registers = []string{ // AX and DX are reserved
-	"CX",
-	"BX",
-	"BP",
-	"SI",
-	"DI",
-	"R8",
-	"R9",
-	"R10",
-	"R11",
-	"R12",
-	"R13",
-	"R14",
-	"R15",
-}
-
-func maxReg() int {
-	return len(registers)
-}
-
-func reg(i int, offset ...int) string {
-	if len(offset) == 1 {
-		i += offset[0]
-	}
-	return registers[i]
 }
 
 func parseFlags(cmd *cobra.Command) error {
