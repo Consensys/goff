@@ -11,6 +11,7 @@ const (
 	fromMont
 )
 
+// helper to generate assembly code for multiplication and fromMont method (mul by 1)
 func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 
 	var header string
@@ -34,20 +35,18 @@ func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 	}
 
 	regX = b.PopRegister()
-	b.Comment("dereference x")
-	b.MOVQ("res+0(FP)", regX)
+	b.MOVQ("res+0(FP)", regX, "dereference x")
 
 	if mType == fromMont {
 		// 	for i=0 to N-1
 		//     t[i] = a[i]
 		for i := 0; i < F.NbWords; i++ {
-			b.MOVQ(regX.at(i), regT[i])
+			b.MOVQ(regX.at(i), regT[i], fmt.Sprintf("t[%d] = x[%d]", i, i))
 		}
 	}
 
-	b.Comment("check if we support adx and mulx")
-	b.CMPB("·supportAdx(SB)", 1)
-	b.JNE("no_adx")
+	b.CMPB("·supportAdx(SB)", 1, "check if we support MULX and ADOX instructions")
+	b.JNE("no_adx", "no support for MULX or ADOX instructions")
 
 	{
 
@@ -56,18 +55,15 @@ func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 		if mType != fromMont {
 			regA = b.PopRegister()
 			regY = b.PopRegister()
-			b.Comment("dereference y")
-			b.MOVQ("y+8(FP)", regY)
+			b.MOVQ("y+8(FP)", regY, "dereference y")
 		}
 
 		for i := 0; i < F.NbWords; i++ {
 			b.Comment(fmt.Sprintf("outter loop %d", i))
-			b.Comment("clear up flags")
-			b.XORQ(dx, dx)
+			b.XORQ(dx, dx, "clear up flags")
 
 			if mType != fromMont {
-				b.Comment(fmt.Sprintf("DX = y[%d]", i))
-				b.MOVQ(regY.at(i), dx)
+				b.MOVQ(regY.at(i), dx, fmt.Sprintf("DX = y[%d]", i))
 
 				// for j=0 to N-1
 				//    (A,t[j])  := t[j] + x[j]*y[i] + A
@@ -75,12 +71,12 @@ func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 					reg := regA
 					if i == 0 {
 						if j == 0 {
-							b.MULXQ(regX.at(j), regT[j], regT[j+1])
+							b.MULXQ(regX.at(j), regT[j], regT[j+1], fmt.Sprintf("t[%d], t[%d] = y[%d] * x[%d]", j, j+1, i, j))
 						} else if j != F.NbWordsLastIndex {
 							reg = regT[j+1]
 						}
 					} else if j != 0 {
-						b.ADCXQ(regA, regT[j])
+						b.ADCXQ(regA, regT[j], fmt.Sprintf("t[%d] += regA", j))
 					}
 
 					if !(i == 0 && j == 0) {
@@ -89,7 +85,7 @@ func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 					}
 				}
 
-				// add the last carries to {{reg $regA}}
+				b.Comment("add the last carries to " + string(regA))
 				b.MOVQ(0, dx)
 				b.ADCXQ(dx, regA)
 				b.ADOXQ(dx, regA)
@@ -97,17 +93,20 @@ func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 
 			// m := t[0]*q'[0] mod W
 			b.MOVQ(F.QInverse[0], dx)
-			b.MULXQ(regT[0], regM, dx)
+			b.MULXQ(regT[0], regM, dx, "m := t[0]*q'[0] mod W")
 
 			// clear the carry flags
-			b.XORQ(dx, dx)
+			b.XORQ(dx, dx, "clear the flags")
 
 			// C,_ := t[0] + m*q[0]
+			b.Comment("C,_ := t[0] + m*q[0]")
 			b.MOVQ(F.Q[0], dx)
 			b.MULXQ(regM, ax, dx)
 			b.ADCXQ(regT[0], ax)
 			b.MOVQ(dx, regT[0])
 
+			b.Comment("for j=1 to N-1")
+			b.Comment("    (C,t[j-1]) := t[j] + m*q[j] + C")
 			// for j=1 to N-1
 			//    (C,t[j-1]) := t[j] + m*q[j] + C
 			for j := 1; j < F.NbWords; j++ {
@@ -149,8 +148,7 @@ func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 		regY := b.PopRegister()
 
 		if mType != fromMont {
-			b.Comment("dereference y")
-			b.MOVQ("y+8(FP)", regY)
+			b.MOVQ("y+8(FP)", regY, "dereference y")
 		}
 
 		for i := 0; i < F.NbWords; i++ {
@@ -230,8 +228,8 @@ func (b *asmBuilder) reduce(F *field, regT []register, result register) error {
 	// let's compare t[lastWord] with q[lastWord]
 	// (not constant time)
 	b.MOVQ(F.Q[F.NbWordsLastIndex], dx)
-	b.CMPQ(regT[F.NbWordsLastIndex], dx) // q[lastWord] - t[lastWord]
-	b.JCS("t_is_smaller")                // t < q
+	b.CMPQ(regT[F.NbWordsLastIndex], dx, "note: this is not constant time, comment out to have constant time mul") // q[lastWord] - t[lastWord]
+	b.JCS("t_is_smaller", "t < q")                                                                                 // t < q
 
 	// u = t - q
 	regU := make([]register, F.NbWords)

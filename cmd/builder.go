@@ -54,74 +54,83 @@ func (builder *asmBuilder) RET() {
 	builder.WriteLn("    RET")
 }
 
-func (builder *asmBuilder) MULXQ(src, lo, hi interface{}) {
-	builder.writeOp("MULXQ", src, lo, hi)
+func (builder *asmBuilder) MULXQ(src, lo, hi interface{}, comment ...string) {
+	builder.writeOp(comment, "MULXQ", src, lo, hi)
 }
 
-func (builder *asmBuilder) SUBQ(r1, r2 interface{}) {
-	builder.writeOp("SUBQ", r1, r2)
+func (builder *asmBuilder) SUBQ(r1, r2 interface{}, comment ...string) {
+	builder.writeOp(comment, "SUBQ", r1, r2)
 }
 
-func (builder *asmBuilder) SBBQ(r1, r2 interface{}) {
-	builder.writeOp("SBBQ", r1, r2)
+func (builder *asmBuilder) SBBQ(r1, r2 interface{}, comment ...string) {
+	builder.writeOp(comment, "SBBQ", r1, r2)
 }
 
-func (builder *asmBuilder) ADDQ(r1, r2 interface{}) {
-	builder.writeOp("ADDQ", r1, r2)
+func (builder *asmBuilder) ADDQ(r1, r2 interface{}, comment ...string) {
+	builder.writeOp(comment, "ADDQ", r1, r2)
 }
 
-func (builder *asmBuilder) ADCQ(r1, r2 interface{}) {
-	builder.writeOp("ADCQ", r1, r2)
+func (builder *asmBuilder) ADCQ(r1, r2 interface{}, comment ...string) {
+	builder.writeOp(comment, "ADCQ", r1, r2)
 }
 
-func (builder *asmBuilder) ADOXQ(r1, r2 interface{}) {
-	builder.writeOp("ADOXQ", r1, r2)
+func (builder *asmBuilder) ADOXQ(r1, r2 interface{}, comment ...string) {
+	builder.writeOp(comment, "ADOXQ", r1, r2)
 }
 
-func (builder *asmBuilder) ADCXQ(r1, r2 interface{}) {
-	builder.writeOp("ADCXQ", r1, r2)
+func (builder *asmBuilder) ADCXQ(r1, r2 interface{}, comment ...string) {
+	builder.writeOp(comment, "ADCXQ", r1, r2)
 }
 
-func (builder *asmBuilder) XORQ(r1, r2 interface{}) {
-	builder.writeOp("XORQ", r1, r2)
+func (builder *asmBuilder) XORQ(r1, r2 interface{}, comment ...string) {
+	builder.writeOp(comment, "XORQ", r1, r2)
 }
 
-func (builder *asmBuilder) MOVQ(r1, r2 interface{}) {
-	builder.writeOp("MOVQ", r1, r2)
+func (builder *asmBuilder) MOVQ(r1, r2 interface{}, comment ...string) {
+	builder.writeOp(comment, "MOVQ", r1, r2)
 }
 
-func (builder *asmBuilder) IMULQ(r1, r2 interface{}) {
-	builder.writeOp("IMULQ", r1, r2)
+func (builder *asmBuilder) IMULQ(r1, r2 interface{}, comment ...string) {
+	builder.writeOp(comment, "IMULQ", r1, r2)
 }
 
-func (builder *asmBuilder) MULQ(r1 interface{}) {
-	builder.writeOp("MULQ", r1)
+func (builder *asmBuilder) MULQ(r1 interface{}, comment ...string) {
+	builder.writeOp(comment, "MULQ", r1)
 }
 
-func (builder *asmBuilder) CMPB(r1, r2 interface{}) {
-	builder.writeOp("CMPB", r1, r2)
+func (builder *asmBuilder) CMPB(r1, r2 interface{}, comment ...string) {
+	builder.writeOp(comment, "CMPB", r1, r2)
 }
 
-func (builder *asmBuilder) CMPQ(r1, r2 interface{}) {
-	builder.writeOp("CMPQ", r1, r2)
+func (builder *asmBuilder) CMPQ(r1, r2 interface{}, comment ...string) {
+	builder.writeOp(comment, "CMPQ", r1, r2)
 }
 
-func (builder *asmBuilder) JNE(label string) {
-	builder.writeOp("JNE", label)
+func (builder *asmBuilder) JNE(label string, comment ...string) {
+	builder.writeOp(comment, "JNE", label)
 }
 
-func (builder *asmBuilder) JCS(label string) {
-	builder.writeOp("JCS", label)
+func (builder *asmBuilder) JCS(label string, comment ...string) {
+	builder.writeOp(comment, "JCS", label)
 }
 
-func (builder *asmBuilder) JMP(label string) {
-	builder.writeOp("JMP", label)
+func (builder *asmBuilder) JMP(label string, comment ...string) {
+	builder.writeOp(comment, "JMP", label)
 }
 
-func (builder *asmBuilder) writeOp(instruction string, r0 interface{}, r ...interface{}) {
+func (builder *asmBuilder) writeOp(comments []string, instruction string, r0 interface{}, r ...interface{}) {
 	builder.Write(fmt.Sprintf("    %s %s", instruction, op(r0)))
+	l := len(op(r0))
 	for _, rn := range r {
 		builder.Write(fmt.Sprintf(", %s", op(rn)))
+		l += (2 + len(op(rn)))
+	}
+	if len(comments) == 1 {
+		l = 50 - l
+		for i := 0; i < l; i++ {
+			builder.Write(" ")
+		}
+		builder.Write("// " + comments[0])
 	}
 	builder.Write("\n")
 }

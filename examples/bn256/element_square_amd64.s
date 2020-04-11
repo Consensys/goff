@@ -16,14 +16,11 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
 
 	// if adx and mulx instructions are not available, uses MUL algorithm.
 	
-    // check if we support adx and mulx
-    CMPB ·supportAdx(SB), $0x0000000000000001
-    JNE no_adx
-    // dereference y
-    MOVQ y+8(FP), DI
+    CMPB ·supportAdx(SB), $0x0000000000000001             // check if we support MULX and ADOX instructions
+    JNE no_adx                                            // no support for MULX or ADOX instructions
+    MOVQ y+8(FP), DI                                       // dereference y
     // outter loop 0
-    // clear up flags
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     // dx = y[0]
     MOVQ 0(DI), DX
     MULXQ 8(DI), R9, R10
@@ -33,7 +30,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R11
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     MULXQ DX, CX, DX
     ADCXQ R9, R9
     MOVQ R9, BX
@@ -48,7 +45,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ AX, R8
     MOVQ $0x87d20782e4866389, DX
     MULXQ CX, R12, DX
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x3c208c16d87cfd47, DX
     MULXQ R12, AX, DX
     ADCXQ CX, AX
@@ -69,8 +66,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, SI
     ADOXQ R8, SI
     // outter loop 1
-    // clear up flags
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     // dx = y[1]
     MOVQ 8(DI), DX
     MULXQ 16(DI), R13, R14
@@ -78,14 +74,14 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R14
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     ADCXQ R13, R13
     ADOXQ R13, BP
     ADCXQ R14, R14
     ADOXQ R14, SI
     ADCXQ R8, R8
     ADOXQ AX, R8
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     MULXQ DX, AX, DX
     ADOXQ AX, BX
     MOVQ $0x0000000000000000, AX
@@ -94,7 +90,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ AX, R8
     MOVQ $0x87d20782e4866389, DX
     MULXQ CX, R15, DX
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x3c208c16d87cfd47, DX
     MULXQ R15, AX, DX
     ADCXQ CX, AX
@@ -115,8 +111,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, SI
     ADOXQ R8, SI
     // outter loop 2
-    // clear up flags
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     // dx = y[2]
     MOVQ 16(DI), DX
     MULXQ 24(DI), R9, R8
@@ -124,7 +119,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ R9, SI
     ADCXQ R8, R8
     ADOXQ AX, R8
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     MULXQ DX, AX, DX
     ADOXQ AX, BP
     MOVQ $0x0000000000000000, AX
@@ -132,7 +127,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ AX, R8
     MOVQ $0x87d20782e4866389, DX
     MULXQ CX, R10, DX
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x3c208c16d87cfd47, DX
     MULXQ R10, AX, DX
     ADCXQ CX, AX
@@ -153,8 +148,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, SI
     ADOXQ R8, SI
     // outter loop 3
-    // clear up flags
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     // dx = y[3]
     MOVQ 24(DI), DX
     MULXQ DX, AX, R8
@@ -163,7 +157,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R8
     MOVQ $0x87d20782e4866389, DX
     MULXQ CX, R11, DX
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x3c208c16d87cfd47, DX
     MULXQ R11, AX, DX
     ADCXQ CX, AX
@@ -187,8 +181,8 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     MOVQ res+0(FP), R12
 reduce:
     MOVQ $0x30644e72e131a029, DX
-    CMPQ SI, DX
-    JCS t_is_smaller
+    CMPQ SI, DX                                            // note: this is not constant time, comment out to have constant time mul
+    JCS t_is_smaller                                      // t < q
     MOVQ CX, R13
     MOVQ $0x3c208c16d87cfd47, DX
     SUBQ DX, R13

@@ -16,14 +16,11 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
 
 	// if adx and mulx instructions are not available, uses MUL algorithm.
 	
-    // check if we support adx and mulx
-    CMPB ·supportAdx(SB), $0x0000000000000001
-    JNE no_adx
-    // dereference y
-    MOVQ y+8(FP), R9
+    CMPB ·supportAdx(SB), $0x0000000000000001             // check if we support MULX and ADOX instructions
+    JNE no_adx                                            // no support for MULX or ADOX instructions
+    MOVQ y+8(FP), R9                                       // dereference y
     // outter loop 0
-    // clear up flags
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     // dx = y[0]
     MOVQ 0(R9), DX
     MULXQ 8(R9), R11, R12
@@ -37,7 +34,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R15
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R10
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     MULXQ DX, CX, DX
     ADCXQ R11, R11
     MOVQ R11, BX
@@ -58,7 +55,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ AX, R10
     MOVQ $0x8508bfffffffffff, DX
     MULXQ CX, R11, DX
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x8508c00000000001, DX
     MULXQ R11, AX, DX
     ADCXQ CX, AX
@@ -87,8 +84,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R8
     ADOXQ R10, R8
     // outter loop 1
-    // clear up flags
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     // dx = y[1]
     MOVQ 8(R9), DX
     MULXQ 16(R9), R12, R13
@@ -100,7 +96,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R15
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R10
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     ADCXQ R12, R12
     ADOXQ R12, BP
     ADCXQ R13, R13
@@ -111,7 +107,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ R15, R8
     ADCXQ R10, R10
     ADOXQ AX, R10
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     MULXQ DX, AX, DX
     ADOXQ AX, BX
     MOVQ $0x0000000000000000, AX
@@ -122,7 +118,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ AX, R10
     MOVQ $0x8508bfffffffffff, DX
     MULXQ CX, R11, DX
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x8508c00000000001, DX
     MULXQ R11, AX, DX
     ADCXQ CX, AX
@@ -151,8 +147,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R8
     ADOXQ R10, R8
     // outter loop 2
-    // clear up flags
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     // dx = y[2]
     MOVQ 16(R9), DX
     MULXQ 24(R9), R12, R13
@@ -162,7 +157,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R14
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R10
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     ADCXQ R12, R12
     ADOXQ R12, SI
     ADCXQ R13, R13
@@ -171,7 +166,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ R14, R8
     ADCXQ R10, R10
     ADOXQ AX, R10
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     MULXQ DX, AX, DX
     ADOXQ AX, BP
     MOVQ $0x0000000000000000, AX
@@ -181,7 +176,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ AX, R10
     MOVQ $0x8508bfffffffffff, DX
     MULXQ CX, R15, DX
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x8508c00000000001, DX
     MULXQ R15, AX, DX
     ADCXQ CX, AX
@@ -210,8 +205,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R8
     ADOXQ R10, R8
     // outter loop 3
-    // clear up flags
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     // dx = y[3]
     MOVQ 24(R9), DX
     MULXQ 32(R9), R11, R12
@@ -219,14 +213,14 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R12
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R10
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     ADCXQ R11, R11
     ADOXQ R11, DI
     ADCXQ R12, R12
     ADOXQ R12, R8
     ADCXQ R10, R10
     ADOXQ AX, R10
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     MULXQ DX, AX, DX
     ADOXQ AX, SI
     MOVQ $0x0000000000000000, AX
@@ -235,7 +229,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ AX, R10
     MOVQ $0x8508bfffffffffff, DX
     MULXQ CX, R13, DX
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x8508c00000000001, DX
     MULXQ R13, AX, DX
     ADCXQ CX, AX
@@ -264,8 +258,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R8
     ADOXQ R10, R8
     // outter loop 4
-    // clear up flags
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     // dx = y[4]
     MOVQ 32(R9), DX
     MULXQ 40(R9), R14, R10
@@ -273,7 +266,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ R14, R8
     ADCXQ R10, R10
     ADOXQ AX, R10
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     MULXQ DX, AX, DX
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
@@ -281,7 +274,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ AX, R10
     MOVQ $0x8508bfffffffffff, DX
     MULXQ CX, R15, DX
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x8508c00000000001, DX
     MULXQ R15, AX, DX
     ADCXQ CX, AX
@@ -310,8 +303,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R8
     ADOXQ R10, R8
     // outter loop 5
-    // clear up flags
-    XORQ AX, AX
+    XORQ AX, AX                                            // clear up flags
     // dx = y[5]
     MOVQ 40(R9), DX
     MULXQ DX, AX, R10
@@ -320,7 +312,7 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R10
     MOVQ $0x8508bfffffffffff, DX
     MULXQ CX, R11, DX
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x8508c00000000001, DX
     MULXQ R11, AX, DX
     ADCXQ CX, AX
@@ -352,8 +344,8 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     MOVQ res+0(FP), R12
 reduce:
     MOVQ $0x01ae3a4617c510ea, DX
-    CMPQ R8, DX
-    JCS t_is_smaller
+    CMPQ R8, DX                                            // note: this is not constant time, comment out to have constant time mul
+    JCS t_is_smaller                                      // t < q
     MOVQ CX, R13
     MOVQ $0x8508c00000000001, DX
     SUBQ DX, R13

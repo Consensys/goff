@@ -17,19 +17,14 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
 	// 		    (C,t[j-1]) := t[j] + m*q[j] + C
 	// 		t[N-1] = C + A
 
-    // dereference x
-    MOVQ res+0(FP), R9
-    // check if we support adx and mulx
-    CMPB ·supportAdx(SB), $0x0000000000000001
-    JNE no_adx
-    // dereference y
-    MOVQ y+8(FP), R12
+    MOVQ res+0(FP), R9                                     // dereference x
+    CMPB ·supportAdx(SB), $0x0000000000000001             // check if we support MULX and ADOX instructions
+    JNE no_adx                                            // no support for MULX or ADOX instructions
+    MOVQ y+8(FP), R12                                      // dereference y
     // outter loop 0
-    // clear up flags
-    XORQ DX, DX
-    // DX = y[0]
-    MOVQ 0(R12), DX
-    MULXQ 0(R9), CX, BX
+    XORQ DX, DX                                            // clear up flags
+    MOVQ 0(R12), DX                                        // DX = y[0]
+    MULXQ 0(R9), CX, BX                                     // t[0], t[1] = y[0] * x[0]
     MULXQ 8(R9), AX, BP
     ADOXQ AX, BX
     MULXQ 16(R9), AX, SI
@@ -40,16 +35,20 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     ADOXQ AX, DI
     MULXQ 40(R9), AX, R11
     ADOXQ AX, R8
+    // add the last carries to R11
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
     MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX
-    XORQ DX, DX
+    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
+    XORQ DX, DX                                            // clear the flags
+    // C,_ := t[0] + m*q[0]
     MOVQ $0x8508c00000000001, DX
     MULXQ R10, AX, DX
     ADCXQ CX, AX
     MOVQ DX, CX
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
     MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
     MULXQ R10, AX, BX
@@ -74,37 +73,39 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R8
     ADOXQ R11, R8
     // outter loop 1
-    // clear up flags
-    XORQ DX, DX
-    // DX = y[1]
-    MOVQ 8(R12), DX
+    XORQ DX, DX                                            // clear up flags
+    MOVQ 8(R12), DX                                        // DX = y[1]
     MULXQ 0(R9), AX, R11
     ADOXQ AX, CX
-    ADCXQ R11, BX
+    ADCXQ R11, BX                                           // t[1] += regA
     MULXQ 8(R9), AX, R11
     ADOXQ AX, BX
-    ADCXQ R11, BP
+    ADCXQ R11, BP                                           // t[2] += regA
     MULXQ 16(R9), AX, R11
     ADOXQ AX, BP
-    ADCXQ R11, SI
+    ADCXQ R11, SI                                           // t[3] += regA
     MULXQ 24(R9), AX, R11
     ADOXQ AX, SI
-    ADCXQ R11, DI
+    ADCXQ R11, DI                                           // t[4] += regA
     MULXQ 32(R9), AX, R11
     ADOXQ AX, DI
-    ADCXQ R11, R8
+    ADCXQ R11, R8                                           // t[5] += regA
     MULXQ 40(R9), AX, R11
     ADOXQ AX, R8
+    // add the last carries to R11
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
     MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX
-    XORQ DX, DX
+    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
+    XORQ DX, DX                                            // clear the flags
+    // C,_ := t[0] + m*q[0]
     MOVQ $0x8508c00000000001, DX
     MULXQ R10, AX, DX
     ADCXQ CX, AX
     MOVQ DX, CX
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
     MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
     MULXQ R10, AX, BX
@@ -129,37 +130,39 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R8
     ADOXQ R11, R8
     // outter loop 2
-    // clear up flags
-    XORQ DX, DX
-    // DX = y[2]
-    MOVQ 16(R12), DX
+    XORQ DX, DX                                            // clear up flags
+    MOVQ 16(R12), DX                                       // DX = y[2]
     MULXQ 0(R9), AX, R11
     ADOXQ AX, CX
-    ADCXQ R11, BX
+    ADCXQ R11, BX                                           // t[1] += regA
     MULXQ 8(R9), AX, R11
     ADOXQ AX, BX
-    ADCXQ R11, BP
+    ADCXQ R11, BP                                           // t[2] += regA
     MULXQ 16(R9), AX, R11
     ADOXQ AX, BP
-    ADCXQ R11, SI
+    ADCXQ R11, SI                                           // t[3] += regA
     MULXQ 24(R9), AX, R11
     ADOXQ AX, SI
-    ADCXQ R11, DI
+    ADCXQ R11, DI                                           // t[4] += regA
     MULXQ 32(R9), AX, R11
     ADOXQ AX, DI
-    ADCXQ R11, R8
+    ADCXQ R11, R8                                           // t[5] += regA
     MULXQ 40(R9), AX, R11
     ADOXQ AX, R8
+    // add the last carries to R11
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
     MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX
-    XORQ DX, DX
+    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
+    XORQ DX, DX                                            // clear the flags
+    // C,_ := t[0] + m*q[0]
     MOVQ $0x8508c00000000001, DX
     MULXQ R10, AX, DX
     ADCXQ CX, AX
     MOVQ DX, CX
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
     MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
     MULXQ R10, AX, BX
@@ -184,37 +187,39 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R8
     ADOXQ R11, R8
     // outter loop 3
-    // clear up flags
-    XORQ DX, DX
-    // DX = y[3]
-    MOVQ 24(R12), DX
+    XORQ DX, DX                                            // clear up flags
+    MOVQ 24(R12), DX                                       // DX = y[3]
     MULXQ 0(R9), AX, R11
     ADOXQ AX, CX
-    ADCXQ R11, BX
+    ADCXQ R11, BX                                           // t[1] += regA
     MULXQ 8(R9), AX, R11
     ADOXQ AX, BX
-    ADCXQ R11, BP
+    ADCXQ R11, BP                                           // t[2] += regA
     MULXQ 16(R9), AX, R11
     ADOXQ AX, BP
-    ADCXQ R11, SI
+    ADCXQ R11, SI                                           // t[3] += regA
     MULXQ 24(R9), AX, R11
     ADOXQ AX, SI
-    ADCXQ R11, DI
+    ADCXQ R11, DI                                           // t[4] += regA
     MULXQ 32(R9), AX, R11
     ADOXQ AX, DI
-    ADCXQ R11, R8
+    ADCXQ R11, R8                                           // t[5] += regA
     MULXQ 40(R9), AX, R11
     ADOXQ AX, R8
+    // add the last carries to R11
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
     MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX
-    XORQ DX, DX
+    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
+    XORQ DX, DX                                            // clear the flags
+    // C,_ := t[0] + m*q[0]
     MOVQ $0x8508c00000000001, DX
     MULXQ R10, AX, DX
     ADCXQ CX, AX
     MOVQ DX, CX
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
     MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
     MULXQ R10, AX, BX
@@ -239,37 +244,39 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R8
     ADOXQ R11, R8
     // outter loop 4
-    // clear up flags
-    XORQ DX, DX
-    // DX = y[4]
-    MOVQ 32(R12), DX
+    XORQ DX, DX                                            // clear up flags
+    MOVQ 32(R12), DX                                       // DX = y[4]
     MULXQ 0(R9), AX, R11
     ADOXQ AX, CX
-    ADCXQ R11, BX
+    ADCXQ R11, BX                                           // t[1] += regA
     MULXQ 8(R9), AX, R11
     ADOXQ AX, BX
-    ADCXQ R11, BP
+    ADCXQ R11, BP                                           // t[2] += regA
     MULXQ 16(R9), AX, R11
     ADOXQ AX, BP
-    ADCXQ R11, SI
+    ADCXQ R11, SI                                           // t[3] += regA
     MULXQ 24(R9), AX, R11
     ADOXQ AX, SI
-    ADCXQ R11, DI
+    ADCXQ R11, DI                                           // t[4] += regA
     MULXQ 32(R9), AX, R11
     ADOXQ AX, DI
-    ADCXQ R11, R8
+    ADCXQ R11, R8                                           // t[5] += regA
     MULXQ 40(R9), AX, R11
     ADOXQ AX, R8
+    // add the last carries to R11
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
     MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX
-    XORQ DX, DX
+    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
+    XORQ DX, DX                                            // clear the flags
+    // C,_ := t[0] + m*q[0]
     MOVQ $0x8508c00000000001, DX
     MULXQ R10, AX, DX
     ADCXQ CX, AX
     MOVQ DX, CX
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
     MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
     MULXQ R10, AX, BX
@@ -294,37 +301,39 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R8
     ADOXQ R11, R8
     // outter loop 5
-    // clear up flags
-    XORQ DX, DX
-    // DX = y[5]
-    MOVQ 40(R12), DX
+    XORQ DX, DX                                            // clear up flags
+    MOVQ 40(R12), DX                                       // DX = y[5]
     MULXQ 0(R9), AX, R11
     ADOXQ AX, CX
-    ADCXQ R11, BX
+    ADCXQ R11, BX                                           // t[1] += regA
     MULXQ 8(R9), AX, R11
     ADOXQ AX, BX
-    ADCXQ R11, BP
+    ADCXQ R11, BP                                           // t[2] += regA
     MULXQ 16(R9), AX, R11
     ADOXQ AX, BP
-    ADCXQ R11, SI
+    ADCXQ R11, SI                                           // t[3] += regA
     MULXQ 24(R9), AX, R11
     ADOXQ AX, SI
-    ADCXQ R11, DI
+    ADCXQ R11, DI                                           // t[4] += regA
     MULXQ 32(R9), AX, R11
     ADOXQ AX, DI
-    ADCXQ R11, R8
+    ADCXQ R11, R8                                           // t[5] += regA
     MULXQ 40(R9), AX, R11
     ADOXQ AX, R8
+    // add the last carries to R11
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
     MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX
-    XORQ DX, DX
+    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
+    XORQ DX, DX                                            // clear the flags
+    // C,_ := t[0] + m*q[0]
     MOVQ $0x8508c00000000001, DX
     MULXQ R10, AX, DX
     ADCXQ CX, AX
     MOVQ DX, CX
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
     MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
     MULXQ R10, AX, BX
@@ -350,8 +359,8 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     ADOXQ R11, R8
 reduce:
     MOVQ $0x01ae3a4617c510ea, DX
-    CMPQ R8, DX
-    JCS t_is_smaller
+    CMPQ R8, DX                                            // note: this is not constant time, comment out to have constant time mul
+    JCS t_is_smaller                                      // t < q
     MOVQ CX, R13
     MOVQ $0x8508c00000000001, DX
     SUBQ DX, R13
@@ -387,8 +396,7 @@ t_is_smaller:
     MOVQ R8, 40(R9)
     RET
 no_adx:
-    // dereference y
-    MOVQ y+8(FP), R12
+    MOVQ y+8(FP), R12                                      // dereference y
     MOVQ 0(R9), AX
     MOVQ 0(R12), R14
     MULQ R14
@@ -943,27 +951,27 @@ TEXT ·fromMontElement(SB), NOSPLIT, $0-8
 	// 		t[N-1] = C
 
 
-    // dereference x
-    MOVQ res+0(FP), R9
-    MOVQ 0(R9), CX
-    MOVQ 8(R9), BX
-    MOVQ 16(R9), BP
-    MOVQ 24(R9), SI
-    MOVQ 32(R9), DI
-    MOVQ 40(R9), R8
-    // check if we support adx and mulx
-    CMPB ·supportAdx(SB), $0x0000000000000001
-    JNE no_adx
+    MOVQ res+0(FP), R9                                     // dereference x
+    MOVQ 0(R9), CX                                         // t[0] = x[0]
+    MOVQ 8(R9), BX                                         // t[1] = x[1]
+    MOVQ 16(R9), BP                                        // t[2] = x[2]
+    MOVQ 24(R9), SI                                        // t[3] = x[3]
+    MOVQ 32(R9), DI                                        // t[4] = x[4]
+    MOVQ 40(R9), R8                                        // t[5] = x[5]
+    CMPB ·supportAdx(SB), $0x0000000000000001             // check if we support MULX and ADOX instructions
+    JNE no_adx                                            // no support for MULX or ADOX instructions
     // outter loop 0
-    // clear up flags
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX
-    XORQ DX, DX
+    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
+    XORQ DX, DX                                            // clear the flags
+    // C,_ := t[0] + m*q[0]
     MOVQ $0x8508c00000000001, DX
     MULXQ R10, AX, DX
     ADCXQ CX, AX
     MOVQ DX, CX
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
     MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
     MULXQ R10, AX, BX
@@ -988,15 +996,17 @@ TEXT ·fromMontElement(SB), NOSPLIT, $0-8
     ADCXQ AX, R8
     ADOXQ AX, R8
     // outter loop 1
-    // clear up flags
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX
-    XORQ DX, DX
+    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
+    XORQ DX, DX                                            // clear the flags
+    // C,_ := t[0] + m*q[0]
     MOVQ $0x8508c00000000001, DX
     MULXQ R10, AX, DX
     ADCXQ CX, AX
     MOVQ DX, CX
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
     MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
     MULXQ R10, AX, BX
@@ -1021,15 +1031,17 @@ TEXT ·fromMontElement(SB), NOSPLIT, $0-8
     ADCXQ AX, R8
     ADOXQ AX, R8
     // outter loop 2
-    // clear up flags
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX
-    XORQ DX, DX
+    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
+    XORQ DX, DX                                            // clear the flags
+    // C,_ := t[0] + m*q[0]
     MOVQ $0x8508c00000000001, DX
     MULXQ R10, AX, DX
     ADCXQ CX, AX
     MOVQ DX, CX
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
     MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
     MULXQ R10, AX, BX
@@ -1054,15 +1066,17 @@ TEXT ·fromMontElement(SB), NOSPLIT, $0-8
     ADCXQ AX, R8
     ADOXQ AX, R8
     // outter loop 3
-    // clear up flags
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX
-    XORQ DX, DX
+    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
+    XORQ DX, DX                                            // clear the flags
+    // C,_ := t[0] + m*q[0]
     MOVQ $0x8508c00000000001, DX
     MULXQ R10, AX, DX
     ADCXQ CX, AX
     MOVQ DX, CX
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
     MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
     MULXQ R10, AX, BX
@@ -1087,15 +1101,17 @@ TEXT ·fromMontElement(SB), NOSPLIT, $0-8
     ADCXQ AX, R8
     ADOXQ AX, R8
     // outter loop 4
-    // clear up flags
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX
-    XORQ DX, DX
+    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
+    XORQ DX, DX                                            // clear the flags
+    // C,_ := t[0] + m*q[0]
     MOVQ $0x8508c00000000001, DX
     MULXQ R10, AX, DX
     ADCXQ CX, AX
     MOVQ DX, CX
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
     MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
     MULXQ R10, AX, BX
@@ -1120,15 +1136,17 @@ TEXT ·fromMontElement(SB), NOSPLIT, $0-8
     ADCXQ AX, R8
     ADOXQ AX, R8
     // outter loop 5
-    // clear up flags
-    XORQ DX, DX
+    XORQ DX, DX                                            // clear up flags
     MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX
-    XORQ DX, DX
+    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
+    XORQ DX, DX                                            // clear the flags
+    // C,_ := t[0] + m*q[0]
     MOVQ $0x8508c00000000001, DX
     MULXQ R10, AX, DX
     ADCXQ CX, AX
     MOVQ DX, CX
+    // for j=1 to N-1
+    //     (C,t[j-1]) := t[j] + m*q[j] + C
     MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
     MULXQ R10, AX, BX
@@ -1154,8 +1172,8 @@ TEXT ·fromMontElement(SB), NOSPLIT, $0-8
     ADOXQ AX, R8
 reduce:
     MOVQ $0x01ae3a4617c510ea, DX
-    CMPQ R8, DX
-    JCS t_is_smaller
+    CMPQ R8, DX                                            // note: this is not constant time, comment out to have constant time mul
+    JCS t_is_smaller                                      // t < q
     MOVQ CX, R11
     MOVQ $0x8508c00000000001, DX
     SUBQ DX, R11

@@ -36,20 +36,17 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 		regT[i] = b.PopRegister()
 	}
 
-	b.Comment("check if we support adx and mulx")
-	b.CMPB("·supportAdx(SB)", 1)
-	b.JNE("no_adx")
+	b.CMPB("·supportAdx(SB)", 1, "check if we support MULX and ADOX instructions")
+	b.JNE("no_adx", "no support for MULX or ADOX instructions")
 
 	{
 		regY := b.PopRegister()
-		b.Comment("dereference y")
-		b.MOVQ("y+8(FP)", regY)
+		b.MOVQ("y+8(FP)", regY, "dereference y")
 		regA := b.PopRegister()
 
 		for i := 0; i < F.NbWords; i++ {
 			b.Comment(fmt.Sprintf("outter loop %d", i))
-			b.Comment("clear up flags")
-			b.XORQ(ax, ax)
+			b.XORQ(ax, ax, "clear up flags")
 
 			b.Comment(fmt.Sprintf("dx = y[%d]", i))
 			b.MOVQ(regY.at(i), dx)
@@ -89,7 +86,7 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 					}
 					b.MOVQ(0, ax)
 					b.ADCXQ(ax, regA)
-					b.XORQ(ax, ax)
+					b.XORQ(ax, ax, "clear up flags")
 				}
 
 				if i == 0 {
@@ -126,7 +123,7 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 					b.ADOXQ(ax, regA)
 
 					// reset flags
-					b.XORQ(ax, ax)
+					b.XORQ(ax, ax, "clear up flags")
 
 					// C, t[i] = x[i] * x[i] + t[i]
 					b.MULXQ(dx, ax, dx)
@@ -161,7 +158,7 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 			b.MULXQ(regT[0], regM, dx)
 
 			// clear the carry flags
-			b.XORQ(dx, dx)
+			b.XORQ(dx, dx, "clear up flags")
 
 			// C,_ := t[0] + m*q[0]
 			b.MOVQ(F.Q[0], dx)
