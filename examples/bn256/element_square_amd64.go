@@ -24,30 +24,11 @@ package bn256
 // /!\ WARNING /!\
 
 //go:noescape
-func mulAssignElement(res, y *Element)
+func squareElement(res, y *Element)
 
-//go:noescape
-func fromMontElement(res *Element)
-
-// Mul z = x * y mod q
+// Square z = x * x mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
-func (z *Element) Mul(x, y *Element) *Element {
-	if z == x {
-		mulAssignElement(z, y)
-		return z
-	} else if z == y {
-		mulAssignElement(z, x)
-		return z
-	} else {
-		z.Set(x)
-		mulAssignElement(z, y)
-		return z
-	}
-}
-
-// MulAssign z = z * x mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *Element) MulAssign(x *Element) *Element {
-	mulAssignElement(z, x)
+func (z *Element) Square(x *Element) *Element {
+	squareElement(z, x)
 	return z
 }

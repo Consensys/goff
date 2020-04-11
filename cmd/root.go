@@ -94,8 +94,6 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		element.MulFIPS,
 		element.MulNoCarry,
 		element.Sqrt,
-		element.SquareCIOSNoCarry,
-		element.SquareNoCarryTemplate,
 	}
 
 	// test file templates
@@ -163,6 +161,29 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 			}
 		}
 
+		if F.NoCarrySquare {
+			pathMulAsm := filepath.Join(outputDir, eName+"_square_amd64.s")
+			f, err := os.Create(pathMulAsm)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			builder := newAsmBuilder(f)
+			builder.Write("#include \"textflag.h\"")
+			if err := builder.square(F); err != nil {
+				return err
+			}
+
+			// generate mul_amd64.go
+			src := []string{
+				element.SquareAMD64,
+			}
+			pathSrc := filepath.Join(outputDir, eName+"_square_amd64.go")
+			if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	{
@@ -177,6 +198,26 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		bavardOptsCpy := make([]func(*bavard.Bavard) error, len(bavardOpts))
 		copy(bavardOptsCpy, bavardOpts)
 		if F.ASM {
+			bavardOptsCpy = append(bavardOptsCpy, bavard.BuildTag("!amd64"))
+		}
+		if err := bavard.Generate(pathSrc, src, F, bavardOptsCpy...); err != nil {
+			return err
+		}
+	}
+
+	{
+		// generate square.go
+		src := []string{
+			element.SquareCIOSNoCarry,
+			element.SquareNoCarryTemplate,
+			element.MulCIOS,
+			element.MulNoCarry,
+			element.Reduce,
+		}
+		pathSrc := filepath.Join(outputDir, eName+"_square.go")
+		bavardOptsCpy := make([]func(*bavard.Bavard) error, len(bavardOpts))
+		copy(bavardOptsCpy, bavardOpts)
+		if F.ASM && F.NoCarrySquare {
 			bavardOptsCpy = append(bavardOptsCpy, bavard.BuildTag("!amd64"))
 		}
 		if err := bavard.Generate(pathSrc, src, F, bavardOptsCpy...); err != nil {

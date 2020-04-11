@@ -17,13 +17,19 @@
 // Package bls377 contains field arithmetic operations
 package bls377
 
+// /!\ WARNING /!\
+// this code has not been audited and is provided as-is. In particular,
+// there is no security guarantees such as constant time implementation
+// or side-channel attack resistance
+// /!\ WARNING /!\
+
 //go:noescape
 func mulAssignElement(res, y *Element)
 
 //go:noescape
 func fromMontElement(res *Element)
 
-// Mul z = x * y mod q (constant time)
+// Mul z = x * y mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Mul(x, y *Element) *Element {
 	if z == x {
@@ -39,7 +45,7 @@ func (z *Element) Mul(x, y *Element) *Element {
 	}
 }
 
-// MulAssign z = z * x mod q (constant time)
+// MulAssign z = z * x mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) MulAssign(x *Element) *Element {
 	mulAssignElement(z, x)

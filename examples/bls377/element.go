@@ -752,15 +752,3 @@ func (z *Element) Sqrt(x *Element) *Element {
 		r = m
 	}
 }
-
-// Square z = x * x mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *Element) Square(x *Element) *Element {
-
-	if z != x {
-		z.Set(x)
-	}
-	mulAssignElement(z, x)
-	return z
-
-}

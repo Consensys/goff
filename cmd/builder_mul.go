@@ -227,6 +227,12 @@ func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 func (b *asmBuilder) reduce(F *field, regT []register, result register) error {
 	b.WriteLn("reduce:")
 
+	// let's compare t[lastWord] with q[lastWord]
+	// (not constant time)
+	b.MOVQ(F.Q[F.NbWordsLastIndex], dx)
+	b.CMPQ(regT[F.NbWordsLastIndex], dx) // q[lastWord] - t[lastWord]
+	b.JCS("t_is_smaller")                // t < q
+
 	// u = t - q
 	regU := make([]register, F.NbWords)
 	for i := 0; i < F.NbWords; i++ {

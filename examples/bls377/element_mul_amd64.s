@@ -349,6 +349,9 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R8
     ADOXQ R11, R8
 reduce:
+    MOVQ $0x01ae3a4617c510ea, DX
+    CMPQ R8, DX
+    JCS t_is_smaller
     MOVQ CX, R13
     MOVQ $0x8508c00000000001, DX
     SUBQ DX, R13
@@ -1150,6 +1153,9 @@ TEXT ·fromMontElement(SB), NOSPLIT, $0-8
     ADCXQ AX, R8
     ADOXQ AX, R8
 reduce:
+    MOVQ $0x01ae3a4617c510ea, DX
+    CMPQ R8, DX
+    JCS t_is_smaller
     MOVQ CX, R11
     MOVQ $0x8508c00000000001, DX
     SUBQ DX, R11

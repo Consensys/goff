@@ -102,6 +102,10 @@ func (builder *asmBuilder) CMPB(r1, r2 interface{}) {
 	builder.writeOp("CMPB", r1, r2)
 }
 
+func (builder *asmBuilder) CMPQ(r1, r2 interface{}) {
+	builder.writeOp("CMPQ", r1, r2)
+}
+
 func (builder *asmBuilder) JNE(label string) {
 	builder.writeOp("JNE", label)
 }

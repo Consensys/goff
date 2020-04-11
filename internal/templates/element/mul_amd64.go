@@ -2,6 +2,12 @@ package element
 
 const MontgomeryMultiplicationAMD64 = `
 
+// /!\ WARNING /!\
+// this code has not been audited and is provided as-is. In particular, 
+// there is no security guarantees such as constant time implementation 
+// or side-channel attack resistance
+// /!\ WARNING /!\
+
 //go:noescape
 func mulAssign{{.ElementName}}(res,y *{{.ElementName}})
 
@@ -9,7 +15,7 @@ func mulAssign{{.ElementName}}(res,y *{{.ElementName}})
 func fromMont{{.ElementName}}(res *{{.ElementName}}) 
 
 
-// Mul z = x * y mod q (constant time)
+// Mul z = x * y mod q 
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
 	if z == x {
@@ -25,7 +31,7 @@ func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
 	}
 }
 
-// MulAssign z = z * x mod q (constant time)
+// MulAssign z = z * x mod q 
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) MulAssign(x *{{.ElementName}}) *{{.ElementName}} {
 	mulAssign{{.ElementName}}(z, x)
