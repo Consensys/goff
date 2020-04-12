@@ -60,6 +60,11 @@ func fromMont{{.ElementName}}(z *{{.ElementName}}) {
 
 	{{ template "reduce" .}}
 }
+
+// for test purposes
+func reduce{{.ElementName}}(z *{{.ElementName}})  {
+	{{ template "reduce" . }}
+}
 {{- end}}
 
 

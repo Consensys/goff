@@ -748,3 +748,42 @@ no_adx:
     MOVQ DX, R13
     MOVQ R13, SI
     JMP reduce
+
+
+// func reduceElement(res *Element)
+TEXT ·reduceElement(SB), NOSPLIT, $0-8
+	// test purposes
+
+    MOVQ res+0(FP), DI                                     // dereference x
+    MOVQ 0(DI), CX                                         // t[0] = x[0]
+    MOVQ 8(DI), BX                                         // t[1] = x[1]
+    MOVQ 16(DI), BP                                        // t[2] = x[2]
+    MOVQ 24(DI), SI                                        // t[3] = x[3]
+reduce:
+    MOVQ $0x30644e72e131a029, DX
+    CMPQ SI, DX                                            // note: this is not constant time, comment out to have constant time mul
+    JCS t_is_smaller                                      // t < q
+    MOVQ CX, R8
+    MOVQ $0x3c208c16d87cfd47, DX
+    SUBQ DX, R8
+    MOVQ BX, R9
+    MOVQ $0x97816a916871ca8d, DX
+    SBBQ DX, R9
+    MOVQ BP, R10
+    MOVQ $0xb85045b68181585d, DX
+    SBBQ DX, R10
+    MOVQ SI, R11
+    MOVQ $0x30644e72e131a029, DX
+    SBBQ DX, R11
+    JCS t_is_smaller
+    MOVQ R8, 0(DI)
+    MOVQ R9, 8(DI)
+    MOVQ R10, 16(DI)
+    MOVQ R11, 24(DI)
+    RET
+t_is_smaller:
+    MOVQ CX, 0(DI)
+    MOVQ BX, 8(DI)
+    MOVQ BP, 16(DI)
+    MOVQ SI, 24(DI)
+    RET

@@ -151,6 +151,10 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 				return err
 			}
 
+			if err := builder.reduceFunc(F); err != nil {
+				return err
+			}
+
 			// generate mul_amd64.go
 			src := []string{
 				element.MontgomeryMultiplicationAMD64,

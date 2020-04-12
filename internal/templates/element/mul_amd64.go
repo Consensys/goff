@@ -14,6 +14,8 @@ func mulAssign{{.ElementName}}(res,y *{{.ElementName}})
 //go:noescape
 func fromMont{{.ElementName}}(res *{{.ElementName}}) 
 
+//go:noescape
+func reduce{{.ElementName}}(res *{{.ElementName}})  // for test purposes
 
 // Mul z = x * y mod q 
 // see https://hackmd.io/@zkteam/modular_multiplication

@@ -332,7 +332,50 @@ func Test{{toUpper .ElementName}}Asm(t *testing.T) {
 	}
 	supportAdx = sadx
 }
-{{end}}
+
+func Test{{toUpper .ElementName}}reduce(t *testing.T) {
+	q := {{.ElementName}} {
+		{{- range $i := .NbWordsIndexesFull}}
+		{{index $.Q $i}},
+		{{- end}}
+	}
+
+	var testData []{{.ElementName}}
+	{
+		a := q
+		a[{{.NbWordsLastIndex}}] -= 1 
+		testData = append(testData, a)
+	}
+	{
+		a := q
+		a[0] -= 1 
+		testData = append(testData, a)
+	}
+	{
+		a := q
+		a[{{.NbWordsLastIndex}}] += 1 
+		testData = append(testData, a)
+	}
+	{
+		a := q
+		a[0] += 1 
+		testData = append(testData, a)
+	}
+	{
+		a := q
+		testData = append(testData, a)
+	}
+
+	for _, s := range testData {
+		expected := s
+		reduce{{.ElementName}}(&s)
+		expected.testReduce()
+		if !s.Equal(&expected) {
+			t.Fatal("reduce failed")
+		}
+	}
+	
+}
 
 // this is here for consistency purposes, to ensure MulAssign on AMD64 using asm implementation gives consistent results 
 func (z *{{.ElementName}}) testMulAssign(x *{{.ElementName}}) *{{.ElementName}} {
@@ -341,6 +384,11 @@ func (z *{{.ElementName}}) testMulAssign(x *{{.ElementName}}) *{{.ElementName}} 
 	{{ else }}
 		{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x"}}
 	{{ end }}
+	{{ template "reduce" . }}
+	return z 
+}
+
+func (z *{{.ElementName}}) testReduce() *{{.ElementName}} {
 	{{ template "reduce" . }}
 	return z 
 }
@@ -359,6 +407,10 @@ func (z *{{.ElementName}}) testSquare(x *{{.ElementName}}) *{{.ElementName}} {
 		return z.Mul(x, x)
 	{{end}}
 }
+
+{{end}}
+
+
 
 {{ if .Benches}}
 // Montgomery multiplication benchmarks

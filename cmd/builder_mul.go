@@ -222,6 +222,30 @@ func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 	return nil
 }
 
+func (b *asmBuilder) reduceFunc(F *field) error {
+	b.WriteLn(fmt.Sprintf(reduceHeader, F.ElementName, F.ElementName, F.ElementName))
+
+	// registers
+	b.registers = make([]register, len(staticRegisters))
+	copy(b.registers, staticRegisters) // re init registers in case
+	var regX register
+
+	regT := make([]register, F.NbWords)
+	for i := 0; i < F.NbWords; i++ {
+		regT[i] = b.PopRegister()
+	}
+
+	regX = b.PopRegister()
+	b.MOVQ("res+0(FP)", regX, "dereference x")
+
+	for i := 0; i < F.NbWords; i++ {
+		b.MOVQ(regX.at(i), regT[i], fmt.Sprintf("t[%d] = x[%d]", i, i))
+	}
+
+	b.reduce(F, regT, regX)
+	return nil
+}
+
 func (b *asmBuilder) reduce(F *field, regT []register, result register) error {
 	b.WriteLn("reduce:")
 
@@ -282,6 +306,13 @@ TEXT ·mulAssign%s(SB), NOSPLIT, $0-16
 	// 		for j=1 to N-1
 	// 		    (C,t[j-1]) := t[j] + m*q[j] + C
 	// 		t[N-1] = C + A
+`
+
+const reduceHeader = `
+
+// func reduce%s(res *%s)
+TEXT ·reduce%s(SB), NOSPLIT, $0-8
+	// test purposes
 `
 
 const fromMontHeader = `
