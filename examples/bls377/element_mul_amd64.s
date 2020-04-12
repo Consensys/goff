@@ -21,13 +21,16 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     CMPB ·supportAdx(SB), $0x0000000000000001             // check if we support MULX and ADOX instructions
     JNE no_adx                                            // no support for MULX or ADOX instructions
     MOVQ y+8(FP), R12                                      // dereference y
+    MOVQ 0(R9), R13                                        // R13 = x[0]
+    MOVQ 8(R9), R14                                        // R14 = x[1]
+    MOVQ 16(R9), R15                                       // R15 = x[2]
     // outter loop 0
     XORQ DX, DX                                            // clear up flags
     MOVQ 0(R12), DX                                        // DX = y[0]
-    MULXQ 0(R9), CX, BX                                     // t[0], t[1] = y[0] * x[0]
-    MULXQ 8(R9), AX, BP
+    MULXQ R13, CX, BX                                       // t[0], t[1] = y[0] * x[0]
+    MULXQ R14, AX, BP
     ADOXQ AX, BX
-    MULXQ 16(R9), AX, SI
+    MULXQ R15, AX, SI
     ADOXQ AX, BP
     MULXQ 24(R9), AX, DI
     ADOXQ AX, SI
@@ -75,13 +78,13 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     // outter loop 1
     XORQ DX, DX                                            // clear up flags
     MOVQ 8(R12), DX                                        // DX = y[1]
-    MULXQ 0(R9), AX, R11
+    MULXQ R13, AX, R11
     ADOXQ AX, CX
     ADCXQ R11, BX                                           // t[1] += regA
-    MULXQ 8(R9), AX, R11
+    MULXQ R14, AX, R11
     ADOXQ AX, BX
     ADCXQ R11, BP                                           // t[2] += regA
-    MULXQ 16(R9), AX, R11
+    MULXQ R15, AX, R11
     ADOXQ AX, BP
     ADCXQ R11, SI                                           // t[3] += regA
     MULXQ 24(R9), AX, R11
@@ -132,13 +135,13 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     // outter loop 2
     XORQ DX, DX                                            // clear up flags
     MOVQ 16(R12), DX                                       // DX = y[2]
-    MULXQ 0(R9), AX, R11
+    MULXQ R13, AX, R11
     ADOXQ AX, CX
     ADCXQ R11, BX                                           // t[1] += regA
-    MULXQ 8(R9), AX, R11
+    MULXQ R14, AX, R11
     ADOXQ AX, BX
     ADCXQ R11, BP                                           // t[2] += regA
-    MULXQ 16(R9), AX, R11
+    MULXQ R15, AX, R11
     ADOXQ AX, BP
     ADCXQ R11, SI                                           // t[3] += regA
     MULXQ 24(R9), AX, R11
@@ -189,13 +192,13 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     // outter loop 3
     XORQ DX, DX                                            // clear up flags
     MOVQ 24(R12), DX                                       // DX = y[3]
-    MULXQ 0(R9), AX, R11
+    MULXQ R13, AX, R11
     ADOXQ AX, CX
     ADCXQ R11, BX                                           // t[1] += regA
-    MULXQ 8(R9), AX, R11
+    MULXQ R14, AX, R11
     ADOXQ AX, BX
     ADCXQ R11, BP                                           // t[2] += regA
-    MULXQ 16(R9), AX, R11
+    MULXQ R15, AX, R11
     ADOXQ AX, BP
     ADCXQ R11, SI                                           // t[3] += regA
     MULXQ 24(R9), AX, R11
@@ -246,13 +249,13 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     // outter loop 4
     XORQ DX, DX                                            // clear up flags
     MOVQ 32(R12), DX                                       // DX = y[4]
-    MULXQ 0(R9), AX, R11
+    MULXQ R13, AX, R11
     ADOXQ AX, CX
     ADCXQ R11, BX                                           // t[1] += regA
-    MULXQ 8(R9), AX, R11
+    MULXQ R14, AX, R11
     ADOXQ AX, BX
     ADCXQ R11, BP                                           // t[2] += regA
-    MULXQ 16(R9), AX, R11
+    MULXQ R15, AX, R11
     ADOXQ AX, BP
     ADCXQ R11, SI                                           // t[3] += regA
     MULXQ 24(R9), AX, R11
@@ -303,13 +306,13 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     // outter loop 5
     XORQ DX, DX                                            // clear up flags
     MOVQ 40(R12), DX                                       // DX = y[5]
-    MULXQ 0(R9), AX, R11
+    MULXQ R13, AX, R11
     ADOXQ AX, CX
     ADCXQ R11, BX                                           // t[1] += regA
-    MULXQ 8(R9), AX, R11
+    MULXQ R14, AX, R11
     ADOXQ AX, BX
     ADCXQ R11, BP                                           // t[2] += regA
-    MULXQ 16(R9), AX, R11
+    MULXQ R15, AX, R11
     ADOXQ AX, BP
     ADCXQ R11, SI                                           // t[3] += regA
     MULXQ 24(R9), AX, R11
@@ -370,568 +373,568 @@ t_is_smaller:
     MOVQ R8, 40(R9)
     RET
 sub_t_q:
-    MOVQ CX, R13
+    MOVQ CX, R10
     MOVQ $0x8508c00000000001, DX
-    SUBQ DX, R13
-    MOVQ BX, R14
+    SUBQ DX, R10
+    MOVQ BX, R12
     MOVQ $0x170b5d4430000000, DX
-    SBBQ DX, R14
-    MOVQ BP, R15
-    MOVQ $0x1ef3622fba094800, DX
-    SBBQ DX, R15
-    MOVQ SI, R10
-    MOVQ $0x1a22d9f300f5138f, DX
-    SBBQ DX, R10
-    MOVQ DI, R12
-    MOVQ $0xc63b05c06ca1493b, DX
     SBBQ DX, R12
-    MOVQ R8, R11
-    MOVQ $0x01ae3a4617c510ea, DX
+    MOVQ BP, R11
+    MOVQ $0x1ef3622fba094800, DX
     SBBQ DX, R11
+    MOVQ SI, R13
+    MOVQ $0x1a22d9f300f5138f, DX
+    SBBQ DX, R13
+    MOVQ DI, R14
+    MOVQ $0xc63b05c06ca1493b, DX
+    SBBQ DX, R14
+    MOVQ R8, R15
+    MOVQ $0x01ae3a4617c510ea, DX
+    SBBQ DX, R15
     JCS t_is_smaller
-    MOVQ R13, 0(R9)
-    MOVQ R14, 8(R9)
-    MOVQ R15, 16(R9)
-    MOVQ R10, 24(R9)
-    MOVQ R12, 32(R9)
-    MOVQ R11, 40(R9)
+    MOVQ R10, 0(R9)
+    MOVQ R12, 8(R9)
+    MOVQ R11, 16(R9)
+    MOVQ R13, 24(R9)
+    MOVQ R14, 32(R9)
+    MOVQ R15, 40(R9)
     RET
 no_adx:
-    MOVQ y+8(FP), R12                                      // dereference y
+    MOVQ y+8(FP), R14                                      // dereference y
     MOVQ 0(R9), AX
-    MOVQ 0(R12), R14
-    MULQ R14
+    MOVQ 0(R14), R12
+    MULQ R12
     MOVQ AX, CX
-    MOVQ DX, R15
-    MOVQ $0x8508bfffffffffff, R10
-    IMULQ CX, R10
+    MOVQ DX, R11
+    MOVQ $0x8508bfffffffffff, R13
+    IMULQ CX, R13
     MOVQ $0x8508c00000000001, AX
-    MULQ R10
+    MULQ R13
     ADDQ CX, AX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R13
+    MOVQ DX, R10
     MOVQ 8(R9), AX
-    MULQ R14
-    MOVQ R15, BX
+    MULQ R12
+    MOVQ R11, BX
     ADDQ AX, BX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x170b5d4430000000, AX
-    MULQ R10
-    ADDQ BX, R13
+    MULQ R13
+    ADDQ BX, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, CX
-    MOVQ DX, R13
+    MOVQ R10, CX
+    MOVQ DX, R10
     MOVQ 16(R9), AX
-    MULQ R14
-    MOVQ R15, BP
+    MULQ R12
+    MOVQ R11, BP
     ADDQ AX, BP
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x1ef3622fba094800, AX
-    MULQ R10
-    ADDQ BP, R13
+    MULQ R13
+    ADDQ BP, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, BX
-    MOVQ DX, R13
+    MOVQ R10, BX
+    MOVQ DX, R10
     MOVQ 24(R9), AX
-    MULQ R14
-    MOVQ R15, SI
+    MULQ R12
+    MOVQ R11, SI
     ADDQ AX, SI
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x1a22d9f300f5138f, AX
-    MULQ R10
-    ADDQ SI, R13
+    MULQ R13
+    ADDQ SI, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, BP
-    MOVQ DX, R13
+    MOVQ R10, BP
+    MOVQ DX, R10
     MOVQ 32(R9), AX
-    MULQ R14
-    MOVQ R15, DI
+    MULQ R12
+    MOVQ R11, DI
     ADDQ AX, DI
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0xc63b05c06ca1493b, AX
-    MULQ R10
-    ADDQ DI, R13
+    MULQ R13
+    ADDQ DI, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, SI
-    MOVQ DX, R13
+    MOVQ R10, SI
+    MOVQ DX, R10
     MOVQ 40(R9), AX
-    MULQ R14
-    MOVQ R15, R8
+    MULQ R12
+    MOVQ R11, R8
     ADDQ AX, R8
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x01ae3a4617c510ea, AX
-    MULQ R10
-    ADDQ R8, R13
+    MULQ R13
+    ADDQ R8, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, DI
-    MOVQ DX, R13
-    ADDQ R13, R15
-    MOVQ R15, R8
+    MOVQ R10, DI
+    MOVQ DX, R10
+    ADDQ R10, R11
+    MOVQ R11, R8
     MOVQ 0(R9), AX
-    MOVQ 8(R12), R14
-    MULQ R14
+    MOVQ 8(R14), R12
+    MULQ R12
     ADDQ AX, CX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
-    MOVQ $0x8508bfffffffffff, R10
-    IMULQ CX, R10
+    MOVQ DX, R11
+    MOVQ $0x8508bfffffffffff, R13
+    IMULQ CX, R13
     MOVQ $0x8508c00000000001, AX
-    MULQ R10
+    MULQ R13
     ADDQ CX, AX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R13
+    MOVQ DX, R10
     MOVQ 8(R9), AX
-    MULQ R14
-    ADDQ R15, BX
+    MULQ R12
+    ADDQ R11, BX
     ADCQ $0x0000000000000000, DX
     ADDQ AX, BX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x170b5d4430000000, AX
-    MULQ R10
-    ADDQ BX, R13
+    MULQ R13
+    ADDQ BX, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, CX
-    MOVQ DX, R13
+    MOVQ R10, CX
+    MOVQ DX, R10
     MOVQ 16(R9), AX
-    MULQ R14
-    ADDQ R15, BP
+    MULQ R12
+    ADDQ R11, BP
     ADCQ $0x0000000000000000, DX
     ADDQ AX, BP
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x1ef3622fba094800, AX
-    MULQ R10
-    ADDQ BP, R13
+    MULQ R13
+    ADDQ BP, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, BX
-    MOVQ DX, R13
+    MOVQ R10, BX
+    MOVQ DX, R10
     MOVQ 24(R9), AX
-    MULQ R14
-    ADDQ R15, SI
+    MULQ R12
+    ADDQ R11, SI
     ADCQ $0x0000000000000000, DX
     ADDQ AX, SI
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x1a22d9f300f5138f, AX
-    MULQ R10
-    ADDQ SI, R13
+    MULQ R13
+    ADDQ SI, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, BP
-    MOVQ DX, R13
+    MOVQ R10, BP
+    MOVQ DX, R10
     MOVQ 32(R9), AX
-    MULQ R14
-    ADDQ R15, DI
+    MULQ R12
+    ADDQ R11, DI
     ADCQ $0x0000000000000000, DX
     ADDQ AX, DI
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0xc63b05c06ca1493b, AX
-    MULQ R10
-    ADDQ DI, R13
+    MULQ R13
+    ADDQ DI, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, SI
-    MOVQ DX, R13
+    MOVQ R10, SI
+    MOVQ DX, R10
     MOVQ 40(R9), AX
-    MULQ R14
-    ADDQ R15, R8
+    MULQ R12
+    ADDQ R11, R8
     ADCQ $0x0000000000000000, DX
     ADDQ AX, R8
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x01ae3a4617c510ea, AX
-    MULQ R10
-    ADDQ R8, R13
+    MULQ R13
+    ADDQ R8, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, DI
-    MOVQ DX, R13
-    ADDQ R13, R15
-    MOVQ R15, R8
+    MOVQ R10, DI
+    MOVQ DX, R10
+    ADDQ R10, R11
+    MOVQ R11, R8
     MOVQ 0(R9), AX
-    MOVQ 16(R12), R14
-    MULQ R14
+    MOVQ 16(R14), R12
+    MULQ R12
     ADDQ AX, CX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
-    MOVQ $0x8508bfffffffffff, R10
-    IMULQ CX, R10
+    MOVQ DX, R11
+    MOVQ $0x8508bfffffffffff, R13
+    IMULQ CX, R13
     MOVQ $0x8508c00000000001, AX
-    MULQ R10
+    MULQ R13
     ADDQ CX, AX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R13
+    MOVQ DX, R10
     MOVQ 8(R9), AX
-    MULQ R14
-    ADDQ R15, BX
+    MULQ R12
+    ADDQ R11, BX
     ADCQ $0x0000000000000000, DX
     ADDQ AX, BX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x170b5d4430000000, AX
-    MULQ R10
-    ADDQ BX, R13
+    MULQ R13
+    ADDQ BX, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, CX
-    MOVQ DX, R13
+    MOVQ R10, CX
+    MOVQ DX, R10
     MOVQ 16(R9), AX
-    MULQ R14
-    ADDQ R15, BP
+    MULQ R12
+    ADDQ R11, BP
     ADCQ $0x0000000000000000, DX
     ADDQ AX, BP
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x1ef3622fba094800, AX
-    MULQ R10
-    ADDQ BP, R13
+    MULQ R13
+    ADDQ BP, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, BX
-    MOVQ DX, R13
+    MOVQ R10, BX
+    MOVQ DX, R10
     MOVQ 24(R9), AX
-    MULQ R14
-    ADDQ R15, SI
+    MULQ R12
+    ADDQ R11, SI
     ADCQ $0x0000000000000000, DX
     ADDQ AX, SI
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x1a22d9f300f5138f, AX
-    MULQ R10
-    ADDQ SI, R13
+    MULQ R13
+    ADDQ SI, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, BP
-    MOVQ DX, R13
+    MOVQ R10, BP
+    MOVQ DX, R10
     MOVQ 32(R9), AX
-    MULQ R14
-    ADDQ R15, DI
+    MULQ R12
+    ADDQ R11, DI
     ADCQ $0x0000000000000000, DX
     ADDQ AX, DI
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0xc63b05c06ca1493b, AX
-    MULQ R10
-    ADDQ DI, R13
+    MULQ R13
+    ADDQ DI, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, SI
-    MOVQ DX, R13
+    MOVQ R10, SI
+    MOVQ DX, R10
     MOVQ 40(R9), AX
-    MULQ R14
-    ADDQ R15, R8
+    MULQ R12
+    ADDQ R11, R8
     ADCQ $0x0000000000000000, DX
     ADDQ AX, R8
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x01ae3a4617c510ea, AX
-    MULQ R10
-    ADDQ R8, R13
+    MULQ R13
+    ADDQ R8, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, DI
-    MOVQ DX, R13
-    ADDQ R13, R15
-    MOVQ R15, R8
+    MOVQ R10, DI
+    MOVQ DX, R10
+    ADDQ R10, R11
+    MOVQ R11, R8
     MOVQ 0(R9), AX
-    MOVQ 24(R12), R14
-    MULQ R14
+    MOVQ 24(R14), R12
+    MULQ R12
     ADDQ AX, CX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
-    MOVQ $0x8508bfffffffffff, R10
-    IMULQ CX, R10
+    MOVQ DX, R11
+    MOVQ $0x8508bfffffffffff, R13
+    IMULQ CX, R13
     MOVQ $0x8508c00000000001, AX
-    MULQ R10
+    MULQ R13
     ADDQ CX, AX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R13
+    MOVQ DX, R10
     MOVQ 8(R9), AX
-    MULQ R14
-    ADDQ R15, BX
+    MULQ R12
+    ADDQ R11, BX
     ADCQ $0x0000000000000000, DX
     ADDQ AX, BX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x170b5d4430000000, AX
-    MULQ R10
-    ADDQ BX, R13
+    MULQ R13
+    ADDQ BX, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, CX
-    MOVQ DX, R13
+    MOVQ R10, CX
+    MOVQ DX, R10
     MOVQ 16(R9), AX
-    MULQ R14
-    ADDQ R15, BP
+    MULQ R12
+    ADDQ R11, BP
     ADCQ $0x0000000000000000, DX
     ADDQ AX, BP
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x1ef3622fba094800, AX
-    MULQ R10
-    ADDQ BP, R13
+    MULQ R13
+    ADDQ BP, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, BX
-    MOVQ DX, R13
+    MOVQ R10, BX
+    MOVQ DX, R10
     MOVQ 24(R9), AX
-    MULQ R14
-    ADDQ R15, SI
+    MULQ R12
+    ADDQ R11, SI
     ADCQ $0x0000000000000000, DX
     ADDQ AX, SI
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x1a22d9f300f5138f, AX
-    MULQ R10
-    ADDQ SI, R13
+    MULQ R13
+    ADDQ SI, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, BP
-    MOVQ DX, R13
+    MOVQ R10, BP
+    MOVQ DX, R10
     MOVQ 32(R9), AX
-    MULQ R14
-    ADDQ R15, DI
+    MULQ R12
+    ADDQ R11, DI
     ADCQ $0x0000000000000000, DX
     ADDQ AX, DI
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0xc63b05c06ca1493b, AX
-    MULQ R10
-    ADDQ DI, R13
+    MULQ R13
+    ADDQ DI, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, SI
-    MOVQ DX, R13
+    MOVQ R10, SI
+    MOVQ DX, R10
     MOVQ 40(R9), AX
-    MULQ R14
-    ADDQ R15, R8
+    MULQ R12
+    ADDQ R11, R8
     ADCQ $0x0000000000000000, DX
     ADDQ AX, R8
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x01ae3a4617c510ea, AX
-    MULQ R10
-    ADDQ R8, R13
+    MULQ R13
+    ADDQ R8, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, DI
-    MOVQ DX, R13
-    ADDQ R13, R15
-    MOVQ R15, R8
+    MOVQ R10, DI
+    MOVQ DX, R10
+    ADDQ R10, R11
+    MOVQ R11, R8
     MOVQ 0(R9), AX
-    MOVQ 32(R12), R14
-    MULQ R14
+    MOVQ 32(R14), R12
+    MULQ R12
     ADDQ AX, CX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
-    MOVQ $0x8508bfffffffffff, R10
-    IMULQ CX, R10
+    MOVQ DX, R11
+    MOVQ $0x8508bfffffffffff, R13
+    IMULQ CX, R13
     MOVQ $0x8508c00000000001, AX
-    MULQ R10
+    MULQ R13
     ADDQ CX, AX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R13
+    MOVQ DX, R10
     MOVQ 8(R9), AX
-    MULQ R14
-    ADDQ R15, BX
+    MULQ R12
+    ADDQ R11, BX
     ADCQ $0x0000000000000000, DX
     ADDQ AX, BX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x170b5d4430000000, AX
-    MULQ R10
-    ADDQ BX, R13
+    MULQ R13
+    ADDQ BX, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, CX
-    MOVQ DX, R13
+    MOVQ R10, CX
+    MOVQ DX, R10
     MOVQ 16(R9), AX
-    MULQ R14
-    ADDQ R15, BP
+    MULQ R12
+    ADDQ R11, BP
     ADCQ $0x0000000000000000, DX
     ADDQ AX, BP
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x1ef3622fba094800, AX
-    MULQ R10
-    ADDQ BP, R13
+    MULQ R13
+    ADDQ BP, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, BX
-    MOVQ DX, R13
+    MOVQ R10, BX
+    MOVQ DX, R10
     MOVQ 24(R9), AX
-    MULQ R14
-    ADDQ R15, SI
+    MULQ R12
+    ADDQ R11, SI
     ADCQ $0x0000000000000000, DX
     ADDQ AX, SI
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x1a22d9f300f5138f, AX
-    MULQ R10
-    ADDQ SI, R13
+    MULQ R13
+    ADDQ SI, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, BP
-    MOVQ DX, R13
+    MOVQ R10, BP
+    MOVQ DX, R10
     MOVQ 32(R9), AX
-    MULQ R14
-    ADDQ R15, DI
+    MULQ R12
+    ADDQ R11, DI
     ADCQ $0x0000000000000000, DX
     ADDQ AX, DI
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0xc63b05c06ca1493b, AX
-    MULQ R10
-    ADDQ DI, R13
+    MULQ R13
+    ADDQ DI, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, SI
-    MOVQ DX, R13
+    MOVQ R10, SI
+    MOVQ DX, R10
     MOVQ 40(R9), AX
-    MULQ R14
-    ADDQ R15, R8
+    MULQ R12
+    ADDQ R11, R8
     ADCQ $0x0000000000000000, DX
     ADDQ AX, R8
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x01ae3a4617c510ea, AX
-    MULQ R10
-    ADDQ R8, R13
+    MULQ R13
+    ADDQ R8, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, DI
-    MOVQ DX, R13
-    ADDQ R13, R15
-    MOVQ R15, R8
+    MOVQ R10, DI
+    MOVQ DX, R10
+    ADDQ R10, R11
+    MOVQ R11, R8
     MOVQ 0(R9), AX
-    MOVQ 40(R12), R14
-    MULQ R14
+    MOVQ 40(R14), R12
+    MULQ R12
     ADDQ AX, CX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
-    MOVQ $0x8508bfffffffffff, R10
-    IMULQ CX, R10
+    MOVQ DX, R11
+    MOVQ $0x8508bfffffffffff, R13
+    IMULQ CX, R13
     MOVQ $0x8508c00000000001, AX
-    MULQ R10
+    MULQ R13
     ADDQ CX, AX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R13
+    MOVQ DX, R10
     MOVQ 8(R9), AX
-    MULQ R14
-    ADDQ R15, BX
+    MULQ R12
+    ADDQ R11, BX
     ADCQ $0x0000000000000000, DX
     ADDQ AX, BX
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x170b5d4430000000, AX
-    MULQ R10
-    ADDQ BX, R13
+    MULQ R13
+    ADDQ BX, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, CX
-    MOVQ DX, R13
+    MOVQ R10, CX
+    MOVQ DX, R10
     MOVQ 16(R9), AX
-    MULQ R14
-    ADDQ R15, BP
+    MULQ R12
+    ADDQ R11, BP
     ADCQ $0x0000000000000000, DX
     ADDQ AX, BP
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x1ef3622fba094800, AX
-    MULQ R10
-    ADDQ BP, R13
+    MULQ R13
+    ADDQ BP, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, BX
-    MOVQ DX, R13
+    MOVQ R10, BX
+    MOVQ DX, R10
     MOVQ 24(R9), AX
-    MULQ R14
-    ADDQ R15, SI
+    MULQ R12
+    ADDQ R11, SI
     ADCQ $0x0000000000000000, DX
     ADDQ AX, SI
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x1a22d9f300f5138f, AX
-    MULQ R10
-    ADDQ SI, R13
+    MULQ R13
+    ADDQ SI, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, BP
-    MOVQ DX, R13
+    MOVQ R10, BP
+    MOVQ DX, R10
     MOVQ 32(R9), AX
-    MULQ R14
-    ADDQ R15, DI
+    MULQ R12
+    ADDQ R11, DI
     ADCQ $0x0000000000000000, DX
     ADDQ AX, DI
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0xc63b05c06ca1493b, AX
-    MULQ R10
-    ADDQ DI, R13
+    MULQ R13
+    ADDQ DI, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, SI
-    MOVQ DX, R13
+    MOVQ R10, SI
+    MOVQ DX, R10
     MOVQ 40(R9), AX
-    MULQ R14
-    ADDQ R15, R8
+    MULQ R12
+    ADDQ R11, R8
     ADCQ $0x0000000000000000, DX
     ADDQ AX, R8
     ADCQ $0x0000000000000000, DX
-    MOVQ DX, R15
+    MOVQ DX, R11
     MOVQ $0x01ae3a4617c510ea, AX
-    MULQ R10
-    ADDQ R8, R13
+    MULQ R13
+    ADDQ R8, R10
     ADCQ $0x0000000000000000, DX
-    ADDQ AX, R13
+    ADDQ AX, R10
     ADCQ $0x0000000000000000, DX
-    MOVQ R13, DI
-    MOVQ DX, R13
-    ADDQ R13, R15
-    MOVQ R15, R8
+    MOVQ R10, DI
+    MOVQ DX, R10
+    ADDQ R10, R11
+    MOVQ R11, R8
     JMP reduce
 
 

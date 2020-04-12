@@ -52,10 +52,16 @@ func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 
 		regM := b.PopRegister()
 		var regA, regY register
+		var regxi []register
 		if mType != fromMont {
 			regA = b.PopRegister()
 			regY = b.PopRegister()
 			b.MOVQ("y+8(FP)", regY, "dereference y")
+			regxi = make([]register, len(b.registers))
+			for i := 0; i < len(regxi); i++ {
+				regxi[i] = b.PopRegister()
+				b.MOVQ(regX.at(i), regxi[i], fmt.Sprintf("%s = x[%d]", string(regxi[i]), i))
+			}
 		}
 
 		for i := 0; i < F.NbWords; i++ {
@@ -68,10 +74,15 @@ func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 				// for j=0 to N-1
 				//    (A,t[j])  := t[j] + x[j]*y[i] + A
 				for j := 0; j < F.NbWords; j++ {
+					xj := regX.at(j)
+					if j < len(regxi) {
+						xj = string(regxi[j])
+					}
+
 					reg := regA
 					if i == 0 {
 						if j == 0 {
-							b.MULXQ(regX.at(j), regT[j], regT[j+1], fmt.Sprintf("t[%d], t[%d] = y[%d] * x[%d]", j, j+1, i, j))
+							b.MULXQ(xj, regT[j], regT[j+1], fmt.Sprintf("t[%d], t[%d] = y[%d] * x[%d]", j, j+1, i, j))
 						} else if j != F.NbWordsLastIndex {
 							reg = regT[j+1]
 						}
@@ -80,7 +91,7 @@ func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 					}
 
 					if !(i == 0 && j == 0) {
-						b.MULXQ(regX.at(j), ax, reg)
+						b.MULXQ(xj, ax, reg)
 						b.ADOXQ(ax, regT[j])
 					}
 				}
@@ -129,6 +140,7 @@ func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 		b.PushRegister(regM)
 		if mType != fromMont {
 			b.PushRegister(regY, regA)
+			b.PushRegister(regxi...)
 		}
 	}
 
