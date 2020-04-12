@@ -57,7 +57,11 @@ func (b *asmBuilder) mulNoCarry(F *field, mType mulType) error {
 			regA = b.PopRegister()
 			regY = b.PopRegister()
 			b.MOVQ("y+8(FP)", regY, "dereference y")
-			regxi = make([]register, len(b.registers))
+			cacheSize := len(b.registers)
+			if cacheSize > F.NbWords {
+				cacheSize = F.NbWords
+			}
+			regxi = make([]register, cacheSize)
 			for i := 0; i < len(regxi); i++ {
 				regxi[i] = b.PopRegister()
 				b.MOVQ(regX.at(i), regxi[i], fmt.Sprintf("%s = x[%d]", string(regxi[i]), i))

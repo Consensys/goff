@@ -72,14 +72,15 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 					b.MULXQ(regY.at(i+1), regU[0], regA)
 				} else {
 					for j := i + 1; j < F.NbWords; j++ {
+						yj := regY.at(j)
 						if j == i+1 {
 							// first iteration
-							b.MULXQ(regY.at(j), regU[j-offset], regU[j+1-offset])
+							b.MULXQ(yj, regU[j-offset], regU[j+1-offset])
 						} else {
 							if j == F.NbWordsLastIndex {
-								b.MULXQ(regY.at(j), ax, regA)
+								b.MULXQ(yj, ax, regA)
 							} else {
-								b.MULXQ(regY.at(j), ax, regU[j+1-offset])
+								b.MULXQ(yj, ax, regU[j+1-offset])
 							}
 							b.ADCXQ(ax, regU[j-offset])
 						}
