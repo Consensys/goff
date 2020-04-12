@@ -253,8 +253,16 @@ func (b *asmBuilder) reduce(F *field, regT []register, result register) error {
 	// (not constant time)
 	b.MOVQ(F.Q[F.NbWordsLastIndex], dx)
 	b.CMPQ(regT[F.NbWordsLastIndex], dx, "note: this is not constant time, comment out to have constant time mul") // q[lastWord] - t[lastWord]
-	b.JCS("t_is_smaller", "t < q")                                                                                 // t < q
+	b.JPS("sub_t_q", "t > q")                                                                                      // t < q
 
+	// t is smaller
+	b.WriteLn("t_is_smaller:")
+	for i := 0; i < F.NbWords; i++ {
+		b.MOVQ(regT[i], result.at(i))
+	}
+	b.RET()
+
+	b.WriteLn("sub_t_q:")
 	// u = t - q
 	regU := make([]register, F.NbWords)
 	for i := 0; i < F.NbWords; i++ {
@@ -274,13 +282,6 @@ func (b *asmBuilder) reduce(F *field, regT []register, result register) error {
 	// return u
 	for i := 0; i < F.NbWords; i++ {
 		b.MOVQ(regU[i], result.at(i))
-	}
-	b.RET()
-
-	// return t
-	b.WriteLn("t_is_smaller:")
-	for i := 0; i < F.NbWords; i++ {
-		b.MOVQ(regT[i], result.at(i))
 	}
 	b.RET()
 

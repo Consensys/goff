@@ -345,7 +345,16 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
 reduce:
     MOVQ $0x01ae3a4617c510ea, DX
     CMPQ R8, DX                                            // note: this is not constant time, comment out to have constant time mul
-    JCS t_is_smaller                                      // t < q
+    JCC sub_t_q                                           // t > q
+t_is_smaller:
+    MOVQ CX, 0(R12)
+    MOVQ BX, 8(R12)
+    MOVQ BP, 16(R12)
+    MOVQ SI, 24(R12)
+    MOVQ DI, 32(R12)
+    MOVQ R8, 40(R12)
+    RET
+sub_t_q:
     MOVQ CX, R13
     MOVQ $0x8508c00000000001, DX
     SUBQ DX, R13
@@ -371,14 +380,6 @@ reduce:
     MOVQ R11, 24(R12)
     MOVQ R9, 32(R12)
     MOVQ R10, 40(R12)
-    RET
-t_is_smaller:
-    MOVQ CX, 0(R12)
-    MOVQ BX, 8(R12)
-    MOVQ BP, 16(R12)
-    MOVQ SI, 24(R12)
-    MOVQ DI, 32(R12)
-    MOVQ R8, 40(R12)
     RET
 no_adx:
     // dereference y

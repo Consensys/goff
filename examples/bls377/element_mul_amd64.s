@@ -360,7 +360,16 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
 reduce:
     MOVQ $0x01ae3a4617c510ea, DX
     CMPQ R8, DX                                            // note: this is not constant time, comment out to have constant time mul
-    JCS t_is_smaller                                      // t < q
+    JCC sub_t_q                                           // t > q
+t_is_smaller:
+    MOVQ CX, 0(R9)
+    MOVQ BX, 8(R9)
+    MOVQ BP, 16(R9)
+    MOVQ SI, 24(R9)
+    MOVQ DI, 32(R9)
+    MOVQ R8, 40(R9)
+    RET
+sub_t_q:
     MOVQ CX, R13
     MOVQ $0x8508c00000000001, DX
     SUBQ DX, R13
@@ -386,14 +395,6 @@ reduce:
     MOVQ R10, 24(R9)
     MOVQ R12, 32(R9)
     MOVQ R11, 40(R9)
-    RET
-t_is_smaller:
-    MOVQ CX, 0(R9)
-    MOVQ BX, 8(R9)
-    MOVQ BP, 16(R9)
-    MOVQ SI, 24(R9)
-    MOVQ DI, 32(R9)
-    MOVQ R8, 40(R9)
     RET
 no_adx:
     MOVQ y+8(FP), R12                                      // dereference y
@@ -1173,7 +1174,16 @@ TEXT ·fromMontElement(SB), NOSPLIT, $0-8
 reduce:
     MOVQ $0x01ae3a4617c510ea, DX
     CMPQ R8, DX                                            // note: this is not constant time, comment out to have constant time mul
-    JCS t_is_smaller                                      // t < q
+    JCC sub_t_q                                           // t > q
+t_is_smaller:
+    MOVQ CX, 0(R9)
+    MOVQ BX, 8(R9)
+    MOVQ BP, 16(R9)
+    MOVQ SI, 24(R9)
+    MOVQ DI, 32(R9)
+    MOVQ R8, 40(R9)
+    RET
+sub_t_q:
     MOVQ CX, R11
     MOVQ $0x8508c00000000001, DX
     SUBQ DX, R11
@@ -1199,14 +1209,6 @@ reduce:
     MOVQ R14, 24(R9)
     MOVQ R15, 32(R9)
     MOVQ R10, 40(R9)
-    RET
-t_is_smaller:
-    MOVQ CX, 0(R9)
-    MOVQ BX, 8(R9)
-    MOVQ BP, 16(R9)
-    MOVQ SI, 24(R9)
-    MOVQ DI, 32(R9)
-    MOVQ R8, 40(R9)
     RET
 no_adx:
     MOVQ $0x8508bfffffffffff, R14
@@ -1514,7 +1516,16 @@ TEXT ·reduceElement(SB), NOSPLIT, $0-8
 reduce:
     MOVQ $0x01ae3a4617c510ea, DX
     CMPQ R8, DX                                            // note: this is not constant time, comment out to have constant time mul
-    JCS t_is_smaller                                      // t < q
+    JCC sub_t_q                                           // t > q
+t_is_smaller:
+    MOVQ CX, 0(R9)
+    MOVQ BX, 8(R9)
+    MOVQ BP, 16(R9)
+    MOVQ SI, 24(R9)
+    MOVQ DI, 32(R9)
+    MOVQ R8, 40(R9)
+    RET
+sub_t_q:
     MOVQ CX, R10
     MOVQ $0x8508c00000000001, DX
     SUBQ DX, R10
@@ -1540,12 +1551,4 @@ reduce:
     MOVQ R13, 24(R9)
     MOVQ R14, 32(R9)
     MOVQ R15, 40(R9)
-    RET
-t_is_smaller:
-    MOVQ CX, 0(R9)
-    MOVQ BX, 8(R9)
-    MOVQ BP, 16(R9)
-    MOVQ SI, 24(R9)
-    MOVQ DI, 32(R9)
-    MOVQ R8, 40(R9)
     RET

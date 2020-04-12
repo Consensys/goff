@@ -192,7 +192,14 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
 reduce:
     MOVQ $0x30644e72e131a029, DX
     CMPQ SI, DX                                            // note: this is not constant time, comment out to have constant time mul
-    JCS t_is_smaller                                      // t < q
+    JCC sub_t_q                                           // t > q
+t_is_smaller:
+    MOVQ CX, 0(DI)
+    MOVQ BX, 8(DI)
+    MOVQ BP, 16(DI)
+    MOVQ SI, 24(DI)
+    RET
+sub_t_q:
     MOVQ CX, R11
     MOVQ $0x3c208c16d87cfd47, DX
     SUBQ DX, R11
@@ -210,12 +217,6 @@ reduce:
     MOVQ R12, 8(DI)
     MOVQ R13, 16(DI)
     MOVQ R14, 24(DI)
-    RET
-t_is_smaller:
-    MOVQ CX, 0(DI)
-    MOVQ BX, 8(DI)
-    MOVQ BP, 16(DI)
-    MOVQ SI, 24(DI)
     RET
 no_adx:
     MOVQ y+8(FP), R11                                      // dereference y
@@ -593,7 +594,14 @@ TEXT ·fromMontElement(SB), NOSPLIT, $0-8
 reduce:
     MOVQ $0x30644e72e131a029, DX
     CMPQ SI, DX                                            // note: this is not constant time, comment out to have constant time mul
-    JCS t_is_smaller                                      // t < q
+    JCC sub_t_q                                           // t > q
+t_is_smaller:
+    MOVQ CX, 0(DI)
+    MOVQ BX, 8(DI)
+    MOVQ BP, 16(DI)
+    MOVQ SI, 24(DI)
+    RET
+sub_t_q:
     MOVQ CX, R9
     MOVQ $0x3c208c16d87cfd47, DX
     SUBQ DX, R9
@@ -611,12 +619,6 @@ reduce:
     MOVQ R10, 8(DI)
     MOVQ R11, 16(DI)
     MOVQ R12, 24(DI)
-    RET
-t_is_smaller:
-    MOVQ CX, 0(DI)
-    MOVQ BX, 8(DI)
-    MOVQ BP, 16(DI)
-    MOVQ SI, 24(DI)
     RET
 no_adx:
     MOVQ $0x87d20782e4866389, R8
@@ -762,7 +764,14 @@ TEXT ·reduceElement(SB), NOSPLIT, $0-8
 reduce:
     MOVQ $0x30644e72e131a029, DX
     CMPQ SI, DX                                            // note: this is not constant time, comment out to have constant time mul
-    JCS t_is_smaller                                      // t < q
+    JCC sub_t_q                                           // t > q
+t_is_smaller:
+    MOVQ CX, 0(DI)
+    MOVQ BX, 8(DI)
+    MOVQ BP, 16(DI)
+    MOVQ SI, 24(DI)
+    RET
+sub_t_q:
     MOVQ CX, R8
     MOVQ $0x3c208c16d87cfd47, DX
     SUBQ DX, R8
@@ -780,10 +789,4 @@ reduce:
     MOVQ R9, 8(DI)
     MOVQ R10, 16(DI)
     MOVQ R11, 24(DI)
-    RET
-t_is_smaller:
-    MOVQ CX, 0(DI)
-    MOVQ BX, 8(DI)
-    MOVQ BP, 16(DI)
-    MOVQ SI, 24(DI)
     RET

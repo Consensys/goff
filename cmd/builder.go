@@ -114,6 +114,10 @@ func (builder *asmBuilder) JCS(label string, comment ...string) {
 	builder.writeOp(comment, "JCS", label)
 }
 
+func (builder *asmBuilder) JPS(label string, comment ...string) {
+	builder.writeOp(comment, "JCC", label)
+}
+
 func (builder *asmBuilder) JMP(label string, comment ...string) {
 	builder.writeOp(comment, "JMP", label)
 }
