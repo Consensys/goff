@@ -221,12 +221,16 @@ func (z *{{.ElementName}}) SetRandom() *{{.ElementName}} {
 
 {{ if .NoCollidingNames}}
 {{ else}}
+
+// One returns 1 (in montgommery form)
 func One() {{.ElementName}} {
 	var one {{.ElementName}}
 	one.SetOne()
 	return one
 }
 
+// FromInterface converts i1 from uint64, int, string, or {{.ElementName}}, big.Int into {{.ElementName}}
+// panic if provided type is not supported
 func FromInterface(i1 interface{}) {{.ElementName}} {
 	var val {{.ElementName}}
 
@@ -237,11 +241,12 @@ func FromInterface(i1 interface{}) {{.ElementName}} {
 		val.SetString(strconv.Itoa(c1))
 	case string:
 		val.SetString(c1)
+	case big.Int:
+		val.SetBigInt(&c1)
 	case {{.ElementName}}:
 		val = c1
 	case *{{.ElementName}}:
 		val.Set(c1)
-	// TODO add big.Int convertions
 	default:
 		panic("invalid type")
 	}

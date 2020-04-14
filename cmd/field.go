@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"fmt"
 	"math/big"
 )
 
@@ -30,6 +31,9 @@ type field struct {
 	IdxFIPS              []int
 	Q                    []uint64
 	QInverse             []uint64
+	ASM                  bool
+	ASMQInv0             string
+	ASMQ                 []string
 	RSquare              []uint64
 	One                  []uint64
 	LegendreExponent     []uint64
@@ -189,6 +193,15 @@ func newField(packageName, elementName, modulus string, benches bool, noCollidin
 			F.SqrtSMinusOneOver2 = toUint64Slice(&s)
 		}
 	}
+
+	// ASM
+	// return fmt.Sprintf("$%#016x", u)
+	F.ASMQInv0 = fmt.Sprintf("$%#016x", F.QInverse[0])
+	F.ASMQ = make([]string, len(F.Q))
+	for i := 0; i < len(F.Q); i++ {
+		F.ASMQ[i] = fmt.Sprintf("$%#016x", F.Q[i])
+	}
+	F.ASM = F.NoCarry && F.NbWords <= 6 // max words without having to deal with spilling
 
 	return F, nil
 }

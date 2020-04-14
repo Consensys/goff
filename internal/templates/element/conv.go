@@ -5,22 +5,7 @@ const FromMont = `
 // FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
 // sets and returns z = z * 1
 func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
-
-	// the following lines implement z = z * 1
-	// with a modified CIOS montgomery multiplication
-	{{- range $j := .NbWordsIndexesFull}}
-	{
-		// m = z[0]n'[0] mod W
-		m := z[0] * {{index $.QInverse 0}}
-		C := madd0(m, {{index $.Q 0}}, z[0])
-		{{- range $i := $.NbWordsIndexesNoZero}}
-			C, z[{{sub $i 1}}] = madd2(m, {{index $.Q $i}}, z[{{$i}}], C)
-		{{- end}}
-		z[{{sub $.NbWords 1}}] = C
-	}
-	{{- end}}
-
-	{{ template "reduce" .}}
+	fromMont{{.ElementName}}(z)
 	return z 
 }
 `
@@ -33,7 +18,8 @@ func (z *{{.ElementName}}) ToMont() *{{.ElementName}} {
 		{{- range $i := .RSquare}}
 		{{$i}},{{end}}
 	}
-	return z.MulAssign(&rSquare)
+	MulAssign{{.ElementName}}(z, &rSquare)
+	return z
 }
 
 // ToRegular returns z in regular form (doesn't mutate z)
@@ -82,19 +68,8 @@ func (z *{{.ElementName}}) SetBigInt(v *big.Int) *{{.ElementName}} {
 	
 	// copy input
 	vv := new(big.Int).Set(v)
-
-	// while v < 0, v+=q 
-	for vv.Cmp(zero) == -1 {
-		vv.Add(vv, q)
-	}
-	// while v > q, v-=q
-	for vv.Cmp(q) == 1 {
-		vv.Sub(vv, q)
-	}
-	// if v == q, return 0
-	if vv.Cmp(q) == 0 {
-		return z
-	}
+	vv.Mod(v, q)
+	
 	// v should
 	vBits := vv.Bits()
 	for i := 0; i < len(vBits); i++ {

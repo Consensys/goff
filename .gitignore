@@ -21,3 +21,4 @@ goff
 **/internal/tests/
 benches/generated/**.go
 benches/generated/**.csv
+benches/generated/**.s

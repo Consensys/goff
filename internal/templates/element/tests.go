@@ -5,7 +5,9 @@ const Test = `
 import (
     "crypto/rand"
 	"math/big"
-    "testing"
+	"math/bits"
+	"testing"
+	"fmt"
     mrand "math/rand"
 )
 
@@ -69,13 +71,13 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
         var bMul, bAdd, bSub, bDiv, bNeg, bLsh, bInv, bExp, bExp2,  bSquare big.Int
 
         // e1 = mont(b1), e2 = mont(b2)
-        var e1, e2, eMul, eAdd, eSub, eDiv, eNeg, eLsh, eInv, eExp, eExp2, eSquare, eMulAssign, eSubAssign, eAddAssign {{.ElementName}}
+        var e1, e2, eMul,  eAdd, eSub, eDiv, eNeg, eLsh, eInv, eExp, eSquare, eMulAssign, eSubAssign, eAddAssign {{.ElementName}}
         e1.SetBigInt(b1)
         e2.SetBigInt(b2)
 
         // (e1*e2).FromMont() === b1*b2 mod q ... etc
         eSquare.Square(&e1)
-        eMul.Mul(&e1, &e2)
+		eMul.Mul(&e1, &e2)
         eMulAssign.Set(&e1)
         eMulAssign.MulAssign(&e2)
         eAdd.Add(&e1, &e2)
@@ -88,12 +90,6 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
         eNeg.Neg(&e1)
         eInv.Inverse(&e1)
 		eExp.Exp(e1, rExp)
-		bits := b2.Bits()
-		exponent := make([]uint64, len(bits))
-		for k := 0; k < len(bits); k++ {
-			exponent[k] = uint64(bits[k])
-		}
-		eExp2.Exp(e1, exponent...)
         eLsh.Double(&e1)
 
         // same operations with big int
@@ -108,11 +104,10 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 
         bInv.ModInverse(b1, modulus)
 		bExp.Exp(b1, rbExp, modulus)
-		bExp2.Exp(b1, b2, modulus)
         bLsh.Lsh(b1, 1).Mod(&bLsh, modulus)
 
         cmpEandB(&eSquare, &bSquare, "Square")
-        cmpEandB(&eMul, &bMul, "Mul")
+		cmpEandB(&eMul, &bMul, "Mul")
         cmpEandB(&eMulAssign, &bMul, "MulAssign")
         cmpEandB(&eAdd, &bAdd, "Add")
         cmpEandB(&eAddAssign, &bAdd, "AddAssign")
@@ -122,7 +117,7 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
         cmpEandB(&eNeg, &bNeg, "Neg")
         cmpEandB(&eInv, &bInv, "Inv")
 		cmpEandB(&eExp, &bExp, "Exp")
-		cmpEandB(&eExp2, &bExp2, "Exp multi words")
+		
 		cmpEandB(&eLsh, &bLsh, "Lsh")
 		
 		// legendre symbol
@@ -133,12 +128,24 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 			t.Fatal("legendre symbol computation failed")
 		}
 
-		// sqrt 
-		var eSqrt {{.ElementName}}
-		var bSqrt big.Int
-		bSqrt.ModSqrt(b1, modulus)
-		eSqrt.Sqrt(&e1)
-		cmpEandB(&eSqrt, &bSqrt, "Sqrt")
+		// these are slow, killing circle ci
+		if n <= 5 {
+			// sqrt 
+			var eSqrt, eExp2 {{.ElementName}}
+			var bSqrt big.Int
+			bSqrt.ModSqrt(b1, modulus)
+			eSqrt.Sqrt(&e1)
+			cmpEandB(&eSqrt, &bSqrt, "Sqrt")
+	
+			bits := b2.Bits()
+			exponent := make([]uint64, len(bits))
+			for k := 0; k < len(bits); k++ {
+				exponent[k] = uint64(bits[k])
+			}
+			eExp2.Exp(e1, exponent...)
+			bExp2.Exp(b1, b2, modulus)
+			cmpEandB(&eExp2, &bExp2, "Exp multi words")
+		}
 	}
 }
 
@@ -274,10 +281,95 @@ func BenchmarkMulAssign{{toUpper .ElementName}}(b *testing.B) {
 	}
 }
 
+{{ if .ASM}}
+func BenchmarkMulAssignASM{{toUpper .ElementName}}(b *testing.B) {
+	x := {{.ElementName}}{
+		{{- range $i := .RSquare}}
+		{{$i}},{{end}}
+	}
+	benchRes{{.ElementName}}.SetOne()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		MulAssign{{.ElementName}}(&benchRes{{.ElementName}}, &x)
+	}
+}
+{{ if .NoCarrySquare}}
+func BenchmarkSquareASM{{toUpper .ElementName}}(b *testing.B) {
+	benchRes{{.ElementName}} = {{.ElementName}}{
+		{{- range $i := .RSquare}}
+		{{$i}},{{end}}
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Square{{.ElementName}}(&benchRes{{.ElementName}}, &benchRes{{.ElementName}})
+	}
+}
+{{ end}}
+{{ end}}
+
+
+func Test{{toUpper .ElementName}}Asm(t *testing.T) {
+	// ensure ASM implementations matches the ones using math/bits
+	modulus, _ := new(big.Int).SetString("{{.Modulus}}", 10)
+	for i := 0; i < 500; i++ {
+		// sample 2 random big int
+		b1, _ := rand.Int(rand.Reader, modulus)
+		b2, _ := rand.Int(rand.Reader, modulus)
+
+		// e1 = mont(b1), e2 = mont(b2)
+		var e1, e2, eTestMul, eMulAssign, eSquare, eTestSquare {{.ElementName}}
+		e1.SetBigInt(b1)
+		e2.SetBigInt(b2)
+
+		eTestMul = e1
+		eTestMul.testMulAssign(&e2)
+		eMulAssign = e1
+		eMulAssign.MulAssign(&e2)
+
+		if !eTestMul.Equal(&eMulAssign) {
+			t.Fatal("inconsisntencies between MulAssign and testMulAssign --> check if MulAssign is calling ASM implementaiton on amd64")
+		}
+
+		// square 
+		eSquare.Square(&e1)
+		eTestSquare.testSquare(&e1)
+
+		if !eTestSquare.Equal(&eSquare) {
+			t.Fatal("inconsisntencies between Square and testSquare --> check if Square is calling ASM implementaiton on amd64")
+		}
+	}
+}
+
+// this is here for consistency purposes, to ensure MulAssign on AMD64 using asm implementation gives consistent results 
+func (z *{{.ElementName}}) testMulAssign(x *{{.ElementName}}) *{{.ElementName}} {
+	{{ if .NoCarry}}
+		{{ template "mul_nocarry" dict "all" . "V1" "z" "V2" "x"}}
+	{{ else }}
+		{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x"}}
+	{{ end }}
+	{{ template "reduce" . }}
+	return z 
+}
+
+// this is here for consistency purposes, to ensure Square on AMD64 using asm implementation gives consistent results 
+func (z *{{.ElementName}}) testSquare(x *{{.ElementName}}) *{{.ElementName}} {
+	{{if .NoCarrySquare}}
+		{{ template "square" dict "all" . "V1" "x"}}
+		{{ template "reduce" . }}
+		return z 
+	{{else if .NoCarry}}
+		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "x"}}
+		{{ template "reduce" . }}
+		return z 
+	{{else }}
+		return z.Mul(x, x)
+	{{end}}
+}
+
 {{ if .Benches}}
 // Montgomery multiplication benchmarks
 func (z *{{.ElementName}}) mulCIOS(x *{{.ElementName}}) *{{.ElementName}} {
-	{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x"}}
+	{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x" "NoReturn" false}}
 	{{ template "reduce" . }}
 	return z 
 }
