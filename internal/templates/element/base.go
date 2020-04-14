@@ -105,13 +105,13 @@ func (z *{{.ElementName}}) IsZero() bool {
 
 
 // field modulus stored as big.Int 
-var _{{toLower .ElementName}}ModulusBigInt big.Int 
-var once{{toLower .ElementName}}Modulus sync.Once
-func {{toLower .ElementName}}ModulusBigInt() *big.Int {
-	once{{toLower .ElementName}}Modulus.Do(func() {
-		_{{toLower .ElementName}}ModulusBigInt.SetString("{{.Modulus}}", 10)
+var _{{.ElementName}}Modulus big.Int 
+var once{{.ElementName}}Modulus sync.Once
+func {{.ElementName}}Modulus() *big.Int {
+	once{{.ElementName}}Modulus.Do(func() {
+		_{{.ElementName}}Modulus.SetString("{{.Modulus}}", 10)
 	})
-	return &_{{toLower .ElementName}}ModulusBigInt
+	return &_{{.ElementName}}Modulus
 }
 
 
@@ -123,7 +123,7 @@ func {{toLower .ElementName}}ModulusBigInt() *big.Int {
 func (z *{{.ElementName}}) Inverse( x *{{.ElementName}}) *{{.ElementName}} {
 	var _xNonMont big.Int
 	x.ToBigIntRegular( &_xNonMont)
-	_xNonMont.ModInverse(&_xNonMont, {{toLower .ElementName}}ModulusBigInt())
+	_xNonMont.ModInverse(&_xNonMont, {{.ElementName}}Modulus())
 	z.SetBigInt(&_xNonMont)
 	return z
 }

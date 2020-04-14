@@ -18,7 +18,7 @@ func (z *{{.ElementName}}) ToMont() *{{.ElementName}} {
 		{{- range $i := .RSquare}}
 		{{$i}},{{end}}
 	}
-	MulAssign{{.ElementName}}(z, &rSquare)
+	mulAssign{{.ElementName}}(z, &rSquare)
 	return z
 }
 
@@ -51,7 +51,7 @@ func (z *{{.ElementName}}) SetBigInt(v *big.Int) *{{.ElementName}} {
 	z.SetZero()
 
 	zero := big.NewInt(0)
-	q := {{toLower .ElementName}}ModulusBigInt()
+	q := {{.ElementName}}Modulus()
 
 	// fast path
 	c := v.Cmp(q)
