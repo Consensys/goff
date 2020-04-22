@@ -178,7 +178,7 @@ func TestELEMENTIsRandom(t *testing.T) {
 	}
 }
 
-func TestByte(t *testing.T) {
+func TestByteElement(t *testing.T) {
 	modulus := ElementModulus()
 	sample, _ := rand.Int(rand.Reader, modulus)
 	var witness Element

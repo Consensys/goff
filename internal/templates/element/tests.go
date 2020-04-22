@@ -165,7 +165,7 @@ func Test{{toUpper .ElementName}}IsRandom(t *testing.T) {
 	}
 }
 
-func TestByte(t *testing.T) {
+func TestByte{{.ElementName}}(t *testing.T) {
 	modulus := {{.ElementName}}Modulus()
 	sample, _ := rand.Int(rand.Reader, modulus)
 	var witness {{.ElementName}}
