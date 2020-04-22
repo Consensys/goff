@@ -47,6 +47,28 @@ const ElementLimbs = 6
 // ElementBits number bits needed to represent Element
 const ElementBits = 377
 
+// ToBytes converts z into a slice of byte
+// the resulting slice is seen as a big endian integer
+func (z *Element) ToBytes() []byte {
+	var _z Element
+	_z.Set(z).FromMont()
+	res := make([]byte, ElementLimbs*8)
+	binary.BigEndian.PutUint64(res[(ElementLimbs-1)*8:], _z[0])
+	for i := ElementLimbs - 2; i >= 0; i-- {
+		binary.BigEndian.PutUint64(res[i*8:(i+1)*8], _z[ElementLimbs-1-i])
+	}
+	return res
+}
+
+// SetBytes sets z form a byte array
+// e is seen as a big endian unsigned integer
+func (z *Element) SetBytes(e []byte) *Element {
+	var tmp big.Int
+	tmp.SetBytes(e)
+	z.SetBigInt(&tmp)
+	return z
+}
+
 // SetUint64 z = v, sets z LSB to v (non-Montgomery form) and convert z to Montgomery form
 func (z *Element) SetUint64(v uint64) *Element {
 	z[0] = v
@@ -410,6 +432,8 @@ func FromInterface(i1 interface{}) Element {
 		val = c1
 	case *Element:
 		val.Set(c1)
+	case []byte:
+		val.SetBytes(c1)
 	default:
 		panic("invalid type")
 	}

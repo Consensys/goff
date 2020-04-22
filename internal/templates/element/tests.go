@@ -165,6 +165,24 @@ func Test{{toUpper .ElementName}}IsRandom(t *testing.T) {
 	}
 }
 
+func TestByte(t *testing.T) {
+	modulus := {{.ElementName}}Modulus()
+	sample, _ := rand.Int(rand.Reader, modulus)
+	var witness {{.ElementName}}
+
+	witness.SetBigInt(sample)
+
+	b := witness.ToBytes()
+
+	// check consistency conversion
+	var test {{.ElementName}}
+	test.SetBytes(b)
+	if !test.Equal(&witness) {
+		t.Fatal("Inconsistancy during conversion ToBytes/SetBytes")
+	}
+
+}
+
 // -------------------------------------------------------------------------------------------------
 // benchmarks
 // most benchmarks are rudimentary and should sample a large number of random inputs
