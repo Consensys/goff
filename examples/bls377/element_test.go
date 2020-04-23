@@ -179,21 +179,40 @@ func TestELEMENTIsRandom(t *testing.T) {
 }
 
 func TestByteElement(t *testing.T) {
+
 	modulus := ElementModulus()
-	sample, _ := rand.Int(rand.Reader, modulus)
-	var witness Element
 
-	witness.SetBigInt(sample)
+	// test values
+	var bs [3][]byte
+	r1, _ := rand.Int(rand.Reader, modulus)
+	bs[0] = r1.Bytes() // should be r1 as Element
+	r2, _ := rand.Int(rand.Reader, modulus)
+	r2.Add(modulus, r2)
+	bs[1] = r2.Bytes() // should be r2 as Element
+	var tmp big.Int
+	tmp.SetUint64(0)
+	bs[2] = tmp.Bytes() // should be 0 as Element
 
-	b := witness.ToBytes()
+	// witness values as Element
+	var el [3]Element
+	el[0].SetBigInt(r1)
+	el[1].SetBigInt(r2)
+	el[2].SetUint64(0)
 
-	// check consistency conversion
-	var test Element
-	test.SetBytes(b)
-	if !test.Equal(&witness) {
-		t.Fatal("Inconsistancy during conversion ToBytes/SetBytes")
+	// check conversions
+	for i := 0; i < 3; i++ {
+		var z Element
+		z.SetBytes(bs[i])
+		if !z.Equal(&el[i]) {
+			t.Fatal("SetBytes fails")
+		}
+		// check conversion Element to Bytes
+		b := z.Bytes()
+		z.SetBytes(b)
+		if !z.Equal(&el[i]) {
+			t.Fatal("Bytes fails")
+		}
 	}
-
 }
 
 // -------------------------------------------------------------------------------------------------

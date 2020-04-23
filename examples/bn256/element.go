@@ -47,9 +47,9 @@ const ElementLimbs = 4
 // ElementBits number bits needed to represent Element
 const ElementBits = 254
 
-// ToBytes converts z into a slice of byte
-// the resulting slice is seen as a big endian integer
-func (z *Element) ToBytes() []byte {
+// Bytes returns the regular (non montgomery) value
+// of z as a big-endian byte slice.
+func (z *Element) Bytes() []byte {
 	var _z Element
 	_z.Set(z).FromMont()
 	res := make([]byte, ElementLimbs*8)
@@ -60,8 +60,8 @@ func (z *Element) ToBytes() []byte {
 	return res
 }
 
-// SetBytes sets z form a byte array
-// e is seen as a big endian unsigned integer
+// SetBytes interprets e as the bytes of a big-endian unsigned integer,
+// sets z to that value (in Montgomery form), and returns z.
 func (z *Element) SetBytes(e []byte) *Element {
 	var tmp big.Int
 	tmp.SetBytes(e)

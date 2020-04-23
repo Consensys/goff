@@ -32,9 +32,9 @@ const {{.ElementName}}Limbs = {{.NbWords}}
 // {{.ElementName}}Bits number bits needed to represent {{.ElementName}}
 const {{.ElementName}}Bits = {{.NbBits}}
 
-// ToBytes converts z into a slice of byte
-// the resulting slice is seen as a big endian integer
-func (z *{{.ElementName}}) ToBytes() []byte {
+// Bytes returns the regular (non montgomery) value 
+// of z as a big-endian byte slice.
+func (z *{{.ElementName}}) Bytes() []byte {
 	var _z {{.ElementName}}
 	_z.Set(z).FromMont()
 	res := make([]byte, {{.ElementName}}Limbs*8)
@@ -45,8 +45,8 @@ func (z *{{.ElementName}}) ToBytes() []byte {
 	return res
 }
 
-// SetBytes sets z form a byte array
-// e is seen as a big endian unsigned integer
+// SetBytes interprets e as the bytes of a big-endian unsigned integer, 
+// sets z to that value (in Montgomery form), and returns z.
 func (z *{{.ElementName}}) SetBytes(e []byte) *{{.ElementName}} {
 	var tmp big.Int
 	tmp.SetBytes(e)
