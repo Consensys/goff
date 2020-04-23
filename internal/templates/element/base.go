@@ -32,6 +32,28 @@ const {{.ElementName}}Limbs = {{.NbWords}}
 // {{.ElementName}}Bits number bits needed to represent {{.ElementName}}
 const {{.ElementName}}Bits = {{.NbBits}}
 
+// Bytes returns the regular (non montgomery) value 
+// of z as a big-endian byte slice.
+func (z *{{.ElementName}}) Bytes() []byte {
+	var _z {{.ElementName}}
+	_z.Set(z).FromMont()
+	res := make([]byte, {{.ElementName}}Limbs*8)
+	binary.BigEndian.PutUint64(res[({{.ElementName}}Limbs-1)*8:], _z[0])
+	for i := {{.ElementName}}Limbs - 2; i >= 0; i-- {
+		binary.BigEndian.PutUint64(res[i*8:(i+1)*8], _z[{{.ElementName}}Limbs-1-i])
+	}
+	return res
+}
+
+// SetBytes interprets e as the bytes of a big-endian unsigned integer, 
+// sets z to that value (in Montgomery form), and returns z.
+func (z *{{.ElementName}}) SetBytes(e []byte) *{{.ElementName}} {
+	var tmp big.Int
+	tmp.SetBytes(e)
+	z.SetBigInt(&tmp)
+	return z
+}
+
 // SetUint64 z = v, sets z LSB to v (non-Montgomery form) and convert z to Montgomery form
 func (z *{{.ElementName}}) SetUint64(v uint64) *{{.ElementName}} {
 	z[0] = v
@@ -247,6 +269,8 @@ func FromInterface(i1 interface{}) {{.ElementName}} {
 		val = c1
 	case *{{.ElementName}}:
 		val.Set(c1)
+	case []byte:
+		val.SetBytes(c1)
 	default:
 		panic("invalid type")
 	}
