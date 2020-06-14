@@ -61,12 +61,26 @@ var modulusElement = Element{
 	3486998266802970665,
 }
 
+var rSquareElement = Element{
+	17522657719365597833,
+	13107472804851548667,
+	5164255478447964150,
+	493319470278259999,
+}
+
 var modulusElementInv0 uint64 = 9786893198990664585
 
 // FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
 // sets and returns z = z * 1
 func (z *Element) FromMont() *Element {
 	fromMontElement(z)
+	return z
+}
+
+// ToMont converts z to Montgomery form
+// sets and returns z = z * r^2
+func (z *Element) ToMont() *Element {
+	mulAssignElement(z, &rSquareElement)
 	return z
 }
 

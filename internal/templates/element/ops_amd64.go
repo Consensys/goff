@@ -44,6 +44,11 @@ var modulus{{.ElementName}} = {{.ElementName}}{
 	{{index $.Q $i}},{{end}}
 }
 
+var rSquare{{.ElementName}} = {{.ElementName}}{
+	{{- range $i := .RSquare}}
+	{{$i}},{{end}}
+}
+
 var modulus{{.ElementName}}Inv0 uint64 = {{index $.QInverse 0}}
 
 // FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
@@ -53,6 +58,12 @@ func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
 	return z
 }
 	
+// ToMont converts z to Montgomery form
+// sets and returns z = z * r^2
+func (z *{{.ElementName}}) ToMont() *{{.ElementName}} {
+	mulAssign{{.ElementName}}(z, &rSquare{{.ElementName}})
+	return z
+}
 
 // Mul z = x * y mod q 
 // see https://hackmd.io/@zkteam/modular_multiplication

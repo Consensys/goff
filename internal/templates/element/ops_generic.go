@@ -207,6 +207,17 @@ func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
 	return z
 }
 
+// ToMont converts z to Montgomery form
+// sets and returns z = z * r^2
+func (z *{{.ElementName}}) ToMont() *{{.ElementName}} {
+	var rSquare = {{.ElementName}}{
+		{{- range $i := .RSquare}}
+		{{$i}},{{end}}
+	}
+	z.MulAssign(&rSquare)
+	return z
+}
+
 
 {{- if eq .ASM false }}
 

@@ -1,16 +1,7 @@
 package element
 
 const Conv = `
-// ToMont converts z to Montgomery form
-// sets and returns z = z * r^2
-func (z *{{.ElementName}}) ToMont() *{{.ElementName}} {
-	var rSquare = {{.ElementName}}{
-		{{- range $i := .RSquare}}
-		{{$i}},{{end}}
-	}
-	z.MulAssign(&rSquare)
-	return z
-}
+
 
 // ToRegular returns z in regular form (doesn't mutate z)
 func (z {{.ElementName}}) ToRegular() {{.ElementName}} {
