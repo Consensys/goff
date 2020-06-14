@@ -27,30 +27,79 @@ package bn256
 func mulAssignElement(res, y *Element)
 
 //go:noescape
+func mulElement(res, x, y *Element)
+
+//go:noescape
+func addAssignElement(res, y *Element)
+
+//go:noescape
+func addElement(res, x, y *Element)
+
+//go:noescape
+func subAssignElement(res, y *Element)
+
+//go:noescape
+func subElement(res, x, y *Element)
+
+//go:noescape
+func doubleElement(res, y *Element)
+
+//go:noescape
 func fromMontElement(res *Element)
 
 //go:noescape
 func reduceElement(res *Element) // for test purposes
 
+//go:noescape
+func squareElement(res, y *Element)
+
 // Mul z = x * y mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Mul(x, y *Element) *Element {
-	if z == x {
-		mulAssignElement(z, y)
-		return z
-	} else if z == y {
-		mulAssignElement(z, x)
-		return z
-	} else {
-		z.Set(x)
-		mulAssignElement(z, y)
-		return z
-	}
+	mulElement(z, x, y)
+	return z
 }
 
 // MulAssign z = z * x mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) MulAssign(x *Element) *Element {
 	mulAssignElement(z, x)
+	return z
+}
+
+// Add z = x + y mod q
+func (z *Element) Add(x, y *Element) *Element {
+	addElement(z, x, y)
+	return z
+}
+
+// AddAssign z = z + x mod q
+func (z *Element) AddAssign(x *Element) *Element {
+	addAssignElement(z, x)
+	return z
+}
+
+// Double z = x + x mod q, aka Lsh 1
+func (z *Element) Double(x *Element) *Element {
+	doubleElement(z, x)
+	return z
+}
+
+// Sub  z = x - y mod q
+func (z *Element) Sub(x, y *Element) *Element {
+	subElement(z, x, y)
+	return z
+}
+
+// SubAssign  z = z - x mod q
+func (z *Element) SubAssign(x *Element) *Element {
+	subAssignElement(z, x)
+	return z
+}
+
+// Square z = x * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *Element) Square(x *Element) *Element {
+	squareElement(z, x)
 	return z
 }

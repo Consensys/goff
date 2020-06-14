@@ -84,8 +84,6 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 	// source file templates
 	src := []string{
 		element.Base,
-		element.Add,
-		element.Sub,
 		element.Reduce,
 		element.Exp,
 		element.FromMont,
@@ -134,55 +132,64 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 	}
 
 	if F.ASM { // max words without having to deal with spilling
-		// generate mul.s
+		// generate ops.s
 		{
-			pathMulAsm := filepath.Join(outputDir, eName+"_mul_amd64.s")
+			pathMulAsm := filepath.Join(outputDir, eName+"_ops_amd64.s")
 			f, err := os.Create(pathMulAsm)
 			if err != nil {
 				return err
 			}
 			defer f.Close()
-			builder := newAsmBuilder(f)
+			builder := bavard.NewAssembly(f)
 			builder.Write("#include \"textflag.h\"")
-			if err := builder.mulNoCarry(F, mulAssign); err != nil {
+
+			// mul assign
+			if err := generateMulASM(builder, F, mulAssign); err != nil {
 				return err
 			}
-			if err := builder.mulNoCarry(F, fromMont); err != nil {
+			if err := generateMulASM(builder, F, mul); err != nil {
 				return err
 			}
 
-			if err := builder.reduceFunc(F); err != nil {
+			// from mont
+			if err := generateMulASM(builder, F, fromMont); err != nil {
 				return err
 			}
 
-			// generate mul_amd64.go
+			// square
+			if err := generateSquareASM(builder, F); err != nil {
+				return err
+			}
+
+			// reduce
+			if err := generateReduceFuncASM(builder, F); err != nil {
+				return err
+			}
+
+			// add
+			if err := generateAddASM(builder, F, add); err != nil {
+				return err
+			}
+			if err := generateAddASM(builder, F, addAssign); err != nil {
+				return err
+			}
+			if err := generateAddASM(builder, F, double); err != nil {
+				return err
+			}
+
+			// sub
+			if err := generateSubASM(builder, F, sub); err != nil {
+				return err
+			}
+			if err := generateSubASM(builder, F, subAssign); err != nil {
+				return err
+			}
+
+			// generate ops_amd64.go
 			src := []string{
-				element.MontgomeryMultiplicationAMD64,
+				element.OpsAMD64,
 			}
-			pathSrc := filepath.Join(outputDir, eName+"_mul_amd64.go")
-			if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
-				return err
-			}
-		}
-
-		if F.NoCarrySquare {
-			pathMulAsm := filepath.Join(outputDir, eName+"_square_amd64.s")
-			f, err := os.Create(pathMulAsm)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-			builder := newAsmBuilder(f)
-			builder.Write("#include \"textflag.h\"")
-			if err := builder.square(F); err != nil {
-				return err
-			}
-
-			// generate mul_amd64.go
-			src := []string{
-				element.SquareAMD64,
-			}
-			pathSrc := filepath.Join(outputDir, eName+"_square_amd64.go")
+			pathSrc := filepath.Join(outputDir, eName+"_ops_amd64.go")
 			if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
 				return err
 			}
@@ -191,14 +198,15 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 	}
 
 	{
-		// generate mul.go
+		// generate ops.go
 		src := []string{
-			element.MontgomeryMultiplication,
+			element.OpsNoAsm,
 			element.MulCIOS,
 			element.MulNoCarry,
+			element.SquareNoCarryTemplate,
 			element.Reduce,
 		}
-		pathSrc := filepath.Join(outputDir, eName+"_mul.go")
+		pathSrc := filepath.Join(outputDir, eName+"_ops_noasm.go")
 		bavardOptsCpy := make([]func(*bavard.Bavard) error, len(bavardOpts))
 		copy(bavardOptsCpy, bavardOpts)
 		if F.ASM {
@@ -209,25 +217,6 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		}
 	}
 
-	{
-		// generate square.go
-		src := []string{
-			element.SquareCIOSNoCarry,
-			element.SquareNoCarryTemplate,
-			element.MulCIOS,
-			element.MulNoCarry,
-			element.Reduce,
-		}
-		pathSrc := filepath.Join(outputDir, eName+"_square.go")
-		bavardOptsCpy := make([]func(*bavard.Bavard) error, len(bavardOpts))
-		copy(bavardOptsCpy, bavardOpts)
-		if F.ASM && F.NoCarrySquare {
-			bavardOptsCpy = append(bavardOptsCpy, bavard.BuildTag("!amd64"))
-		}
-		if err := bavard.Generate(pathSrc, src, F, bavardOptsCpy...); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

@@ -1,5 +1,6 @@
 package element
 
+// TODO this should  be changed to match ASM constant time version
 const Reduce = `
 {{ define "reduce" }}
 // if z > q --> z -= q

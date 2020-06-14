@@ -2,13 +2,15 @@ package cmd
 
 import (
 	"fmt"
+
+	"github.com/consensys/bavard"
 )
 
-func (b *asmBuilder) square(F *field) error {
+func generateSquareASM(b *bavard.Assembly, F *field) error {
 
-	const header = `
-// func square%s(res,y *%s)
-TEXT ·square%s(SB), NOSPLIT, $0-16
+	b.FuncHeader("square"+F.ElementName, 16)
+
+	b.WriteLn(`
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
 	// for i=0 to N-1
@@ -23,15 +25,12 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 	// t[N-1] = C + A
 
 	// if adx and mulx instructions are not available, uses MUL algorithm.
-	`
-
-	b.WriteLn(fmt.Sprintf(header, F.ElementName, F.ElementName, F.ElementName))
+	`)
 
 	// registers
-	b.registers = make([]register, len(staticRegisters))
-	copy(b.registers, staticRegisters) // re init registers in case
+	b.Reset()
 
-	regT := make([]register, F.NbWords)
+	regT := make([]bavard.Register, F.NbWords)
 	for i := 0; i < F.NbWords; i++ {
 		regT[i] = b.PopRegister()
 	}
@@ -46,10 +45,10 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 
 		for i := 0; i < F.NbWords; i++ {
 			b.Comment(fmt.Sprintf("outter loop %d", i))
-			b.XORQ(ax, ax, "clear up flags")
+			b.XORQ(bavard.AX, bavard.AX, "clear up flags")
 
 			b.Comment(fmt.Sprintf("dx = y[%d]", i))
-			b.MOVQ(regY.at(i), dx)
+			b.MOVQ(regY.At(i), bavard.DX)
 
 			// instead of
 			// for j=i+1 to N-1
@@ -59,7 +58,7 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 			// for j=i+1 to N-1
 			//     A,t[j] = u[j] + t[j] + A
 			if i != F.NbWordsLastIndex {
-				regU := make([]register, (F.NbWords - i - 1))
+				regU := make([]bavard.Register, (F.NbWords - i - 1))
 				for i := 0; i < len(regU); i++ {
 					regU[i] = b.PopRegister()
 				}
@@ -69,30 +68,30 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 				// for j=i+1 to N-1
 				//     A,u[j] = x[j]*x[i] + A
 				if (i + 1) == F.NbWordsLastIndex {
-					b.MULXQ(regY.at(i+1), regU[0], regA)
+					b.MULXQ(regY.At(i+1), regU[0], regA)
 				} else {
 					for j := i + 1; j < F.NbWords; j++ {
-						yj := regY.at(j)
+						yj := regY.At(j)
 						if j == i+1 {
 							// first iteration
 							b.MULXQ(yj, regU[j-offset], regU[j+1-offset])
 						} else {
 							if j == F.NbWordsLastIndex {
-								b.MULXQ(yj, ax, regA)
+								b.MULXQ(yj, bavard.AX, regA)
 							} else {
-								b.MULXQ(yj, ax, regU[j+1-offset])
+								b.MULXQ(yj, bavard.AX, regU[j+1-offset])
 							}
-							b.ADCXQ(ax, regU[j-offset])
+							b.ADCXQ(bavard.AX, regU[j-offset])
 						}
 					}
-					b.MOVQ(0, ax)
-					b.ADCXQ(ax, regA)
-					b.XORQ(ax, ax, "clear up flags")
+					b.MOVQ(0, bavard.AX)
+					b.ADCXQ(bavard.AX, regA)
+					b.XORQ(bavard.AX, bavard.AX, "clear up flags")
 				}
 
 				if i == 0 {
 					// C, t[i] = x[i] * x[i] + t[i]
-					b.MULXQ(dx, regT[i], dx)
+					b.MULXQ(bavard.DX, regT[i], bavard.DX)
 
 					// when i == 0, T is not set yet
 					// so  we can use ADOXQ carry chain to propagate C from x[i] * x[i] + t[i] (dx)
@@ -103,14 +102,14 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 						b.ADCXQ(regU[j], regU[j])
 						b.MOVQ(regU[j], regT[j+offset])
 						if j == 0 {
-							b.ADOXQ(dx, regT[j+offset])
+							b.ADOXQ(bavard.DX, regT[j+offset])
 						} else {
-							b.ADOXQ(ax, regT[j+offset])
+							b.ADOXQ(bavard.AX, regT[j+offset])
 						}
 					}
 
 					b.ADCXQ(regA, regA)
-					b.ADOXQ(ax, regA)
+					b.ADOXQ(bavard.AX, regA)
 
 				} else {
 					// i != 0 so T is set.
@@ -121,62 +120,62 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 					}
 
 					b.ADCXQ(regA, regA)
-					b.ADOXQ(ax, regA)
+					b.ADOXQ(bavard.AX, regA)
 
 					// reset flags
-					b.XORQ(ax, ax, "clear up flags")
+					b.XORQ(bavard.AX, bavard.AX, "clear up flags")
 
 					// C, t[i] = x[i] * x[i] + t[i]
-					b.MULXQ(dx, ax, dx)
-					b.ADOXQ(ax, regT[i])
-					b.MOVQ(0, ax)
+					b.MULXQ(bavard.DX, bavard.AX, bavard.DX)
+					b.ADOXQ(bavard.AX, regT[i])
+					b.MOVQ(0, bavard.AX)
 
 					// propagate C
 					for j := i + 1; j < F.NbWords; j++ {
 						if j == i+1 {
-							b.ADOXQ(dx, regT[j])
+							b.ADOXQ(bavard.DX, regT[j])
 						} else {
-							b.ADOXQ(ax, regT[j])
+							b.ADOXQ(bavard.AX, regT[j])
 						}
 					}
 
-					b.ADOXQ(ax, regA)
+					b.ADOXQ(bavard.AX, regA)
 				}
 
 				b.PushRegister(regU...)
 
 			} else {
 				// i == last index
-				b.MULXQ(dx, ax, regA)
-				b.ADCXQ(ax, regT[i])
-				b.MOVQ(0, ax)
-				b.ADCXQ(ax, regA)
+				b.MULXQ(bavard.DX, bavard.AX, regA)
+				b.ADCXQ(bavard.AX, regT[i])
+				b.MOVQ(0, bavard.AX)
+				b.ADCXQ(bavard.AX, regA)
 			}
 
 			regM := b.PopRegister()
 			// m := t[0]*q'[0] mod W
-			b.MOVQ(F.QInverse[0], dx)
-			b.MULXQ(regT[0], regM, dx)
+			b.MOVQ(F.QInverse[0], bavard.DX)
+			b.MULXQ(regT[0], regM, bavard.DX)
 
 			// clear the carry flags
-			b.XORQ(dx, dx, "clear up flags")
+			b.XORQ(bavard.DX, bavard.DX, "clear up flags")
 
 			// C,_ := t[0] + m*q[0]
-			b.MOVQ(F.Q[0], dx)
-			b.MULXQ(regM, ax, dx)
-			b.ADCXQ(regT[0], ax)
-			b.MOVQ(dx, regT[0])
+			b.MOVQ(F.Q[0], bavard.DX)
+			b.MULXQ(regM, bavard.AX, bavard.DX)
+			b.ADCXQ(regT[0], bavard.AX)
+			b.MOVQ(bavard.DX, regT[0])
 
 			// for j=1 to N-1
 			//    (C,t[j-1]) := t[j] + m*q[j] + C
 			for j := 1; j < F.NbWords; j++ {
-				b.MOVQ(F.Q[j], dx)
+				b.MOVQ(F.Q[j], bavard.DX)
 				b.ADCXQ(regT[j], regT[j-1])
-				b.MULXQ(regM, ax, regT[j])
-				b.ADOXQ(ax, regT[j-1])
+				b.MULXQ(regM, bavard.AX, regT[j])
+				b.ADOXQ(bavard.AX, regT[j-1])
 			}
-			b.MOVQ(0, ax)
-			b.ADCXQ(ax, regT[F.NbWordsLastIndex])
+			b.MOVQ(0, bavard.AX)
+			b.ADCXQ(bavard.AX, regT[F.NbWordsLastIndex])
 			b.ADOXQ(regA, regT[F.NbWordsLastIndex])
 
 			b.PushRegister(regM)
@@ -192,7 +191,7 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 	regX := b.PopRegister()
 	b.Comment("dereference res")
 	b.MOVQ("res+0(FP)", regX)
-	b.reduce(F, regT, regX)
+	generateReduceASM(b, F, regT, regX)
 
 	// ---------------------------------------------------------------------------------------------
 	// no MULX, ADX instructions
@@ -210,54 +209,54 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 
 		for i := 0; i < F.NbWords; i++ {
 			// (A,t[0]) := t[0] + x[0]*y[{{$i}}]
-			b.MOVQ(regY.at(0), ax)
-			b.MOVQ(regY.at(i), regYi)
+			b.MOVQ(regY.At(0), bavard.AX)
+			b.MOVQ(regY.At(i), regYi)
 			b.MULQ(regYi)
 			if i != 0 {
-				b.ADDQ(ax, regT[0])
-				b.ADCQ(0, dx)
+				b.ADDQ(bavard.AX, regT[0])
+				b.ADCQ(0, bavard.DX)
 			} else {
-				b.MOVQ(ax, regT[0])
+				b.MOVQ(bavard.AX, regT[0])
 			}
-			b.MOVQ(dx, regA)
+			b.MOVQ(bavard.DX, regA)
 
 			// m := t[0]*q'[0] mod W
 			b.MOVQ(F.QInverse[0], regM)
 			b.IMULQ(regT[0], regM)
 
 			// C,_ := t[0] + m*q[0]
-			b.MOVQ(F.Q[0], ax)
+			b.MOVQ(F.Q[0], bavard.AX)
 			b.MULQ(regM)
-			b.ADDQ(regT[0], ax)
-			b.ADCQ(0, dx)
-			b.MOVQ(dx, regC)
+			b.ADDQ(regT[0], bavard.AX)
+			b.ADCQ(0, bavard.DX)
+			b.MOVQ(bavard.DX, regC)
 
 			// for j=1 to N-1
 			//    (A,t[j])  := t[j] + x[j]*y[i] + A
 			//    (C,t[j-1]) := t[j] + m*q[j] + C
 			for j := 1; j < F.NbWords; j++ {
-				b.MOVQ(regY.at(j), ax)
+				b.MOVQ(regY.At(j), bavard.AX)
 				b.MULQ(regYi)
 				if i != 0 {
 					b.ADDQ(regA, regT[j])
-					b.ADCQ(0, dx)
-					b.ADDQ(ax, regT[j])
-					b.ADCQ(0, dx)
+					b.ADCQ(0, bavard.DX)
+					b.ADDQ(bavard.AX, regT[j])
+					b.ADCQ(0, bavard.DX)
 				} else {
 					b.MOVQ(regA, regT[j])
-					b.ADDQ(ax, regT[j])
-					b.ADCQ(0, dx)
+					b.ADDQ(bavard.AX, regT[j])
+					b.ADCQ(0, bavard.DX)
 				}
-				b.MOVQ(dx, regA)
+				b.MOVQ(bavard.DX, regA)
 
-				b.MOVQ(F.Q[j], ax)
+				b.MOVQ(F.Q[j], bavard.AX)
 				b.MULQ(regM)
 				b.ADDQ(regT[j], regC)
-				b.ADCQ(0, dx)
-				b.ADDQ(ax, regC)
-				b.ADCQ(0, dx)
+				b.ADCQ(0, bavard.DX)
+				b.ADDQ(bavard.AX, regC)
+				b.ADCQ(0, bavard.DX)
 				b.MOVQ(regC, regT[j-1])
-				b.MOVQ(dx, regC)
+				b.MOVQ(bavard.DX, regC)
 			}
 
 			b.ADDQ(regC, regA)
@@ -265,8 +264,9 @@ TEXT ·square%s(SB), NOSPLIT, $0-16
 
 		}
 		b.Comment("dereference res")
+		b.PushRegister(regC, regYi, regA, regM, regY)
 		b.MOVQ("res+0(FP)", regX)
-		b.JMP("reduce")
+		generateReduceASM(b, F, regT, regX)
 	}
 
 	return nil
