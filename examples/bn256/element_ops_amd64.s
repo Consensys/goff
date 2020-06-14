@@ -945,7 +945,7 @@ no_adx:
     MOVQ SI, 24(DI)
     RET
 
-TEXT ·fromMontElement(SB), NOSPLIT, $0-16
+TEXT ·fromMontElement(SB), NOSPLIT, $0-8
 
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication

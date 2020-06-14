@@ -21,7 +21,7 @@ func generateMulASM(b *bavard.Assembly, F *field, mType mulType) error {
 	case mulAssign:
 		b.FuncHeader("mulAssign"+F.ElementName, 16)
 	case fromMont:
-		b.FuncHeader("fromMont"+F.ElementName, 16)
+		b.FuncHeader("fromMont"+F.ElementName, 8)
 	case mul:
 		b.FuncHeader("mul"+F.ElementName, 24)
 	}
