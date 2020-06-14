@@ -46,6 +46,13 @@ var modulus{{.ElementName}} = {{.ElementName}}{
 
 var modulus{{.ElementName}}Inv0 uint64 = {{index $.QInverse 0}}
 
+// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
+// sets and returns z = z * 1
+func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
+	fromMont{{.ElementName}}(z)
+	return z
+}
+	
 
 // Mul z = x * y mod q 
 // see https://hackmd.io/@zkteam/modular_multiplication

@@ -186,18 +186,9 @@ func (z *{{.ElementName}}) SubAssign(x *{{.ElementName}}) *{{.ElementName}} {
 	return z
 }
 
-
-{{- if eq .ASM false }}
-func mulAssign{{.ElementName}}(z,x *{{.ElementName}}) {
-	{{ if .NoCarry}}
-		{{ template "mul_nocarry" dict "all" . "V1" "z" "V2" "x"}}
-	{{ else }}
-		{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x" "NoReturn" true}}
-	{{ end }}
-	{{ template "reduce" . }}
-}
-
-func fromMont{{.ElementName}}(z *{{.ElementName}}) {
+// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
+// sets and returns z = z * 1
+func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
 	// the following lines implement z = z * 1
 	// with a modified CIOS montgomery multiplication
 	{{- range $j := .NbWordsIndexesFull}}
@@ -213,7 +204,21 @@ func fromMont{{.ElementName}}(z *{{.ElementName}}) {
 	{{- end}}
 
 	{{ template "reduce" .}}
+	return z
 }
+
+
+{{- if eq .ASM false }}
+func mulAssign{{.ElementName}}(z,x *{{.ElementName}}) {
+	{{ if .NoCarry}}
+		{{ template "mul_nocarry" dict "all" . "V1" "z" "V2" "x"}}
+	{{ else }}
+		{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x" "NoReturn" true}}
+	{{ end }}
+	{{ template "reduce" . }}
+}
+
+
 
 func square{{.ElementName}}(z,x *{{.ElementName}}) {
 	{{if .NoCarrySquare}}

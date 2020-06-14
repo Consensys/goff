@@ -472,13 +472,6 @@ func (z *Element) Exp(x Element, exponent ...uint64) *Element {
 	return z
 }
 
-// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
-// sets and returns z = z * 1
-func (z *Element) FromMont() *Element {
-	fromMontElement(z)
-	return z
-}
-
 // ToMont converts z to Montgomery form
 // sets and returns z = z * r^2
 func (z *Element) ToMont() *Element {

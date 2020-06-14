@@ -86,7 +86,6 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		element.Base,
 		element.Reduce,
 		element.Exp,
-		element.FromMont,
 		element.Conv,
 		element.MulCIOS,
 		element.MulFIPS,

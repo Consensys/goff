@@ -63,6 +63,13 @@ var modulusElement = Element{
 
 var modulusElementInv0 uint64 = 9786893198990664585
 
+// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
+// sets and returns z = z * 1
+func (z *Element) FromMont() *Element {
+	fromMontElement(z)
+	return z
+}
+
 // Mul z = x * y mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Mul(x, y *Element) *Element {

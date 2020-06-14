@@ -330,3 +330,57 @@ func (z *Element) SubAssign(x *Element) *Element {
 	}
 	return z
 }
+
+// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
+// sets and returns z = z * 1
+func (z *Element) FromMont() *Element {
+	// the following lines implement z = z * 1
+	// with a modified CIOS montgomery multiplication
+	{
+		// m = z[0]n'[0] mod W
+		m := z[0] * 9786893198990664585
+		C := madd0(m, 4332616871279656263, z[0])
+		C, z[0] = madd2(m, 10917124144477883021, z[1], C)
+		C, z[1] = madd2(m, 13281191951274694749, z[2], C)
+		C, z[2] = madd2(m, 3486998266802970665, z[3], C)
+		z[3] = C
+	}
+	{
+		// m = z[0]n'[0] mod W
+		m := z[0] * 9786893198990664585
+		C := madd0(m, 4332616871279656263, z[0])
+		C, z[0] = madd2(m, 10917124144477883021, z[1], C)
+		C, z[1] = madd2(m, 13281191951274694749, z[2], C)
+		C, z[2] = madd2(m, 3486998266802970665, z[3], C)
+		z[3] = C
+	}
+	{
+		// m = z[0]n'[0] mod W
+		m := z[0] * 9786893198990664585
+		C := madd0(m, 4332616871279656263, z[0])
+		C, z[0] = madd2(m, 10917124144477883021, z[1], C)
+		C, z[1] = madd2(m, 13281191951274694749, z[2], C)
+		C, z[2] = madd2(m, 3486998266802970665, z[3], C)
+		z[3] = C
+	}
+	{
+		// m = z[0]n'[0] mod W
+		m := z[0] * 9786893198990664585
+		C := madd0(m, 4332616871279656263, z[0])
+		C, z[0] = madd2(m, 10917124144477883021, z[1], C)
+		C, z[1] = madd2(m, 13281191951274694749, z[2], C)
+		C, z[2] = madd2(m, 3486998266802970665, z[3], C)
+		z[3] = C
+	}
+
+	// if z > q --> z -= q
+	// note: this is NOT constant time
+	if !(z[3] < 3486998266802970665 || (z[3] == 3486998266802970665 && (z[2] < 13281191951274694749 || (z[2] == 13281191951274694749 && (z[1] < 10917124144477883021 || (z[1] == 10917124144477883021 && (z[0] < 4332616871279656263))))))) {
+		var b uint64
+		z[0], b = bits.Sub64(z[0], 4332616871279656263, 0)
+		z[1], b = bits.Sub64(z[1], 10917124144477883021, b)
+		z[2], b = bits.Sub64(z[2], 13281191951274694749, b)
+		z[3], _ = bits.Sub64(z[3], 3486998266802970665, b)
+	}
+	return z
+}
