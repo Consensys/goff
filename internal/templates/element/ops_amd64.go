@@ -38,6 +38,14 @@ func reduce{{.ElementName}}(res *{{.ElementName}})  // for test purposes
 //go:noescape
 func square{{.ElementName}}(res,y *{{.ElementName}})
 
+// modulus 
+var modulus{{.ElementName}} = {{.ElementName}}{
+	{{- range $i := .NbWordsIndexesFull}}
+	{{index $.Q $i}},{{end}}
+}
+
+var modulus{{.ElementName}}Inv0 uint64 = {{index $.QInverse 0}}
+
 
 // Mul z = x * y mod q 
 // see https://hackmd.io/@zkteam/modular_multiplication

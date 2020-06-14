@@ -152,33 +152,37 @@ func generateSquareASM(b *bavard.Assembly, F *field) error {
 				b.ADCXQ(bavard.AX, regA)
 			}
 
-			regM := b.PopRegister()
+			regTmp := b.PopRegister()
 			// m := t[0]*q'[0] mod W
-			b.MOVQ(F.QInverse[0], bavard.DX)
-			b.MULXQ(regT[0], regM, bavard.DX)
+			regM := bavard.DX
+			b.MOVQ(regT[0], bavard.DX)
+			b.MULXQ(fmt.Sprintf("·modulus%sInv0(SB)", F.ElementName), regM, bavard.AX, "m := t[0]*q'[0] mod W")
+			// b.MOVQ(F.QInverse[0], bavard.DX)
+			// b.MULXQ(regT[0], regM, bavard.DX)
 
 			// clear the carry flags
-			b.XORQ(bavard.DX, bavard.DX, "clear up flags")
+			b.XORQ(bavard.AX, bavard.AX, "clear up flags")
 
 			// C,_ := t[0] + m*q[0]
-			b.MOVQ(F.Q[0], bavard.DX)
-			b.MULXQ(regM, bavard.AX, bavard.DX)
+			b.MULXQ(modAt(0, F), bavard.AX, regTmp)
+			// b.MOVQ(F.Q[0], bavard.DX)
+			// b.MULXQ(regM, bavard.AX, bavard.DX)
 			b.ADCXQ(regT[0], bavard.AX)
-			b.MOVQ(bavard.DX, regT[0])
+			b.MOVQ(regTmp, regT[0])
 
 			// for j=1 to N-1
 			//    (C,t[j-1]) := t[j] + m*q[j] + C
 			for j := 1; j < F.NbWords; j++ {
-				b.MOVQ(F.Q[j], bavard.DX)
+				// b.MOVQ(F.Q[j], bavard.DX)
 				b.ADCXQ(regT[j], regT[j-1])
-				b.MULXQ(regM, bavard.AX, regT[j])
+				b.MULXQ(modAt(j, F), bavard.AX, regT[j])
 				b.ADOXQ(bavard.AX, regT[j-1])
 			}
 			b.MOVQ(0, bavard.AX)
 			b.ADCXQ(bavard.AX, regT[F.NbWordsLastIndex])
 			b.ADOXQ(regA, regT[F.NbWordsLastIndex])
 
-			b.PushRegister(regM)
+			b.PushRegister(regTmp)
 		}
 
 		// free registers

@@ -39,35 +39,29 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -96,35 +90,29 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -153,35 +141,29 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -210,35 +192,29 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -267,35 +243,29 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -324,57 +294,45 @@ TEXT ·mulAssignElement(SB), NOSPLIT, $0-16
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
     ADOXQ R11, R8
     MOVQ CX, R10
-    MOVQ $0x8508c00000000001, DX
-    SUBQ DX, R10
+    SUBQ ·modulusElement+0(SB), R10
     MOVQ BX, R12
-    MOVQ $0x170b5d4430000000, DX
-    SBBQ DX, R12
+    SBBQ ·modulusElement+8(SB), R12
     MOVQ BP, R11
-    MOVQ $0x1ef3622fba094800, DX
-    SBBQ DX, R11
+    SBBQ ·modulusElement+16(SB), R11
     MOVQ SI, R13
-    MOVQ $0x1a22d9f300f5138f, DX
-    SBBQ DX, R13
+    SBBQ ·modulusElement+24(SB), R13
     MOVQ DI, R14
-    MOVQ $0xc63b05c06ca1493b, DX
-    SBBQ DX, R14
+    SBBQ ·modulusElement+32(SB), R14
     MOVQ R8, R15
-    MOVQ $0x01ae3a4617c510ea, DX
-    SBBQ DX, R15
+    SBBQ ·modulusElement+40(SB), R15
     CMOVQCC R10, CX
     CMOVQCC R12, BX
     CMOVQCC R11, BP
@@ -925,23 +883,17 @@ no_adx:
     ADDQ R10, R11
     MOVQ R11, R8
     MOVQ CX, R15
-    MOVQ $0x8508c00000000001, DX
-    SUBQ DX, R15
+    SUBQ ·modulusElement+0(SB), R15
     MOVQ BX, R10
-    MOVQ $0x170b5d4430000000, DX
-    SBBQ DX, R10
+    SBBQ ·modulusElement+8(SB), R10
     MOVQ BP, R12
-    MOVQ $0x1ef3622fba094800, DX
-    SBBQ DX, R12
+    SBBQ ·modulusElement+16(SB), R12
     MOVQ SI, R11
-    MOVQ $0x1a22d9f300f5138f, DX
-    SBBQ DX, R11
+    SBBQ ·modulusElement+24(SB), R11
     MOVQ DI, R13
-    MOVQ $0xc63b05c06ca1493b, DX
-    SBBQ DX, R13
+    SBBQ ·modulusElement+32(SB), R13
     MOVQ R8, R14
-    MOVQ $0x01ae3a4617c510ea, DX
-    SBBQ DX, R14
+    SBBQ ·modulusElement+40(SB), R14
     CMOVQCC R15, CX
     CMOVQCC R10, BX
     CMOVQCC R12, BP
@@ -996,35 +948,29 @@ TEXT ·mulElement(SB), NOSPLIT, $0-24
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -1053,35 +999,29 @@ TEXT ·mulElement(SB), NOSPLIT, $0-24
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -1110,35 +1050,29 @@ TEXT ·mulElement(SB), NOSPLIT, $0-24
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -1167,35 +1101,29 @@ TEXT ·mulElement(SB), NOSPLIT, $0-24
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -1224,35 +1152,29 @@ TEXT ·mulElement(SB), NOSPLIT, $0-24
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -1281,58 +1203,46 @@ TEXT ·mulElement(SB), NOSPLIT, $0-24
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R11
     ADOXQ DX, R11
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
     ADOXQ R11, R8
     MOVQ res+0(FP), R9                                     // dereference res
     MOVQ CX, R10
-    MOVQ $0x8508c00000000001, DX
-    SUBQ DX, R10
+    SUBQ ·modulusElement+0(SB), R10
     MOVQ BX, R12
-    MOVQ $0x170b5d4430000000, DX
-    SBBQ DX, R12
+    SBBQ ·modulusElement+8(SB), R12
     MOVQ BP, R11
-    MOVQ $0x1ef3622fba094800, DX
-    SBBQ DX, R11
+    SBBQ ·modulusElement+16(SB), R11
     MOVQ SI, R13
-    MOVQ $0x1a22d9f300f5138f, DX
-    SBBQ DX, R13
+    SBBQ ·modulusElement+24(SB), R13
     MOVQ DI, R14
-    MOVQ $0xc63b05c06ca1493b, DX
-    SBBQ DX, R14
+    SBBQ ·modulusElement+32(SB), R14
     MOVQ R8, R15
-    MOVQ $0x01ae3a4617c510ea, DX
-    SBBQ DX, R15
+    SBBQ ·modulusElement+40(SB), R15
     CMOVQCC R10, CX
     CMOVQCC R12, BX
     CMOVQCC R11, BP
@@ -1884,23 +1794,17 @@ no_adx:
     MOVQ R11, R8
     MOVQ res+0(FP), R9                                     // dereference res
     MOVQ CX, R15
-    MOVQ $0x8508c00000000001, DX
-    SUBQ DX, R15
+    SUBQ ·modulusElement+0(SB), R15
     MOVQ BX, R10
-    MOVQ $0x170b5d4430000000, DX
-    SBBQ DX, R10
+    SBBQ ·modulusElement+8(SB), R10
     MOVQ BP, R12
-    MOVQ $0x1ef3622fba094800, DX
-    SBBQ DX, R12
+    SBBQ ·modulusElement+16(SB), R12
     MOVQ SI, R11
-    MOVQ $0x1a22d9f300f5138f, DX
-    SBBQ DX, R11
+    SBBQ ·modulusElement+24(SB), R11
     MOVQ DI, R13
-    MOVQ $0xc63b05c06ca1493b, DX
-    SBBQ DX, R13
+    SBBQ ·modulusElement+32(SB), R13
     MOVQ R8, R14
-    MOVQ $0x01ae3a4617c510ea, DX
-    SBBQ DX, R14
+    SBBQ ·modulusElement+40(SB), R14
     CMOVQCC R15, CX
     CMOVQCC R10, BX
     CMOVQCC R12, BP
@@ -1939,232 +1843,190 @@ TEXT ·fromMontElement(SB), NOSPLIT, $0-8
     JNE no_adx                                            // no support for MULX or ADOX instructions
     // outter loop 0
     XORQ DX, DX                                            // clear up flags
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
     ADOXQ AX, R8
     // outter loop 1
     XORQ DX, DX                                            // clear up flags
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
     ADOXQ AX, R8
     // outter loop 2
     XORQ DX, DX                                            // clear up flags
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
     ADOXQ AX, R8
     // outter loop 3
     XORQ DX, DX                                            // clear up flags
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
     ADOXQ AX, R8
     // outter loop 4
     XORQ DX, DX                                            // clear up flags
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
     ADOXQ AX, R8
     // outter loop 5
     XORQ DX, DX                                            // clear up flags
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R10, DX                                       // m := t[0]*q'[0] mod W
-    XORQ DX, DX                                            // clear the flags
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear the flags
     // C,_ := t[0] + m*q[0]
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R10, AX, DX
+    MULXQ ·modulusElement+0(SB), AX, R10
     ADCXQ CX, AX
-    MOVQ DX, CX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    MOVQ $0x170b5d4430000000, DX
     ADCXQ BX, CX
-    MULXQ R10, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R10, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R10, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R10, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R10, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
     ADOXQ AX, R8
     MOVQ CX, R11
-    MOVQ $0x8508c00000000001, DX
-    SUBQ DX, R11
+    SUBQ ·modulusElement+0(SB), R11
     MOVQ BX, R12
-    MOVQ $0x170b5d4430000000, DX
-    SBBQ DX, R12
+    SBBQ ·modulusElement+8(SB), R12
     MOVQ BP, R13
-    MOVQ $0x1ef3622fba094800, DX
-    SBBQ DX, R13
+    SBBQ ·modulusElement+16(SB), R13
     MOVQ SI, R14
-    MOVQ $0x1a22d9f300f5138f, DX
-    SBBQ DX, R14
+    SBBQ ·modulusElement+24(SB), R14
     MOVQ DI, R15
-    MOVQ $0xc63b05c06ca1493b, DX
-    SBBQ DX, R15
+    SBBQ ·modulusElement+32(SB), R15
     MOVQ R8, R10
-    MOVQ $0x01ae3a4617c510ea, DX
-    SBBQ DX, R10
+    SBBQ ·modulusElement+40(SB), R10
     CMOVQCC R11, CX
     CMOVQCC R12, BX
     CMOVQCC R13, BP
@@ -2468,23 +2330,17 @@ no_adx:
     MOVQ DX, R11
     MOVQ R11, R8
     MOVQ CX, R10
-    MOVQ $0x8508c00000000001, DX
-    SUBQ DX, R10
+    SUBQ ·modulusElement+0(SB), R10
     MOVQ BX, R11
-    MOVQ $0x170b5d4430000000, DX
-    SBBQ DX, R11
+    SBBQ ·modulusElement+8(SB), R11
     MOVQ BP, R12
-    MOVQ $0x1ef3622fba094800, DX
-    SBBQ DX, R12
+    SBBQ ·modulusElement+16(SB), R12
     MOVQ SI, R13
-    MOVQ $0x1a22d9f300f5138f, DX
-    SBBQ DX, R13
+    SBBQ ·modulusElement+24(SB), R13
     MOVQ DI, R14
-    MOVQ $0xc63b05c06ca1493b, DX
-    SBBQ DX, R14
+    SBBQ ·modulusElement+32(SB), R14
     MOVQ R8, R15
-    MOVQ $0x01ae3a4617c510ea, DX
-    SBBQ DX, R15
+    SBBQ ·modulusElement+40(SB), R15
     CMOVQCC R10, CX
     CMOVQCC R11, BX
     CMOVQCC R12, BP
@@ -2553,32 +2409,26 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ AX, R8
     ADCXQ R10, R10
     ADOXQ AX, R10
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R11, DX
-    XORQ DX, DX                                            // clear up flags
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R11, AX, DX
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear up flags
+    MULXQ ·modulusElement+0(SB), AX, R11
     ADCXQ CX, AX
-    MOVQ DX, CX
-    MOVQ $0x170b5d4430000000, DX
+    MOVQ R11, CX
     ADCXQ BX, CX
-    MULXQ R11, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R11, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R11, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R11, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R11, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -2616,32 +2466,26 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ AX, DI
     ADOXQ AX, R8
     ADOXQ AX, R10
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R11, DX
-    XORQ DX, DX                                            // clear up flags
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R11, AX, DX
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear up flags
+    MULXQ ·modulusElement+0(SB), AX, R11
     ADCXQ CX, AX
-    MOVQ DX, CX
-    MOVQ $0x170b5d4430000000, DX
+    MOVQ R11, CX
     ADCXQ BX, CX
-    MULXQ R11, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R11, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R11, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R11, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R11, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -2674,32 +2518,26 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ AX, DI
     ADOXQ AX, R8
     ADOXQ AX, R10
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R15, DX
-    XORQ DX, DX                                            // clear up flags
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R15, AX, DX
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear up flags
+    MULXQ ·modulusElement+0(SB), AX, R15
     ADCXQ CX, AX
-    MOVQ DX, CX
-    MOVQ $0x170b5d4430000000, DX
+    MOVQ R15, CX
     ADCXQ BX, CX
-    MULXQ R15, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R15, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R15, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R15, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R15, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -2727,32 +2565,26 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADOXQ DX, DI
     ADOXQ AX, R8
     ADOXQ AX, R10
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R13, DX
-    XORQ DX, DX                                            // clear up flags
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R13, AX, DX
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear up flags
+    MULXQ ·modulusElement+0(SB), AX, R13
     ADCXQ CX, AX
-    MOVQ DX, CX
-    MOVQ $0x170b5d4430000000, DX
+    MOVQ R13, CX
     ADCXQ BX, CX
-    MULXQ R13, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R13, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R13, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R13, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R13, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -2772,32 +2604,26 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     MOVQ $0x0000000000000000, AX
     ADOXQ DX, R8
     ADOXQ AX, R10
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R15, DX
-    XORQ DX, DX                                            // clear up flags
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R15, AX, DX
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear up flags
+    MULXQ ·modulusElement+0(SB), AX, R15
     ADCXQ CX, AX
-    MOVQ DX, CX
-    MOVQ $0x170b5d4430000000, DX
+    MOVQ R15, CX
     ADCXQ BX, CX
-    MULXQ R15, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R15, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R15, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R15, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R15, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -2810,32 +2636,26 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     ADCXQ AX, R8
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R10
-    MOVQ $0x8508bfffffffffff, DX
-    MULXQ CX, R11, DX
-    XORQ DX, DX                                            // clear up flags
-    MOVQ $0x8508c00000000001, DX
-    MULXQ R11, AX, DX
+    MOVQ CX, DX
+    MULXQ ·modulusElementInv0(SB), DX, AX                  // m := t[0]*q'[0] mod W
+    XORQ AX, AX                                            // clear up flags
+    MULXQ ·modulusElement+0(SB), AX, R11
     ADCXQ CX, AX
-    MOVQ DX, CX
-    MOVQ $0x170b5d4430000000, DX
+    MOVQ R11, CX
     ADCXQ BX, CX
-    MULXQ R11, AX, BX
+    MULXQ ·modulusElement+8(SB), AX, BX
     ADOXQ AX, CX
-    MOVQ $0x1ef3622fba094800, DX
     ADCXQ BP, BX
-    MULXQ R11, AX, BP
+    MULXQ ·modulusElement+16(SB), AX, BP
     ADOXQ AX, BX
-    MOVQ $0x1a22d9f300f5138f, DX
     ADCXQ SI, BP
-    MULXQ R11, AX, SI
+    MULXQ ·modulusElement+24(SB), AX, SI
     ADOXQ AX, BP
-    MOVQ $0xc63b05c06ca1493b, DX
     ADCXQ DI, SI
-    MULXQ R11, AX, DI
+    MULXQ ·modulusElement+32(SB), AX, DI
     ADOXQ AX, SI
-    MOVQ $0x01ae3a4617c510ea, DX
     ADCXQ R8, DI
-    MULXQ R11, AX, R8
+    MULXQ ·modulusElement+40(SB), AX, R8
     ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
     ADCXQ AX, R8
@@ -2843,23 +2663,17 @@ TEXT ·squareElement(SB), NOSPLIT, $0-16
     // dereference res
     MOVQ res+0(FP), R12
     MOVQ CX, R13
-    MOVQ $0x8508c00000000001, DX
-    SUBQ DX, R13
+    SUBQ ·modulusElement+0(SB), R13
     MOVQ BX, R14
-    MOVQ $0x170b5d4430000000, DX
-    SBBQ DX, R14
+    SBBQ ·modulusElement+8(SB), R14
     MOVQ BP, R15
-    MOVQ $0x1ef3622fba094800, DX
-    SBBQ DX, R15
+    SBBQ ·modulusElement+16(SB), R15
     MOVQ SI, R11
-    MOVQ $0x1a22d9f300f5138f, DX
-    SBBQ DX, R11
+    SBBQ ·modulusElement+24(SB), R11
     MOVQ DI, R9
-    MOVQ $0xc63b05c06ca1493b, DX
-    SBBQ DX, R9
+    SBBQ ·modulusElement+32(SB), R9
     MOVQ R8, R10
-    MOVQ $0x01ae3a4617c510ea, DX
-    SBBQ DX, R10
+    SBBQ ·modulusElement+40(SB), R10
     CMOVQCC R13, CX
     CMOVQCC R14, BX
     CMOVQCC R15, BP
@@ -3413,23 +3227,17 @@ no_adx:
     // dereference res
     MOVQ res+0(FP), R12
     MOVQ CX, R10
-    MOVQ $0x8508c00000000001, DX
-    SUBQ DX, R10
+    SUBQ ·modulusElement+0(SB), R10
     MOVQ BX, R13
-    MOVQ $0x170b5d4430000000, DX
-    SBBQ DX, R13
+    SBBQ ·modulusElement+8(SB), R13
     MOVQ BP, R14
-    MOVQ $0x1ef3622fba094800, DX
-    SBBQ DX, R14
+    SBBQ ·modulusElement+16(SB), R14
     MOVQ SI, R15
-    MOVQ $0x1a22d9f300f5138f, DX
-    SBBQ DX, R15
+    SBBQ ·modulusElement+24(SB), R15
     MOVQ DI, R11
-    MOVQ $0xc63b05c06ca1493b, DX
-    SBBQ DX, R11
+    SBBQ ·modulusElement+32(SB), R11
     MOVQ R8, R9
-    MOVQ $0x01ae3a4617c510ea, DX
-    SBBQ DX, R9
+    SBBQ ·modulusElement+40(SB), R9
     CMOVQCC R10, CX
     CMOVQCC R13, BX
     CMOVQCC R14, BP
@@ -3453,23 +3261,17 @@ TEXT ·reduceElement(SB), NOSPLIT, $0-8
     MOVQ 32(R9), DI                                        // t[4] = x[4]
     MOVQ 40(R9), R8                                        // t[5] = x[5]
     MOVQ CX, R10
-    MOVQ $0x8508c00000000001, DX
-    SUBQ DX, R10
+    SUBQ ·modulusElement+0(SB), R10
     MOVQ BX, R11
-    MOVQ $0x170b5d4430000000, DX
-    SBBQ DX, R11
+    SBBQ ·modulusElement+8(SB), R11
     MOVQ BP, R12
-    MOVQ $0x1ef3622fba094800, DX
-    SBBQ DX, R12
+    SBBQ ·modulusElement+16(SB), R12
     MOVQ SI, R13
-    MOVQ $0x1a22d9f300f5138f, DX
-    SBBQ DX, R13
+    SBBQ ·modulusElement+24(SB), R13
     MOVQ DI, R14
-    MOVQ $0xc63b05c06ca1493b, DX
-    SBBQ DX, R14
+    SBBQ ·modulusElement+32(SB), R14
     MOVQ R8, R15
-    MOVQ $0x01ae3a4617c510ea, DX
-    SBBQ DX, R15
+    SBBQ ·modulusElement+40(SB), R15
     CMOVQCC R10, CX
     CMOVQCC R11, BX
     CMOVQCC R12, BP
@@ -3501,23 +3303,17 @@ TEXT ·addElement(SB), NOSPLIT, $0-24
     ADCQ 40(R10), R8
     MOVQ res+0(FP), R9                                     // dereference res
     MOVQ CX, R11
-    MOVQ $0x8508c00000000001, DX
-    SUBQ DX, R11
+    SUBQ ·modulusElement+0(SB), R11
     MOVQ BX, R12
-    MOVQ $0x170b5d4430000000, DX
-    SBBQ DX, R12
+    SBBQ ·modulusElement+8(SB), R12
     MOVQ BP, R13
-    MOVQ $0x1ef3622fba094800, DX
-    SBBQ DX, R13
+    SBBQ ·modulusElement+16(SB), R13
     MOVQ SI, R14
-    MOVQ $0x1a22d9f300f5138f, DX
-    SBBQ DX, R14
+    SBBQ ·modulusElement+24(SB), R14
     MOVQ DI, R15
-    MOVQ $0xc63b05c06ca1493b, DX
-    SBBQ DX, R15
+    SBBQ ·modulusElement+32(SB), R15
     MOVQ R8, R10
-    MOVQ $0x01ae3a4617c510ea, DX
-    SBBQ DX, R10
+    SBBQ ·modulusElement+40(SB), R10
     CMOVQCC R11, CX
     CMOVQCC R12, BX
     CMOVQCC R13, BP
@@ -3548,23 +3344,17 @@ TEXT ·addAssignElement(SB), NOSPLIT, $0-16
     ADCQ 32(R10), DI
     ADCQ 40(R10), R8
     MOVQ CX, R11
-    MOVQ $0x8508c00000000001, DX
-    SUBQ DX, R11
+    SUBQ ·modulusElement+0(SB), R11
     MOVQ BX, R12
-    MOVQ $0x170b5d4430000000, DX
-    SBBQ DX, R12
+    SBBQ ·modulusElement+8(SB), R12
     MOVQ BP, R13
-    MOVQ $0x1ef3622fba094800, DX
-    SBBQ DX, R13
+    SBBQ ·modulusElement+16(SB), R13
     MOVQ SI, R14
-    MOVQ $0x1a22d9f300f5138f, DX
-    SBBQ DX, R14
+    SBBQ ·modulusElement+24(SB), R14
     MOVQ DI, R15
-    MOVQ $0xc63b05c06ca1493b, DX
-    SBBQ DX, R15
+    SBBQ ·modulusElement+32(SB), R15
     MOVQ R8, R10
-    MOVQ $0x01ae3a4617c510ea, DX
-    SBBQ DX, R10
+    SBBQ ·modulusElement+40(SB), R10
     CMOVQCC R11, CX
     CMOVQCC R12, BX
     CMOVQCC R13, BP
@@ -3595,23 +3385,17 @@ TEXT ·doubleElement(SB), NOSPLIT, $0-16
     ADCQ DI, DI
     ADCQ R8, R8
     MOVQ CX, R11
-    MOVQ $0x8508c00000000001, DX
-    SUBQ DX, R11
+    SUBQ ·modulusElement+0(SB), R11
     MOVQ BX, R12
-    MOVQ $0x170b5d4430000000, DX
-    SBBQ DX, R12
+    SBBQ ·modulusElement+8(SB), R12
     MOVQ BP, R13
-    MOVQ $0x1ef3622fba094800, DX
-    SBBQ DX, R13
+    SBBQ ·modulusElement+16(SB), R13
     MOVQ SI, R14
-    MOVQ $0x1a22d9f300f5138f, DX
-    SBBQ DX, R14
+    SBBQ ·modulusElement+24(SB), R14
     MOVQ DI, R15
-    MOVQ $0xc63b05c06ca1493b, DX
-    SBBQ DX, R15
+    SBBQ ·modulusElement+32(SB), R15
     MOVQ R8, R10
-    MOVQ $0x01ae3a4617c510ea, DX
-    SBBQ DX, R10
+    SBBQ ·modulusElement+40(SB), R10
     CMOVQCC R11, CX
     CMOVQCC R12, BX
     CMOVQCC R13, BP

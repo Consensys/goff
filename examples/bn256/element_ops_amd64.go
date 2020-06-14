@@ -53,6 +53,16 @@ func reduceElement(res *Element) // for test purposes
 //go:noescape
 func squareElement(res, y *Element)
 
+// modulus
+var modulusElement = Element{
+	4332616871279656263,
+	10917124144477883021,
+	13281191951274694749,
+	3486998266802970665,
+}
+
+var modulusElementInv0 uint64 = 9786893198990664585
+
 // Mul z = x * y mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Mul(x, y *Element) *Element {

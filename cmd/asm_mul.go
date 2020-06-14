@@ -14,6 +14,10 @@ const (
 	fromMont
 )
 
+func modAt(i int, F *field) string {
+	return fmt.Sprintf("·modulus%s+%d(SB)", F.ElementName, i*8)
+}
+
 // helper to generate assembly code for multiplication and fromMont method (mul by 1)
 func generateMulASM(b *bavard.Assembly, F *field, mType mulType) error {
 
@@ -84,7 +88,8 @@ func generateMulASM(b *bavard.Assembly, F *field, mType mulType) error {
 
 	{
 
-		regM := b.PopRegister()
+		// regM := b.PopRegister()
+		regTmp := b.PopRegister()
 		var regA, regY bavard.Register
 		var regxi []bavard.Register
 		if mType != fromMont {
@@ -113,7 +118,6 @@ func generateMulASM(b *bavard.Assembly, F *field, mType mulType) error {
 
 			if mType != fromMont {
 				b.MOVQ(regY.At(i), bavard.DX, fmt.Sprintf("DX = y[%d]", i))
-
 				// for j=0 to N-1
 				//    (A,t[j])  := t[j] + x[j]*y[i] + A
 				for j := 0; j < F.NbWords; j++ {
@@ -146,27 +150,28 @@ func generateMulASM(b *bavard.Assembly, F *field, mType mulType) error {
 			}
 
 			// m := t[0]*q'[0] mod W
-			b.MOVQ(F.QInverse[0], bavard.DX)
-			b.MULXQ(regT[0], regM, bavard.DX, "m := t[0]*q'[0] mod W")
+			regM := bavard.DX
+			b.MOVQ(regT[0], bavard.DX)
+			b.MULXQ(fmt.Sprintf("·modulus%sInv0(SB)", F.ElementName), regM, bavard.AX, "m := t[0]*q'[0] mod W")
 
 			// clear the carry flags
-			b.XORQ(bavard.DX, bavard.DX, "clear the flags")
+			b.XORQ(bavard.AX, bavard.AX, "clear the flags")
 
 			// C,_ := t[0] + m*q[0]
 			b.Comment("C,_ := t[0] + m*q[0]")
-			b.MOVQ(F.Q[0], bavard.DX)
-			b.MULXQ(regM, bavard.AX, bavard.DX)
+
+			b.MULXQ(modAt(0, F), bavard.AX, regTmp)
 			b.ADCXQ(regT[0], bavard.AX)
-			b.MOVQ(bavard.DX, regT[0])
+			b.MOVQ(regTmp, regT[0])
 
 			b.Comment("for j=1 to N-1")
 			b.Comment("    (C,t[j-1]) := t[j] + m*q[j] + C")
+
 			// for j=1 to N-1
 			//    (C,t[j-1]) := t[j] + m*q[j] + C
 			for j := 1; j < F.NbWords; j++ {
-				b.MOVQ(F.Q[j], bavard.DX)
 				b.ADCXQ(regT[j], regT[j-1])
-				b.MULXQ(regM, bavard.AX, regT[j])
+				b.MULXQ(modAt(j, F), bavard.AX, regT[j])
 				b.ADOXQ(bavard.AX, regT[j-1])
 			}
 			b.MOVQ(0, bavard.AX)
@@ -180,7 +185,8 @@ func generateMulASM(b *bavard.Assembly, F *field, mType mulType) error {
 		}
 
 		// free registers
-		b.PushRegister(regM)
+		// b.PushRegister(regM)
+		b.PushRegister(regTmp)
 		if mType != fromMont {
 			b.PushRegister(regY, regA)
 			b.PushRegister(regxi...)
@@ -193,6 +199,7 @@ func generateMulASM(b *bavard.Assembly, F *field, mType mulType) error {
 		b.MOVQ("res+0(FP)", regX, "dereference res")
 	}
 	generateReduceASM(b, F, regT, regX)
+	// b.RET()
 
 	// ---------------------------------------------------------------------------------------------
 	// no MULX, ADX instructions
@@ -315,20 +322,17 @@ func generateReduceFuncASM(b *bavard.Assembly, F *field) error {
 }
 
 func generateReduceASM(b *bavard.Assembly, F *field, regT []bavard.Register, result bavard.Register) error {
-	// b.WriteLn("reduce:")
-
 	// u = t - q
 	regU := make([]bavard.Register, F.NbWords)
 
 	for i := 0; i < F.NbWords; i++ {
 		regU[i] = b.PopRegister()
 		b.MOVQ(regT[i], regU[i])
-		b.MOVQ(F.Q[i], bavard.DX)
 
 		if i == 0 {
-			b.SUBQ(bavard.DX, regU[i])
+			b.SUBQ(modAt(i, F), regU[i])
 		} else {
-			b.SBBQ(bavard.DX, regU[i])
+			b.SBBQ(modAt(i, F), regU[i])
 		}
 	}
 
