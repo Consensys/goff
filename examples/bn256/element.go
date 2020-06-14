@@ -423,7 +423,7 @@ func (z *Element) ToMont() *Element {
 		5164255478447964150,
 		493319470278259999,
 	}
-	mulAssignElement(z, &rSquare)
+	z.MulAssign(&rSquare)
 	return z
 }
 

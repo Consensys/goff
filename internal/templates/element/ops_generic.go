@@ -209,17 +209,6 @@ func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
 
 
 {{- if eq .ASM false }}
-func mulAssign{{.ElementName}}(z,x *{{.ElementName}}) {
-	{{ if .NoCarry}}
-		{{ template "mul_nocarry" dict "all" . "V1" "z" "V2" "x"}}
-	{{ else }}
-		{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x" "NoReturn" true}}
-	{{ end }}
-	{{ template "reduce" . }}
-}
-
-
-
 func square{{.ElementName}}(z,x *{{.ElementName}}) {
 	{{if .NoCarrySquare}}
 		{{ template "square" dict "all" . "V1" "x"}}
