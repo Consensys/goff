@@ -209,17 +209,6 @@ func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
 
 
 {{- if eq .ASM false }}
-func square{{.ElementName}}(z,x *{{.ElementName}}) {
-	{{if .NoCarrySquare}}
-		{{ template "square" dict "all" . "V1" "x"}}
-		{{ template "reduce" . }}
-	{{else if .NoCarry}}
-		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "x"}}
-		{{ template "reduce" . }}
-	{{else }}
-		z.Mul(x, x)
-	{{end}}
-}
 
 // for test purposes
 func reduce{{.ElementName}}(z *{{.ElementName}})  {
