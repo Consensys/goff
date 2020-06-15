@@ -216,6 +216,12 @@ func (z *{{.ElementName}}) ToMont() *{{.ElementName}} {
 
 {{- if eq .ASM false }}
 
+// rSquare
+var rSquare{{.ElementName}} = {{.ElementName}}{
+	{{- range $i := .RSquare}}
+	{{$i}},{{end}}
+}
+
 // for test purposes
 func reduce{{.ElementName}}(z *{{.ElementName}})  {
 	{{ template "reduce" . }}
