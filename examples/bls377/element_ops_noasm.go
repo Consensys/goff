@@ -587,14 +587,5 @@ func (z *Element) FromMont() *Element {
 // ToMont converts z to Montgomery form
 // sets and returns z = z * r^2
 func (z *Element) ToMont() *Element {
-	var rSquare = Element{
-		13224372171368877346,
-		227991066186625457,
-		2496666625421784173,
-		13825906835078366124,
-		9475172226622360569,
-		30958721782860680,
-	}
-	z.MulAssign(&rSquare)
-	return z
+	return z.MulAssign(&rSquareElement)
 }

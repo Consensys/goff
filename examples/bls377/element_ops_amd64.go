@@ -23,20 +23,40 @@ package bls377
 // or side-channel attack resistance
 // /!\ WARNING /!\
 
-//go:noescape
-func mulAssignElement(res, y *Element)
+// -------------------------------------------------------------------------------------------------
+// Constants
+
+// q (modulus)
+var qElement = Element{
+	9586122913090633729,
+	1660523435060625408,
+	2230234197602682880,
+	1883307231910630287,
+	14284016967150029115,
+	121098312706494698,
+}
+
+// q'[0], see montgommery multiplication algorithm
+var qElementInv0 uint64 = 9586122913090633727
+
+// rSquare
+var rSquareElement = Element{
+	13224372171368877346,
+	227991066186625457,
+	2496666625421784173,
+	13825906835078366124,
+	9475172226622360569,
+	30958721782860680,
+}
+
+// -------------------------------------------------------------------------------------------------
+// Declarations
 
 //go:noescape
 func mulElement(res, x, y *Element)
 
 //go:noescape
-func addAssignElement(res, y *Element)
-
-//go:noescape
 func addElement(res, x, y *Element)
-
-//go:noescape
-func subAssignElement(res, y *Element)
 
 //go:noescape
 func subElement(res, x, y *Element)
@@ -53,26 +73,8 @@ func reduceElement(res *Element) // for test purposes
 //go:noescape
 func squareElement(res, y *Element)
 
-// modulus
-var modulusElement = Element{
-	9586122913090633729,
-	1660523435060625408,
-	2230234197602682880,
-	1883307231910630287,
-	14284016967150029115,
-	121098312706494698,
-}
-
-var rSquareElement = Element{
-	13224372171368877346,
-	227991066186625457,
-	2496666625421784173,
-	13825906835078366124,
-	9475172226622360569,
-	30958721782860680,
-}
-
-var modulusElementInv0 uint64 = 9586122913090633727
+// -------------------------------------------------------------------------------------------------
+// APIs
 
 // FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
 // sets and returns z = z * 1
@@ -84,7 +86,7 @@ func (z *Element) FromMont() *Element {
 // ToMont converts z to Montgomery form
 // sets and returns z = z * r^2
 func (z *Element) ToMont() *Element {
-	mulAssignElement(z, &rSquareElement)
+	mulElement(z, z, &rSquareElement)
 	return z
 }
 
@@ -98,7 +100,7 @@ func (z *Element) Mul(x, y *Element) *Element {
 // MulAssign z = z * x mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) MulAssign(x *Element) *Element {
-	mulAssignElement(z, x)
+	mulElement(z, z, x)
 	return z
 }
 
@@ -110,7 +112,7 @@ func (z *Element) Add(x, y *Element) *Element {
 
 // AddAssign z = z + x mod q
 func (z *Element) AddAssign(x *Element) *Element {
-	addAssignElement(z, x)
+	addElement(z, z, x)
 	return z
 }
 
@@ -128,7 +130,7 @@ func (z *Element) Sub(x, y *Element) *Element {
 
 // SubAssign  z = z - x mod q
 func (z *Element) SubAssign(x *Element) *Element {
-	subAssignElement(z, x)
+	subElement(z, z, x)
 	return z
 }
 

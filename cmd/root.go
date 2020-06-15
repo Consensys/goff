@@ -143,15 +143,12 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 			builder.Write("#include \"textflag.h\"")
 
 			// mul assign
-			if err := generateMulASM(builder, F, mulAssign); err != nil {
-				return err
-			}
-			if err := generateMulASM(builder, F, mul); err != nil {
+			if err := generateMulASM(builder, F); err != nil {
 				return err
 			}
 
 			// from mont
-			if err := generateMulASM(builder, F, fromMont); err != nil {
+			if err := generateFromMontASM(builder, F); err != nil {
 				return err
 			}
 
@@ -166,21 +163,15 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 			}
 
 			// add
-			if err := generateAddASM(builder, F, add); err != nil {
+			if err := generateAddASM(builder, F); err != nil {
 				return err
 			}
-			if err := generateAddASM(builder, F, addAssign); err != nil {
-				return err
-			}
-			if err := generateAddASM(builder, F, double); err != nil {
+			if err := generateDoubleASM(builder, F); err != nil {
 				return err
 			}
 
 			// sub
-			if err := generateSubASM(builder, F, sub); err != nil {
-				return err
-			}
-			if err := generateSubASM(builder, F, subAssign); err != nil {
+			if err := generateSubASM(builder, F); err != nil {
 				return err
 			}
 

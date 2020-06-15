@@ -6,21 +6,9 @@ import (
 	"github.com/consensys/bavard"
 )
 
-type subType uint8
+func generateSubASM(b *bavard.Assembly, F *field) error {
 
-const (
-	sub subType = iota
-	subAssign
-)
-
-func generateSubASM(b *bavard.Assembly, F *field, sType subType) error {
-
-	switch sType {
-	case sub:
-		b.FuncHeader("sub"+F.ElementName, 24)
-	case subAssign:
-		b.FuncHeader("subAssign"+F.ElementName, 16)
-	}
+	b.FuncHeader("sub"+F.ElementName, 24)
 	// registers
 	b.Reset()
 	var regX bavard.Register
@@ -32,15 +20,8 @@ func generateSubASM(b *bavard.Assembly, F *field, sType subType) error {
 
 	regX = b.PopRegister()
 	regY := b.PopRegister()
-	switch sType {
-	case sub:
-		b.MOVQ("x+8(FP)", regX, "dereference x")
-		b.MOVQ("y+16(FP)", regY, "dereference y")
-	case subAssign:
-		b.MOVQ("res+0(FP)", regX, "dereference x")
-		b.MOVQ("y+8(FP)", regY, "dereference y")
-	}
-
+	b.MOVQ("x+8(FP)", regX, "dereference x")
+	b.MOVQ("y+16(FP)", regY, "dereference y")
 	// z = x - y mod q
 
 	for i := 0; i < F.NbWords; i++ {
@@ -69,9 +50,7 @@ func generateSubASM(b *bavard.Assembly, F *field, sType subType) error {
 		b.ADCQ(regQ[i], regT[i])
 	}
 
-	if sType == sub {
-		b.MOVQ("res+0(FP)", regX, "dereference res")
-	}
+	b.MOVQ("res+0(FP)", regX, "dereference res")
 
 	for i := 0; i < F.NbWords; i++ {
 		b.MOVQ(regT[i], regX.At(i))
