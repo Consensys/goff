@@ -19,5 +19,4 @@ if !({{- range $i := reverse .NbWordsIndexesNoZero}} z[{{$i}}] < {{index $.Q $i}
 }
 {{-  end }}
 
-
 `

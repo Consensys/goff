@@ -40,7 +40,6 @@ var (
 	fOutputDir   string
 	fPackageName string
 	fElementName string
-	fBenches     bool
 )
 
 func init() {
@@ -49,7 +48,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&fModulus, "modulus", "m", "", "field modulus (base 10)")
 	rootCmd.PersistentFlags().StringVarP(&fOutputDir, "output", "o", "", "destination path to create output files")
 	rootCmd.PersistentFlags().StringVarP(&fPackageName, "package", "p", "", "package name in generated files")
-	rootCmd.PersistentFlags().BoolVarP(&fBenches, "benches", "b", false, "set to true to generate montgomery multiplication (CIOS, FIPS, noCarry) benchmarks")
 
 	if bits.UintSize != 64 {
 		panic("goff only supports 64bits architectures")
@@ -69,15 +67,15 @@ func cmdGenerate(cmd *cobra.Command, args []string) {
 	}
 
 	// generate code
-	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, fBenches, false); err != nil {
+	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, false); err != nil {
 		fmt.Printf("\n%s\n", err.Error())
 		os.Exit(-1)
 	}
 }
 
-func GenerateFF(packageName, elementName, modulus, outputDir string, benches bool, noCollidingNames bool) error {
+func GenerateFF(packageName, elementName, modulus, outputDir string, noCollidingNames bool) error {
 	// compute field constants
-	F, err := newField(packageName, elementName, modulus, benches, noCollidingNames)
+	F, err := newField(packageName, elementName, modulus, noCollidingNames)
 	if err != nil {
 		return err
 	}
@@ -89,19 +87,16 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		element.Exp,
 		element.Conv,
 		element.MulCIOS,
-		element.MulFIPS,
 		element.MulNoCarry,
-		element.SquareNoCarryTemplate,
 		element.Sqrt,
+		element.Inverse,
 		element.Ops,
 	}
 
 	// test file templates
 	tst := []string{
 		element.MulCIOS,
-		element.MulFIPS,
 		element.MulNoCarry,
-		element.SquareNoCarryTemplate,
 		element.Reduce,
 		element.Test,
 	}
@@ -149,7 +144,6 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 				element.Reduce,
 				element.MulCIOS,
 				element.MulNoCarry,
-				element.SquareNoCarryTemplate,
 			}
 			pathSrc := filepath.Join(outputDir, eName+"_ops_amd64.go")
 			if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
@@ -165,7 +159,6 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 			element.OpsNoAsm,
 			element.MulCIOS,
 			element.MulNoCarry,
-			element.SquareNoCarryTemplate,
 			element.Reduce,
 		}
 		pathSrc := filepath.Join(outputDir, eName+"_ops_noasm.go")

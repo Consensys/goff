@@ -12,7 +12,7 @@ In particular, `goff` modular multiplication is blazingly fast. ["Faster big-int
 ## Warning
 **`goff` has not been audited and is provided as-is, use at your own risk. In particular, `goff` makes no security guarantees such as constant time implementation or side-channel attack resistance.**
 
-`goff` generates code optimized for 64bits architectures
+`goff` generates code optimized for 64bits architectures. It generates optimized assembly for moduli matching the `NoCarry` condition on `amd64` which support `ADX/MULX` instructions. Other targets have a fallback generic Go code. 
 
 <img style="display: block;margin: auto;" width="80%"
 src="banner_goff.png">
@@ -41,7 +41,6 @@ Usage:
   goff [flags]
 
 Flags:
-  -b, --benches          set to true to generate montgomery multiplication (CIOS, FIPS, noCarry) benchmarks
   -e, --element string   name of the generated struct and file
   -h, --help             help for goff
   -m, --modulus string   field modulus (base 10)
@@ -101,14 +100,6 @@ go test -c
 benchstat bls377.txt 
 ```
 
-For the modular multiplication with varying modulus size
-```bash 
-cd benches/generated
-./benchmark.sh
-benchstat cios.txt
-benchstat fips.txt
-benchstat nocarry.txt
-```
 
 ## Contributing
 

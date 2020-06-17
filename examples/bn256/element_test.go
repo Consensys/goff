@@ -347,22 +347,22 @@ func TestELEMENTreduce(t *testing.T) {
 	var testData []Element
 	{
 		a := q
-		a[3] -= 1
+		a[3]--
 		testData = append(testData, a)
 	}
 	{
 		a := q
-		a[0] -= 1
+		a[0]--
 		testData = append(testData, a)
 	}
 	{
 		a := q
-		a[3] += 1
+		a[3]++
 		testData = append(testData, a)
 	}
 	{
 		a := q
-		a[0] += 1
+		a[0]++
 		testData = append(testData, a)
 	}
 	{

@@ -1,5 +1,6 @@
 package element
 
+// OpsAMD64 generates ops_amd64.go
 const OpsAMD64 = `
 
 // set functions pointers to ADX version if instruction set available
@@ -25,6 +26,15 @@ func init() {
 
 // -------------------------------------------------------------------------------------------------
 // Declarations
+
+//go:noescape
+func reduce{{.ElementName}}(res *{{.ElementName}})
+
+//go:noescape
+func add{{.ElementName}}(res,x,y *{{.ElementName}})
+
+//go:noescape
+func _fromMontADX{{.ElementName}}(res *{{.ElementName}})
 
 {{if gt .NbWords 6}}
 
@@ -101,18 +111,6 @@ func (z *{{.ElementName}}) SubAssign(x *{{.ElementName}}) *{{.ElementName}} {
 
 {{end}}
 
-//go:noescape
-func reduce{{.ElementName}}(res *{{.ElementName}})
-
-//go:noescape
-func add{{.ElementName}}(res,x,y *{{.ElementName}})
-
-//go:noescape
-func double{{.ElementName}}(res,x *{{.ElementName}})
-
-//go:noescape
-func _fromMontADX{{.ElementName}}(res *{{.ElementName}})
-
 
 
 // Add z = x + y mod q
@@ -130,7 +128,7 @@ func (z *{{.ElementName}}) AddAssign(x *{{.ElementName}}) *{{.ElementName}} {
 
 // Double z = x + x mod q, aka Lsh 1
 func (z *{{.ElementName}}) Double( x *{{.ElementName}}) *{{.ElementName}} {
-	double{{.ElementName}}(z, x)
+	add{{.ElementName}}(z, x, x)
 	return z 
 }
 

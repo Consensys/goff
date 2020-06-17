@@ -37,7 +37,8 @@ func (b *Builder) fromMont(asm *bavard.Assembly) error {
 	}
 
 	var tmp bavard.Register
-	if b.nbWords > 11 {
+	hasRegisters := asm.AvailableRegisters() > 0
+	if !hasRegisters {
 		tmp = r
 	} else {
 		tmp = asm.PopRegister()
@@ -77,7 +78,7 @@ func (b *Builder) fromMont(asm *bavard.Assembly) error {
 
 	}
 
-	if b.nbWords > 11 {
+	if !hasRegisters {
 		asm.MOVQ("res+0(FP)", r)
 	} else {
 		asm.PushRegister(tmp)

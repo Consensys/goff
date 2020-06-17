@@ -47,6 +47,44 @@ const ElementLimbs = 6
 // ElementBits number bits needed to represent Element
 const ElementBits = 377
 
+// field modulus stored as big.Int
+var _ElementModulus big.Int
+var onceElementModulus sync.Once
+
+// ElementModulus returns q as a big.Int
+// q =
+//
+// 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177
+func ElementModulus() *big.Int {
+	onceElementModulus.Do(func() {
+		_ElementModulus.SetString("258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177", 10)
+	})
+	return &_ElementModulus
+}
+
+// q (modulus)
+var qElement = Element{
+	9586122913090633729,
+	1660523435060625408,
+	2230234197602682880,
+	1883307231910630287,
+	14284016967150029115,
+	121098312706494698,
+}
+
+// q'[0], see montgommery multiplication algorithm
+var qElementInv0 uint64 = 9586122913090633727
+
+// rSquare
+var rSquareElement = Element{
+	13224372171368877346,
+	227991066186625457,
+	2496666625421784173,
+	13825906835078366124,
+	9475172226622360569,
+	30958721782860680,
+}
+
 // Bytes returns the regular (non montgomery) value
 // of z as a big-endian byte slice.
 func (z *Element) Bytes() []byte {
@@ -144,240 +182,6 @@ func (z *Element) Equal(x *Element) bool {
 // IsZero returns z == 0
 func (z *Element) IsZero() bool {
 	return (z[5] | z[4] | z[3] | z[2] | z[1] | z[0]) == 0
-}
-
-// field modulus stored as big.Int
-var _ElementModulus big.Int
-var onceElementModulus sync.Once
-
-func ElementModulus() *big.Int {
-	onceElementModulus.Do(func() {
-		_ElementModulus.SetString("258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177", 10)
-	})
-	return &_ElementModulus
-}
-
-// Inverse z = x^-1 mod q
-// Algorithm 16 in "Efficient Software-Implementation of Finite Fields with Applications to Cryptography"
-// if x == 0, sets and returns z = x
-func (z *Element) Inverse(x *Element) *Element {
-	if x.IsZero() {
-		return z.Set(x)
-	}
-
-	// initialize u = q
-	var u = Element{
-		9586122913090633729,
-		1660523435060625408,
-		2230234197602682880,
-		1883307231910630287,
-		14284016967150029115,
-		121098312706494698,
-	}
-
-	// initialize s = r^2
-	var s = Element{
-		13224372171368877346,
-		227991066186625457,
-		2496666625421784173,
-		13825906835078366124,
-		9475172226622360569,
-		30958721782860680,
-	}
-
-	// r = 0
-	r := Element{}
-
-	v := *x
-
-	var carry, borrow, t, t2 uint64
-	var bigger, uIsOne, vIsOne bool
-
-	for !uIsOne && !vIsOne {
-		for v[0]&1 == 0 {
-
-			// v = v >> 1
-			t2 = v[5] << 63
-			v[5] >>= 1
-			t = t2
-			t2 = v[4] << 63
-			v[4] = (v[4] >> 1) | t
-			t = t2
-			t2 = v[3] << 63
-			v[3] = (v[3] >> 1) | t
-			t = t2
-			t2 = v[2] << 63
-			v[2] = (v[2] >> 1) | t
-			t = t2
-			t2 = v[1] << 63
-			v[1] = (v[1] >> 1) | t
-			t = t2
-			v[0] = (v[0] >> 1) | t
-
-			if s[0]&1 == 1 {
-
-				// s = s + q
-				s[0], carry = bits.Add64(s[0], 9586122913090633729, 0)
-				s[1], carry = bits.Add64(s[1], 1660523435060625408, carry)
-				s[2], carry = bits.Add64(s[2], 2230234197602682880, carry)
-				s[3], carry = bits.Add64(s[3], 1883307231910630287, carry)
-				s[4], carry = bits.Add64(s[4], 14284016967150029115, carry)
-				s[5], _ = bits.Add64(s[5], 121098312706494698, carry)
-
-			}
-
-			// s = s >> 1
-			t2 = s[5] << 63
-			s[5] >>= 1
-			t = t2
-			t2 = s[4] << 63
-			s[4] = (s[4] >> 1) | t
-			t = t2
-			t2 = s[3] << 63
-			s[3] = (s[3] >> 1) | t
-			t = t2
-			t2 = s[2] << 63
-			s[2] = (s[2] >> 1) | t
-			t = t2
-			t2 = s[1] << 63
-			s[1] = (s[1] >> 1) | t
-			t = t2
-			s[0] = (s[0] >> 1) | t
-
-		}
-		for u[0]&1 == 0 {
-
-			// u = u >> 1
-			t2 = u[5] << 63
-			u[5] >>= 1
-			t = t2
-			t2 = u[4] << 63
-			u[4] = (u[4] >> 1) | t
-			t = t2
-			t2 = u[3] << 63
-			u[3] = (u[3] >> 1) | t
-			t = t2
-			t2 = u[2] << 63
-			u[2] = (u[2] >> 1) | t
-			t = t2
-			t2 = u[1] << 63
-			u[1] = (u[1] >> 1) | t
-			t = t2
-			u[0] = (u[0] >> 1) | t
-
-			if r[0]&1 == 1 {
-
-				// r = r + q
-				r[0], carry = bits.Add64(r[0], 9586122913090633729, 0)
-				r[1], carry = bits.Add64(r[1], 1660523435060625408, carry)
-				r[2], carry = bits.Add64(r[2], 2230234197602682880, carry)
-				r[3], carry = bits.Add64(r[3], 1883307231910630287, carry)
-				r[4], carry = bits.Add64(r[4], 14284016967150029115, carry)
-				r[5], _ = bits.Add64(r[5], 121098312706494698, carry)
-
-			}
-
-			// r = r >> 1
-			t2 = r[5] << 63
-			r[5] >>= 1
-			t = t2
-			t2 = r[4] << 63
-			r[4] = (r[4] >> 1) | t
-			t = t2
-			t2 = r[3] << 63
-			r[3] = (r[3] >> 1) | t
-			t = t2
-			t2 = r[2] << 63
-			r[2] = (r[2] >> 1) | t
-			t = t2
-			t2 = r[1] << 63
-			r[1] = (r[1] >> 1) | t
-			t = t2
-			r[0] = (r[0] >> 1) | t
-
-		}
-
-		// v >= u
-		bigger = !(v[5] < u[5] || (v[5] == u[5] && (v[4] < u[4] || (v[4] == u[4] && (v[3] < u[3] || (v[3] == u[3] && (v[2] < u[2] || (v[2] == u[2] && (v[1] < u[1] || (v[1] == u[1] && (v[0] < u[0])))))))))))
-
-		if bigger {
-
-			// v = v - u
-			v[0], borrow = bits.Sub64(v[0], u[0], 0)
-			v[1], borrow = bits.Sub64(v[1], u[1], borrow)
-			v[2], borrow = bits.Sub64(v[2], u[2], borrow)
-			v[3], borrow = bits.Sub64(v[3], u[3], borrow)
-			v[4], borrow = bits.Sub64(v[4], u[4], borrow)
-			v[5], _ = bits.Sub64(v[5], u[5], borrow)
-
-			// r >= s
-			bigger = !(r[5] < s[5] || (r[5] == s[5] && (r[4] < s[4] || (r[4] == s[4] && (r[3] < s[3] || (r[3] == s[3] && (r[2] < s[2] || (r[2] == s[2] && (r[1] < s[1] || (r[1] == s[1] && (r[0] < s[0])))))))))))
-
-			if bigger {
-
-				// s = s + q
-				s[0], carry = bits.Add64(s[0], 9586122913090633729, 0)
-				s[1], carry = bits.Add64(s[1], 1660523435060625408, carry)
-				s[2], carry = bits.Add64(s[2], 2230234197602682880, carry)
-				s[3], carry = bits.Add64(s[3], 1883307231910630287, carry)
-				s[4], carry = bits.Add64(s[4], 14284016967150029115, carry)
-				s[5], _ = bits.Add64(s[5], 121098312706494698, carry)
-
-			}
-
-			// s = s - r
-			s[0], borrow = bits.Sub64(s[0], r[0], 0)
-			s[1], borrow = bits.Sub64(s[1], r[1], borrow)
-			s[2], borrow = bits.Sub64(s[2], r[2], borrow)
-			s[3], borrow = bits.Sub64(s[3], r[3], borrow)
-			s[4], borrow = bits.Sub64(s[4], r[4], borrow)
-			s[5], _ = bits.Sub64(s[5], r[5], borrow)
-
-		} else {
-
-			// u = u - v
-			u[0], borrow = bits.Sub64(u[0], v[0], 0)
-			u[1], borrow = bits.Sub64(u[1], v[1], borrow)
-			u[2], borrow = bits.Sub64(u[2], v[2], borrow)
-			u[3], borrow = bits.Sub64(u[3], v[3], borrow)
-			u[4], borrow = bits.Sub64(u[4], v[4], borrow)
-			u[5], _ = bits.Sub64(u[5], v[5], borrow)
-
-			// s >= r
-			bigger = !(s[5] < r[5] || (s[5] == r[5] && (s[4] < r[4] || (s[4] == r[4] && (s[3] < r[3] || (s[3] == r[3] && (s[2] < r[2] || (s[2] == r[2] && (s[1] < r[1] || (s[1] == r[1] && (s[0] < r[0])))))))))))
-
-			if bigger {
-
-				// r = r + q
-				r[0], carry = bits.Add64(r[0], 9586122913090633729, 0)
-				r[1], carry = bits.Add64(r[1], 1660523435060625408, carry)
-				r[2], carry = bits.Add64(r[2], 2230234197602682880, carry)
-				r[3], carry = bits.Add64(r[3], 1883307231910630287, carry)
-				r[4], carry = bits.Add64(r[4], 14284016967150029115, carry)
-				r[5], _ = bits.Add64(r[5], 121098312706494698, carry)
-
-			}
-
-			// r = r - s
-			r[0], borrow = bits.Sub64(r[0], s[0], 0)
-			r[1], borrow = bits.Sub64(r[1], s[1], borrow)
-			r[2], borrow = bits.Sub64(r[2], s[2], borrow)
-			r[3], borrow = bits.Sub64(r[3], s[3], borrow)
-			r[4], borrow = bits.Sub64(r[4], s[4], borrow)
-			r[5], _ = bits.Sub64(r[5], s[5], borrow)
-
-		}
-		uIsOne = (u[0] == 1) && (u[5]|u[4]|u[3]|u[2]|u[1]) == 0
-		vIsOne = (v[0] == 1) && (v[5]|v[4]|v[3]|v[2]|v[1]) == 0
-	}
-
-	if uIsOne {
-		z.Set(&r)
-	} else {
-		z.Set(&s)
-	}
-
-	return z
 }
 
 // SetRandom sets z to a random element < q
@@ -638,30 +442,227 @@ func (z *Element) Sqrt(x *Element) *Element {
 	}
 }
 
-// -------------------------------------------------------------------------------------------------
-// Constants
+// Inverse z = x^-1 mod q
+// Algorithm 16 in "Efficient Software-Implementation of Finite Fields with Applications to Cryptography"
+// if x == 0, sets and returns z = x
+func (z *Element) Inverse(x *Element) *Element {
+	if x.IsZero() {
+		return z.Set(x)
+	}
 
-// q (modulus)
-var qElement = Element{
-	9586122913090633729,
-	1660523435060625408,
-	2230234197602682880,
-	1883307231910630287,
-	14284016967150029115,
-	121098312706494698,
-}
+	// initialize u = q
+	var u = Element{
+		9586122913090633729,
+		1660523435060625408,
+		2230234197602682880,
+		1883307231910630287,
+		14284016967150029115,
+		121098312706494698,
+	}
 
-// q'[0], see montgommery multiplication algorithm
-var qElementInv0 uint64 = 9586122913090633727
+	// initialize s = r^2
+	var s = Element{
+		13224372171368877346,
+		227991066186625457,
+		2496666625421784173,
+		13825906835078366124,
+		9475172226622360569,
+		30958721782860680,
+	}
 
-// rSquare
-var rSquareElement = Element{
-	13224372171368877346,
-	227991066186625457,
-	2496666625421784173,
-	13825906835078366124,
-	9475172226622360569,
-	30958721782860680,
+	// r = 0
+	r := Element{}
+
+	v := *x
+
+	var carry, borrow, t, t2 uint64
+	var bigger, uIsOne, vIsOne bool
+
+	for !uIsOne && !vIsOne {
+		for v[0]&1 == 0 {
+
+			// v = v >> 1
+			t2 = v[5] << 63
+			v[5] >>= 1
+			t = t2
+			t2 = v[4] << 63
+			v[4] = (v[4] >> 1) | t
+			t = t2
+			t2 = v[3] << 63
+			v[3] = (v[3] >> 1) | t
+			t = t2
+			t2 = v[2] << 63
+			v[2] = (v[2] >> 1) | t
+			t = t2
+			t2 = v[1] << 63
+			v[1] = (v[1] >> 1) | t
+			t = t2
+			v[0] = (v[0] >> 1) | t
+
+			if s[0]&1 == 1 {
+
+				// s = s + q
+				s[0], carry = bits.Add64(s[0], 9586122913090633729, 0)
+				s[1], carry = bits.Add64(s[1], 1660523435060625408, carry)
+				s[2], carry = bits.Add64(s[2], 2230234197602682880, carry)
+				s[3], carry = bits.Add64(s[3], 1883307231910630287, carry)
+				s[4], carry = bits.Add64(s[4], 14284016967150029115, carry)
+				s[5], _ = bits.Add64(s[5], 121098312706494698, carry)
+
+			}
+
+			// s = s >> 1
+			t2 = s[5] << 63
+			s[5] >>= 1
+			t = t2
+			t2 = s[4] << 63
+			s[4] = (s[4] >> 1) | t
+			t = t2
+			t2 = s[3] << 63
+			s[3] = (s[3] >> 1) | t
+			t = t2
+			t2 = s[2] << 63
+			s[2] = (s[2] >> 1) | t
+			t = t2
+			t2 = s[1] << 63
+			s[1] = (s[1] >> 1) | t
+			t = t2
+			s[0] = (s[0] >> 1) | t
+
+		}
+		for u[0]&1 == 0 {
+
+			// u = u >> 1
+			t2 = u[5] << 63
+			u[5] >>= 1
+			t = t2
+			t2 = u[4] << 63
+			u[4] = (u[4] >> 1) | t
+			t = t2
+			t2 = u[3] << 63
+			u[3] = (u[3] >> 1) | t
+			t = t2
+			t2 = u[2] << 63
+			u[2] = (u[2] >> 1) | t
+			t = t2
+			t2 = u[1] << 63
+			u[1] = (u[1] >> 1) | t
+			t = t2
+			u[0] = (u[0] >> 1) | t
+
+			if r[0]&1 == 1 {
+
+				// r = r + q
+				r[0], carry = bits.Add64(r[0], 9586122913090633729, 0)
+				r[1], carry = bits.Add64(r[1], 1660523435060625408, carry)
+				r[2], carry = bits.Add64(r[2], 2230234197602682880, carry)
+				r[3], carry = bits.Add64(r[3], 1883307231910630287, carry)
+				r[4], carry = bits.Add64(r[4], 14284016967150029115, carry)
+				r[5], _ = bits.Add64(r[5], 121098312706494698, carry)
+
+			}
+
+			// r = r >> 1
+			t2 = r[5] << 63
+			r[5] >>= 1
+			t = t2
+			t2 = r[4] << 63
+			r[4] = (r[4] >> 1) | t
+			t = t2
+			t2 = r[3] << 63
+			r[3] = (r[3] >> 1) | t
+			t = t2
+			t2 = r[2] << 63
+			r[2] = (r[2] >> 1) | t
+			t = t2
+			t2 = r[1] << 63
+			r[1] = (r[1] >> 1) | t
+			t = t2
+			r[0] = (r[0] >> 1) | t
+
+		}
+
+		// v >= u
+		bigger = !(v[5] < u[5] || (v[5] == u[5] && (v[4] < u[4] || (v[4] == u[4] && (v[3] < u[3] || (v[3] == u[3] && (v[2] < u[2] || (v[2] == u[2] && (v[1] < u[1] || (v[1] == u[1] && (v[0] < u[0])))))))))))
+
+		if bigger {
+
+			// v = v - u
+			v[0], borrow = bits.Sub64(v[0], u[0], 0)
+			v[1], borrow = bits.Sub64(v[1], u[1], borrow)
+			v[2], borrow = bits.Sub64(v[2], u[2], borrow)
+			v[3], borrow = bits.Sub64(v[3], u[3], borrow)
+			v[4], borrow = bits.Sub64(v[4], u[4], borrow)
+			v[5], _ = bits.Sub64(v[5], u[5], borrow)
+
+			// r >= s
+			bigger = !(r[5] < s[5] || (r[5] == s[5] && (r[4] < s[4] || (r[4] == s[4] && (r[3] < s[3] || (r[3] == s[3] && (r[2] < s[2] || (r[2] == s[2] && (r[1] < s[1] || (r[1] == s[1] && (r[0] < s[0])))))))))))
+
+			if bigger {
+
+				// s = s + q
+				s[0], carry = bits.Add64(s[0], 9586122913090633729, 0)
+				s[1], carry = bits.Add64(s[1], 1660523435060625408, carry)
+				s[2], carry = bits.Add64(s[2], 2230234197602682880, carry)
+				s[3], carry = bits.Add64(s[3], 1883307231910630287, carry)
+				s[4], carry = bits.Add64(s[4], 14284016967150029115, carry)
+				s[5], _ = bits.Add64(s[5], 121098312706494698, carry)
+
+			}
+
+			// s = s - r
+			s[0], borrow = bits.Sub64(s[0], r[0], 0)
+			s[1], borrow = bits.Sub64(s[1], r[1], borrow)
+			s[2], borrow = bits.Sub64(s[2], r[2], borrow)
+			s[3], borrow = bits.Sub64(s[3], r[3], borrow)
+			s[4], borrow = bits.Sub64(s[4], r[4], borrow)
+			s[5], _ = bits.Sub64(s[5], r[5], borrow)
+
+		} else {
+
+			// u = u - v
+			u[0], borrow = bits.Sub64(u[0], v[0], 0)
+			u[1], borrow = bits.Sub64(u[1], v[1], borrow)
+			u[2], borrow = bits.Sub64(u[2], v[2], borrow)
+			u[3], borrow = bits.Sub64(u[3], v[3], borrow)
+			u[4], borrow = bits.Sub64(u[4], v[4], borrow)
+			u[5], _ = bits.Sub64(u[5], v[5], borrow)
+
+			// s >= r
+			bigger = !(s[5] < r[5] || (s[5] == r[5] && (s[4] < r[4] || (s[4] == r[4] && (s[3] < r[3] || (s[3] == r[3] && (s[2] < r[2] || (s[2] == r[2] && (s[1] < r[1] || (s[1] == r[1] && (s[0] < r[0])))))))))))
+
+			if bigger {
+
+				// r = r + q
+				r[0], carry = bits.Add64(r[0], 9586122913090633729, 0)
+				r[1], carry = bits.Add64(r[1], 1660523435060625408, carry)
+				r[2], carry = bits.Add64(r[2], 2230234197602682880, carry)
+				r[3], carry = bits.Add64(r[3], 1883307231910630287, carry)
+				r[4], carry = bits.Add64(r[4], 14284016967150029115, carry)
+				r[5], _ = bits.Add64(r[5], 121098312706494698, carry)
+
+			}
+
+			// r = r - s
+			r[0], borrow = bits.Sub64(r[0], s[0], 0)
+			r[1], borrow = bits.Sub64(r[1], s[1], borrow)
+			r[2], borrow = bits.Sub64(r[2], s[2], borrow)
+			r[3], borrow = bits.Sub64(r[3], s[3], borrow)
+			r[4], borrow = bits.Sub64(r[4], s[4], borrow)
+			r[5], _ = bits.Sub64(r[5], s[5], borrow)
+
+		}
+		uIsOne = (u[0] == 1) && (u[5]|u[4]|u[3]|u[2]|u[1]) == 0
+		vIsOne = (v[0] == 1) && (v[5]|v[4]|v[3]|v[2]|v[1]) == 0
+	}
+
+	if uIsOne {
+		z.Set(&r)
+	} else {
+		z.Set(&s)
+	}
+
+	return z
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -833,93 +834,109 @@ func _mulGenericElement(z, x, y *Element) {
 
 func _squareGenericElement(z, x *Element) {
 
-	var p [6]uint64
-
-	var u, v uint64
+	var t [6]uint64
+	var c [3]uint64
 	{
 		// round 0
-		u, p[0] = bits.Mul64(x[0], x[0])
-		m := p[0] * 9586122913090633727
-		C := madd0(m, 9586122913090633729, p[0])
-		var t uint64
-		t, u, v = madd1sb(x[0], x[1], u)
-		C, p[0] = madd2(m, 1660523435060625408, v, C)
-		t, u, v = madd1s(x[0], x[2], t, u)
-		C, p[1] = madd2(m, 2230234197602682880, v, C)
-		t, u, v = madd1s(x[0], x[3], t, u)
-		C, p[2] = madd2(m, 1883307231910630287, v, C)
-		t, u, v = madd1s(x[0], x[4], t, u)
-		C, p[3] = madd2(m, 14284016967150029115, v, C)
-		_, u, v = madd1s(x[0], x[5], t, u)
-		p[5], p[4] = madd3(m, 121098312706494698, v, C, u)
+		v := x[0]
+		c[1], c[0] = bits.Mul64(v, x[0])
+		m := c[0] * 9586122913090633727
+		c[2] = madd0(m, 9586122913090633729, c[0])
+		c[1], c[0] = madd1(v, x[1], c[1])
+		c[2], t[0] = madd2(m, 1660523435060625408, c[2], c[0])
+		c[1], c[0] = madd1(v, x[2], c[1])
+		c[2], t[1] = madd2(m, 2230234197602682880, c[2], c[0])
+		c[1], c[0] = madd1(v, x[3], c[1])
+		c[2], t[2] = madd2(m, 1883307231910630287, c[2], c[0])
+		c[1], c[0] = madd1(v, x[4], c[1])
+		c[2], t[3] = madd2(m, 14284016967150029115, c[2], c[0])
+		c[1], c[0] = madd1(v, x[5], c[1])
+		t[5], t[4] = madd3(m, 121098312706494698, c[0], c[2], c[1])
 	}
 	{
 		// round 1
-		m := p[0] * 9586122913090633727
-		C := madd0(m, 9586122913090633729, p[0])
-		u, v = madd1(x[1], x[1], p[1])
-		C, p[0] = madd2(m, 1660523435060625408, v, C)
-		var t uint64
-		t, u, v = madd2sb(x[1], x[2], p[2], u)
-		C, p[1] = madd2(m, 2230234197602682880, v, C)
-		t, u, v = madd2s(x[1], x[3], p[3], t, u)
-		C, p[2] = madd2(m, 1883307231910630287, v, C)
-		t, u, v = madd2s(x[1], x[4], p[4], t, u)
-		C, p[3] = madd2(m, 14284016967150029115, v, C)
-		_, u, v = madd2s(x[1], x[5], p[5], t, u)
-		p[5], p[4] = madd3(m, 121098312706494698, v, C, u)
+		v := x[1]
+		c[1], c[0] = madd1(v, x[0], t[0])
+		m := c[0] * 9586122913090633727
+		c[2] = madd0(m, 9586122913090633729, c[0])
+		c[1], c[0] = madd2(v, x[1], c[1], t[1])
+		c[2], t[0] = madd2(m, 1660523435060625408, c[2], c[0])
+		c[1], c[0] = madd2(v, x[2], c[1], t[2])
+		c[2], t[1] = madd2(m, 2230234197602682880, c[2], c[0])
+		c[1], c[0] = madd2(v, x[3], c[1], t[3])
+		c[2], t[2] = madd2(m, 1883307231910630287, c[2], c[0])
+		c[1], c[0] = madd2(v, x[4], c[1], t[4])
+		c[2], t[3] = madd2(m, 14284016967150029115, c[2], c[0])
+		c[1], c[0] = madd2(v, x[5], c[1], t[5])
+		t[5], t[4] = madd3(m, 121098312706494698, c[0], c[2], c[1])
 	}
 	{
 		// round 2
-		m := p[0] * 9586122913090633727
-		C := madd0(m, 9586122913090633729, p[0])
-		C, p[0] = madd2(m, 1660523435060625408, p[1], C)
-		u, v = madd1(x[2], x[2], p[2])
-		C, p[1] = madd2(m, 2230234197602682880, v, C)
-		var t uint64
-		t, u, v = madd2sb(x[2], x[3], p[3], u)
-		C, p[2] = madd2(m, 1883307231910630287, v, C)
-		t, u, v = madd2s(x[2], x[4], p[4], t, u)
-		C, p[3] = madd2(m, 14284016967150029115, v, C)
-		_, u, v = madd2s(x[2], x[5], p[5], t, u)
-		p[5], p[4] = madd3(m, 121098312706494698, v, C, u)
+		v := x[2]
+		c[1], c[0] = madd1(v, x[0], t[0])
+		m := c[0] * 9586122913090633727
+		c[2] = madd0(m, 9586122913090633729, c[0])
+		c[1], c[0] = madd2(v, x[1], c[1], t[1])
+		c[2], t[0] = madd2(m, 1660523435060625408, c[2], c[0])
+		c[1], c[0] = madd2(v, x[2], c[1], t[2])
+		c[2], t[1] = madd2(m, 2230234197602682880, c[2], c[0])
+		c[1], c[0] = madd2(v, x[3], c[1], t[3])
+		c[2], t[2] = madd2(m, 1883307231910630287, c[2], c[0])
+		c[1], c[0] = madd2(v, x[4], c[1], t[4])
+		c[2], t[3] = madd2(m, 14284016967150029115, c[2], c[0])
+		c[1], c[0] = madd2(v, x[5], c[1], t[5])
+		t[5], t[4] = madd3(m, 121098312706494698, c[0], c[2], c[1])
 	}
 	{
 		// round 3
-		m := p[0] * 9586122913090633727
-		C := madd0(m, 9586122913090633729, p[0])
-		C, p[0] = madd2(m, 1660523435060625408, p[1], C)
-		C, p[1] = madd2(m, 2230234197602682880, p[2], C)
-		u, v = madd1(x[3], x[3], p[3])
-		C, p[2] = madd2(m, 1883307231910630287, v, C)
-		var t uint64
-		t, u, v = madd2sb(x[3], x[4], p[4], u)
-		C, p[3] = madd2(m, 14284016967150029115, v, C)
-		_, u, v = madd2s(x[3], x[5], p[5], t, u)
-		p[5], p[4] = madd3(m, 121098312706494698, v, C, u)
+		v := x[3]
+		c[1], c[0] = madd1(v, x[0], t[0])
+		m := c[0] * 9586122913090633727
+		c[2] = madd0(m, 9586122913090633729, c[0])
+		c[1], c[0] = madd2(v, x[1], c[1], t[1])
+		c[2], t[0] = madd2(m, 1660523435060625408, c[2], c[0])
+		c[1], c[0] = madd2(v, x[2], c[1], t[2])
+		c[2], t[1] = madd2(m, 2230234197602682880, c[2], c[0])
+		c[1], c[0] = madd2(v, x[3], c[1], t[3])
+		c[2], t[2] = madd2(m, 1883307231910630287, c[2], c[0])
+		c[1], c[0] = madd2(v, x[4], c[1], t[4])
+		c[2], t[3] = madd2(m, 14284016967150029115, c[2], c[0])
+		c[1], c[0] = madd2(v, x[5], c[1], t[5])
+		t[5], t[4] = madd3(m, 121098312706494698, c[0], c[2], c[1])
 	}
 	{
 		// round 4
-		m := p[0] * 9586122913090633727
-		C := madd0(m, 9586122913090633729, p[0])
-		C, p[0] = madd2(m, 1660523435060625408, p[1], C)
-		C, p[1] = madd2(m, 2230234197602682880, p[2], C)
-		C, p[2] = madd2(m, 1883307231910630287, p[3], C)
-		u, v = madd1(x[4], x[4], p[4])
-		C, p[3] = madd2(m, 14284016967150029115, v, C)
-		_, u, v = madd2sb(x[4], x[5], p[5], u)
-		p[5], p[4] = madd3(m, 121098312706494698, v, C, u)
+		v := x[4]
+		c[1], c[0] = madd1(v, x[0], t[0])
+		m := c[0] * 9586122913090633727
+		c[2] = madd0(m, 9586122913090633729, c[0])
+		c[1], c[0] = madd2(v, x[1], c[1], t[1])
+		c[2], t[0] = madd2(m, 1660523435060625408, c[2], c[0])
+		c[1], c[0] = madd2(v, x[2], c[1], t[2])
+		c[2], t[1] = madd2(m, 2230234197602682880, c[2], c[0])
+		c[1], c[0] = madd2(v, x[3], c[1], t[3])
+		c[2], t[2] = madd2(m, 1883307231910630287, c[2], c[0])
+		c[1], c[0] = madd2(v, x[4], c[1], t[4])
+		c[2], t[3] = madd2(m, 14284016967150029115, c[2], c[0])
+		c[1], c[0] = madd2(v, x[5], c[1], t[5])
+		t[5], t[4] = madd3(m, 121098312706494698, c[0], c[2], c[1])
 	}
 	{
 		// round 5
-		m := p[0] * 9586122913090633727
-		C := madd0(m, 9586122913090633729, p[0])
-		C, z[0] = madd2(m, 1660523435060625408, p[1], C)
-		C, z[1] = madd2(m, 2230234197602682880, p[2], C)
-		C, z[2] = madd2(m, 1883307231910630287, p[3], C)
-		C, z[3] = madd2(m, 14284016967150029115, p[4], C)
-		u, v = madd1(x[5], x[5], p[5])
-		z[5], z[4] = madd3(m, 121098312706494698, v, C, u)
+		v := x[5]
+		c[1], c[0] = madd1(v, x[0], t[0])
+		m := c[0] * 9586122913090633727
+		c[2] = madd0(m, 9586122913090633729, c[0])
+		c[1], c[0] = madd2(v, x[1], c[1], t[1])
+		c[2], z[0] = madd2(m, 1660523435060625408, c[2], c[0])
+		c[1], c[0] = madd2(v, x[2], c[1], t[2])
+		c[2], z[1] = madd2(m, 2230234197602682880, c[2], c[0])
+		c[1], c[0] = madd2(v, x[3], c[1], t[3])
+		c[2], z[2] = madd2(m, 1883307231910630287, c[2], c[0])
+		c[1], c[0] = madd2(v, x[4], c[1], t[4])
+		c[2], z[3] = madd2(m, 14284016967150029115, c[2], c[0])
+		c[1], c[0] = madd2(v, x[5], c[1], t[5])
+		z[5], z[4] = madd3(m, 121098312706494698, c[0], c[2], c[1])
 	}
 
 	// if z > q --> z -= q
@@ -933,7 +950,6 @@ func _squareGenericElement(z, x *Element) {
 		z[4], b = bits.Sub64(z[4], 14284016967150029115, b)
 		z[5], _ = bits.Sub64(z[5], 121098312706494698, b)
 	}
-
 }
 
 func _fromMontGenericElement(z *Element) {

@@ -71,10 +71,5 @@ func (b *Builder) Build() error {
 		return err
 	}
 
-	// double
-	if err := b.double(asm); err != nil {
-		return err
-	}
-
 	return nil
 }

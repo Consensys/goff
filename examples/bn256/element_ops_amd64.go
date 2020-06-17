@@ -32,6 +32,15 @@ func init() {
 // Declarations
 
 //go:noescape
+func reduceElement(res *Element)
+
+//go:noescape
+func addElement(res, x, y *Element)
+
+//go:noescape
+func _fromMontADXElement(res *Element)
+
+//go:noescape
 func _mulADXElement(res, x, y *Element)
 
 //go:noescape
@@ -52,18 +61,6 @@ func (z *Element) SubAssign(x *Element) *Element {
 	return z
 }
 
-//go:noescape
-func reduceElement(res *Element)
-
-//go:noescape
-func addElement(res, x, y *Element)
-
-//go:noescape
-func doubleElement(res, x *Element)
-
-//go:noescape
-func _fromMontADXElement(res *Element)
-
 // Add z = x + y mod q
 func (z *Element) Add(x, y *Element) *Element {
 	addElement(z, x, y)
@@ -78,6 +75,6 @@ func (z *Element) AddAssign(x *Element) *Element {
 
 // Double z = x + x mod q, aka Lsh 1
 func (z *Element) Double(x *Element) *Element {
-	doubleElement(z, x)
+	addElement(z, x, x)
 	return z
 }

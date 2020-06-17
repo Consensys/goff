@@ -336,22 +336,22 @@ func Test{{toUpper .ElementName}}reduce(t *testing.T) {
 	var testData []{{.ElementName}}
 	{
 		a := q
-		a[{{.NbWordsLastIndex}}] -= 1 
+		a[{{.NbWordsLastIndex}}]--
 		testData = append(testData, a)
 	}
 	{
 		a := q
-		a[0] -= 1 
+		a[0]--
 		testData = append(testData, a)
 	}
 	{
 		a := q
-		a[{{.NbWordsLastIndex}}] += 1 
+		a[{{.NbWordsLastIndex}}]++
 		testData = append(testData, a)
 	}
 	{
 		a := q
-		a[0] += 1 
+		a[0]++
 		testData = append(testData, a)
 	}
 	{
@@ -378,66 +378,6 @@ func (z *{{.ElementName}}) testReduce() *{{.ElementName}} {
 
 {{end}}
 
-
-
-{{ if .Benches}}
-// Montgomery multiplication benchmarks
-func (z *{{.ElementName}}) mulCIOS(x *{{.ElementName}}) *{{.ElementName}} {
-	{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x" "NoReturn" false}}
-	{{ template "reduce" . }}
-	return z 
-}
-
-func (z *{{.ElementName}}) mulNoCarry(x *{{.ElementName}}) *{{.ElementName}} {
-	{{ template "mul_nocarry" dict "all" . "V1" "z" "V2" "x"}}
-	{{ template "reduce" . }}
-	return z 
-}
-
-func (z *{{.ElementName}}) mulFIPS(x *{{.ElementName}}) *{{.ElementName}} {
-	{{ template "mul_fips" dict "all" . "V1" "z" "V2" "x"}}
-	{{ template "reduce" . }}
-	return z 
-}
-
-
-func BenchmarkMulCIOS{{toUpper .ElementName}}(b *testing.B) {
-	x := {{.ElementName}}{
-		{{- range $i := .RSquare}}
-		{{$i}},{{end}}
-	}
-	benchRes{{.ElementName}}.SetOne()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		benchRes{{.ElementName}}.mulCIOS(&x)
-	}
-}
-
-func BenchmarkMulFIPS{{toUpper .ElementName}}(b *testing.B) {
-	x := {{.ElementName}}{
-		{{- range $i := .RSquare}}
-		{{$i}},{{end}}
-	}
-	benchRes{{.ElementName}}.SetOne()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		benchRes{{.ElementName}}.mulFIPS(&x)
-	}
-}
-
-func BenchmarkMulNoCarry{{toUpper .ElementName}}(b *testing.B) {
-	x := {{.ElementName}}{
-		{{- range $i := .RSquare}}
-		{{$i}},{{end}}
-	}
-	benchRes{{.ElementName}}.SetOne()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		benchRes{{.ElementName}}.mulNoCarry(&x)
-	}
-}
-
-{{ end }}
 
 
 `

@@ -27,7 +27,6 @@ type field struct {
 	NbWordsLastIndex     int
 	NbWordsIndexesNoZero []int
 	NbWordsIndexesFull   []int
-	IdxFIPS              []int
 	Q                    []uint64
 	QInverse             []uint64
 	ASM                  bool
@@ -36,7 +35,6 @@ type field struct {
 	LegendreExponent     []uint64
 	NoCarry              bool
 	NoCarrySquare        bool // used if NoCarry is set, but some op may overflow in square optimization
-	Benches              bool
 	SqrtQ3Mod4           bool
 	SqrtAtkin            bool
 	SqrtTonelliShanks    bool
@@ -53,7 +51,7 @@ type field struct {
 
 // -------------------------------------------------------------------------------------------------
 // Field data precompute functions
-func newField(packageName, elementName, modulus string, benches bool, noCollidingNames bool) (*field, error) {
+func newField(packageName, elementName, modulus string, noCollidingNames bool) (*field, error) {
 	// parse modulus
 	var bModulus big.Int
 	if _, ok := bModulus.SetString(modulus, 10); !ok {
@@ -65,7 +63,6 @@ func newField(packageName, elementName, modulus string, benches bool, noCollidin
 		PackageName:      packageName,
 		ElementName:      elementName,
 		Modulus:          modulus,
-		Benches:          benches,
 		NoCollidingNames: noCollidingNames,
 	}
 	F.Version = Version
@@ -118,10 +115,6 @@ func newField(packageName, elementName, modulus string, benches bool, noCollidin
 	F.NoCarry = (F.Q[len(F.Q)-1] <= B) && F.NbWords <= 12
 	const BSquare = (^uint64(0) >> 2)
 	F.NoCarrySquare = F.Q[len(F.Q)-1] <= BSquare
-
-	for i := F.NbWords; i <= 2*F.NbWords-2; i++ {
-		F.IdxFIPS = append(F.IdxFIPS, i)
-	}
 
 	// Legendre exponent (p-1)/2
 	var legendreExponent big.Int

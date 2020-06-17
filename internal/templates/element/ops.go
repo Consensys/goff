@@ -1,25 +1,7 @@
 package element
 
+// Ops is included with all builds (regardless of architecture or if F.ASM is set)
 const Ops = `
-
-// -------------------------------------------------------------------------------------------------
-// Constants
-
-// q (modulus)
-var q{{.ElementName}} = {{.ElementName}}{
-	{{- range $i := .NbWordsIndexesFull}}
-	{{index $.Q $i}},{{end}}
-}
-
-// q'[0], see montgommery multiplication algorithm
-var q{{.ElementName}}Inv0 uint64 = {{index $.QInverse 0}}
-
-// rSquare
-var rSquare{{.ElementName}} = {{.ElementName}}{
-	{{- range $i := .RSquare}}
-	{{$i}},{{end}}
-}
-
 
 // -------------------------------------------------------------------------------------------------
 // declarations
@@ -67,8 +49,6 @@ func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
 }
 
 
-
-
 // Generic (no ADX instructions, no AMD64) versions
 
 func _mulGeneric{{.ElementName}}(z,x,y *{{.ElementName}}) {
@@ -82,15 +62,12 @@ func _mulGeneric{{.ElementName}}(z,x,y *{{.ElementName}}) {
 
 
 func _squareGeneric{{.ElementName}}(z,x *{{.ElementName}}) {
-	{{if .NoCarrySquare}}
-		{{ template "square" dict "all" . "V1" "x"}}
-		{{ template "reduce" . }}
-	{{else if .NoCarry}}
+	{{ if .NoCarry}}
 		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "x"}}
-		{{ template "reduce" . }}
-	{{else }}
-		z.Mul(x, x)
-	{{end}}
+	{{ else }}
+		{{ template "mul_cios" dict "all" . "V1" "x" "V2" "x" "NoReturn" true}}
+	{{ end }}
+	{{ template "reduce" . }}
 }
 
 func _fromMontGeneric{{.ElementName}}(z *{{.ElementName}}) {
