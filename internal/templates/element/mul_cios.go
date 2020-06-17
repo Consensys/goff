@@ -53,7 +53,7 @@ const MulCIOS = `
 		{{if $.NoReturn }}
 		return
 		{{else}}
-		return z
+		return
 		{{end}}
 	}
 
