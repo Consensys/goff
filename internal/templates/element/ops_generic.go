@@ -9,46 +9,6 @@ const OpsNoAsm = `
 
 import "math/bits"
 
-// Mul z = x * y mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
-	{{ if .NoCarry}}
-		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "y"}}
-	{{ else }}
-		{{ template "mul_cios" dict "all" . "V1" "x" "V2" "y" "NoReturn" false}}
-	{{ end }}
-	{{ template "reduce" . }}
-	return z 
-}
-
-// MulAssign z = z * x mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *{{.ElementName}}) MulAssign(x *{{.ElementName}}) *{{.ElementName}} {
-	{{ if .NoCarry}}
-		{{ template "mul_nocarry" dict "all" . "V1" "z" "V2" "x"}}
-	{{ else }}
-		{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x" "NoReturn" false}}
-	{{ end }}
-	{{ template "reduce" . }}
-	return z 
-}
-
-// Square z = x * x mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *{{.ElementName}}) Square(x *{{.ElementName}}) *{{.ElementName}} {
-	{{if .NoCarrySquare}}
-		{{ template "square" dict "all" . "V1" "x"}}
-		{{ template "reduce" . }}
-		return z 
-	{{else if .NoCarry}}
-		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "x"}}
-		{{ template "reduce" . }}
-		return z 
-	{{else }}
-		return z.Mul(x, x)
-	{{end}}
-}
-
 // Add z = x + y mod q
 func (z *{{.ElementName}}) Add( x, y *{{.ElementName}}) *{{.ElementName}} {
 	var carry uint64
@@ -183,38 +143,6 @@ func (z *{{.ElementName}}) SubAssign(x *{{.ElementName}}) *{{.ElementName}} {
 			{{- end}}
 		{{- end}}
 	}
-	return z
-}
-
-// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
-// sets and returns z = z * 1
-func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
-	// the following lines implement z = z * 1
-	// with a modified CIOS montgomery multiplication
-	{{- range $j := .NbWordsIndexesFull}}
-	{
-		// m = z[0]n'[0] mod W
-		m := z[0] * {{index $.QInverse 0}}
-		C := madd0(m, {{index $.Q 0}}, z[0])
-		{{- range $i := $.NbWordsIndexesNoZero}}
-			C, z[{{sub $i 1}}] = madd2(m, {{index $.Q $i}}, z[{{$i}}], C)
-		{{- end}}
-		z[{{sub $.NbWords 1}}] = C
-	}
-	{{- end}}
-
-	{{ template "reduce" .}}
-	return z
-}
-
-// ToMont converts z to Montgomery form
-// sets and returns z = z * r^2
-func (z *{{.ElementName}}) ToMont() *{{.ElementName}} {
-	var rSquare = {{.ElementName}}{
-		{{- range $i := .RSquare}}
-		{{$i}},{{end}}
-	}
-	z.MulAssign(&rSquare)
 	return z
 }
 

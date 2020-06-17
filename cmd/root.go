@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/consensys/bavard"
+	"github.com/consensys/goff/asm"
 	"github.com/consensys/goff/internal/templates/element"
 	"github.com/spf13/cobra"
 )
@@ -90,7 +91,9 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		element.MulCIOS,
 		element.MulFIPS,
 		element.MulNoCarry,
+		element.SquareNoCarryTemplate,
 		element.Sqrt,
+		element.Ops,
 	}
 
 	// test file templates
@@ -130,54 +133,23 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		return err
 	}
 
-	if F.ASM { // max words without having to deal with spilling
+	// if we generate assembly code
+	if F.ASM {
 		// generate ops.s
 		{
 			pathMulAsm := filepath.Join(outputDir, eName+"_ops_amd64.s")
-			f, err := os.Create(pathMulAsm)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-			builder := bavard.NewAssembly(f)
-			builder.Write("#include \"textflag.h\"")
-
-			// mul assign
-			if err := generateMulASM(builder, F); err != nil {
-				return err
-			}
-
-			// from mont
-			if err := generateFromMontASM(builder, F); err != nil {
-				return err
-			}
-
-			// square
-			if err := generateSquareASM(builder, F); err != nil {
-				return err
-			}
-
-			// reduce
-			if err := generateReduceFuncASM(builder, F); err != nil {
-				return err
-			}
-
-			// add
-			if err := generateAddASM(builder, F); err != nil {
-				return err
-			}
-			if err := generateDoubleASM(builder, F); err != nil {
-				return err
-			}
-
-			// sub
-			if err := generateSubASM(builder, F); err != nil {
+			builder := asm.NewBuilder(pathMulAsm, F.ElementName, F.NbWords, F.Q)
+			if err := builder.Build(); err != nil {
 				return err
 			}
 
 			// generate ops_amd64.go
 			src := []string{
 				element.OpsAMD64,
+				element.Reduce,
+				element.MulCIOS,
+				element.MulNoCarry,
+				element.SquareNoCarryTemplate,
 			}
 			pathSrc := filepath.Join(outputDir, eName+"_ops_amd64.go")
 			if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {

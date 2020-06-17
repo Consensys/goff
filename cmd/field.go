@@ -195,7 +195,7 @@ func newField(packageName, elementName, modulus string, benches bool, noCollidin
 	// note: to simplify output files generated, we generated ASM code only for moduli that meet the condition
 	// "F.NoCarrySquare".
 	// TODO manage cases where F.NoCarry is met, but F.NoCarrySquare isn't, and or, other ops (Add, Sub, ..)
-	F.ASM = F.NoCarrySquare && F.NoCarry && F.NbWords <= 6 // max words without having to deal with spilling
+	F.ASM = F.NoCarrySquare && F.NoCarry && F.NbWords <= 12 // max words without having to deal with spilling
 
 	return F, nil
 }

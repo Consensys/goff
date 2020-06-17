@@ -17,88 +17,52 @@
 // Package bn256 contains field arithmetic operations
 package bn256
 
-// /!\ WARNING /!\
-// this code has not been audited and is provided as-is. In particular,
-// there is no security guarantees such as constant time implementation
-// or side-channel attack resistance
-// /!\ WARNING /!\
+// set functions pointers to ADX version if instruction set available
+func init() {
+	if supportAdx {
 
-// -------------------------------------------------------------------------------------------------
-// Constants
+		mulElement = _mulADXElement
+		squareElement = _squareADXElement
 
-// q (modulus)
-var qElement = Element{
-	4332616871279656263,
-	10917124144477883021,
-	13281191951274694749,
-	3486998266802970665,
-}
-
-// q'[0], see montgommery multiplication algorithm
-var qElementInv0 uint64 = 9786893198990664585
-
-// rSquare
-var rSquareElement = Element{
-	17522657719365597833,
-	13107472804851548667,
-	5164255478447964150,
-	493319470278259999,
+		fromMontElement = _fromMontADXElement
+	}
 }
 
 // -------------------------------------------------------------------------------------------------
 // Declarations
 
 //go:noescape
-func mulElement(res, x, y *Element)
+func _mulADXElement(res, x, y *Element)
+
+//go:noescape
+func _squareADXElement(res, x *Element)
+
+//go:noescape
+func subElement(res, x, y *Element)
+
+// Sub  z = x - y mod q
+func (z *Element) Sub(x, y *Element) *Element {
+	subElement(z, x, y)
+	return z
+}
+
+// SubAssign  z = z - x mod q
+func (z *Element) SubAssign(x *Element) *Element {
+	subElement(z, z, x)
+	return z
+}
+
+//go:noescape
+func reduceElement(res *Element)
 
 //go:noescape
 func addElement(res, x, y *Element)
 
 //go:noescape
-func subElement(res, x, y *Element)
+func doubleElement(res, x *Element)
 
 //go:noescape
-func doubleElement(res, y *Element)
-
-//go:noescape
-func fromMontElement(res *Element)
-
-//go:noescape
-func reduceElement(res *Element) // for test purposes
-
-//go:noescape
-func squareElement(res, y *Element)
-
-// -------------------------------------------------------------------------------------------------
-// APIs
-
-// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
-// sets and returns z = z * 1
-func (z *Element) FromMont() *Element {
-	fromMontElement(z)
-	return z
-}
-
-// ToMont converts z to Montgomery form
-// sets and returns z = z * r^2
-func (z *Element) ToMont() *Element {
-	mulElement(z, z, &rSquareElement)
-	return z
-}
-
-// Mul z = x * y mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *Element) Mul(x, y *Element) *Element {
-	mulElement(z, x, y)
-	return z
-}
-
-// MulAssign z = z * x mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *Element) MulAssign(x *Element) *Element {
-	mulElement(z, z, x)
-	return z
-}
+func _fromMontADXElement(res *Element)
 
 // Add z = x + y mod q
 func (z *Element) Add(x, y *Element) *Element {
@@ -115,24 +79,5 @@ func (z *Element) AddAssign(x *Element) *Element {
 // Double z = x + x mod q, aka Lsh 1
 func (z *Element) Double(x *Element) *Element {
 	doubleElement(z, x)
-	return z
-}
-
-// Sub  z = x - y mod q
-func (z *Element) Sub(x, y *Element) *Element {
-	subElement(z, x, y)
-	return z
-}
-
-// SubAssign  z = z - x mod q
-func (z *Element) SubAssign(x *Element) *Element {
-	subElement(z, z, x)
-	return z
-}
-
-// Square z = x * x mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *Element) Square(x *Element) *Element {
-	squareElement(z, x)
 	return z
 }

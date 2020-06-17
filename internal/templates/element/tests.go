@@ -36,6 +36,7 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
     for i := 0; i < n; i++ {
 		if i == n/2 && sAdx {
 			supportAdx = false // testing without adx instruction
+			mul{{.ElementName}} = _mulGeneric{{.ElementName}}
 		}
         // sample 2 random big int
         b1, _ := rand.Int(rand.Reader, modulus)
@@ -324,51 +325,6 @@ func BenchmarkMulAssign{{toUpper .ElementName}}(b *testing.B) {
 }
 
 {{if .ASM}}
-func Test{{toUpper .ElementName}}Asm(t *testing.T) {
-	// ensure ASM implementations matches the ones using math/bits
-	modulus, _ := new(big.Int).SetString("{{.Modulus}}", 10)
-	sadx := supportAdx
-	for i := 0; i < 500; i++ {
-		// sample 2 random big int
-		if i == 250 && sadx {
-			// going the no_adx path
-			supportAdx = false
-		}
-		b1, _ := rand.Int(rand.Reader, modulus)
-		b2, _ := rand.Int(rand.Reader, modulus)
-
-		// e1 = mont(b1), e2 = mont(b2)
-		var e1, e2, eTestMul, eMulAssign, eSquare, eTestSquare {{.ElementName}}
-		e1.SetBigInt(b1)
-		e2.SetBigInt(b2)
-
-		eTestMul = e1
-		eTestMul.testMulAssign(&e2)
-		eMulAssign = e1
-		eMulAssign.MulAssign(&e2)
-
-		if !eTestMul.Equal(&eMulAssign) {
-			if supportAdx {
-				t.Fatal("mul assembly implementation WITH adx instructions doesn't match non-assembly one")
-			} else {
-				t.Fatal("mul assembly implementation WITHOUT adx instructions doesn't match non-assembly one")
-			}
-		}
-
-		// square 
-		eSquare.Square(&e1)
-		eTestSquare.testSquare(&e1)
-
-		if !eTestSquare.Equal(&eSquare) {
-			if supportAdx {
-				t.Fatal("square assembly implementation WITH adx instructions doesn't match non-assembly one")
-			} else {
-				t.Fatal("square assembly implementation WITHOUT adx instructions doesn't match non-assembly one")
-			}
-		}
-	}
-	supportAdx = sadx
-}
 
 func Test{{toUpper .ElementName}}reduce(t *testing.T) {
 	q := {{.ElementName}} {
@@ -414,36 +370,11 @@ func Test{{toUpper .ElementName}}reduce(t *testing.T) {
 	
 }
 
-// this is here for consistency purposes, to ensure MulAssign on AMD64 using asm implementation gives consistent results 
-func (z *{{.ElementName}}) testMulAssign(x *{{.ElementName}}) *{{.ElementName}} {
-	{{ if .NoCarry}}
-		{{ template "mul_nocarry" dict "all" . "V1" "z" "V2" "x"}}
-	{{ else }}
-		{{ template "mul_cios" dict "all" . "V1" "z" "V2" "x"}}
-	{{ end }}
-	{{ template "reduce" . }}
-	return z 
-}
-
 func (z *{{.ElementName}}) testReduce() *{{.ElementName}} {
 	{{ template "reduce" . }}
 	return z 
 }
 
-// this is here for consistency purposes, to ensure Square on AMD64 using asm implementation gives consistent results 
-func (z *{{.ElementName}}) testSquare(x *{{.ElementName}}) *{{.ElementName}} {
-	{{if .NoCarrySquare}}
-		{{ template "square" dict "all" . "V1" "x"}}
-		{{ template "reduce" . }}
-		return z 
-	{{else if .NoCarry}}
-		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "x"}}
-		{{ template "reduce" . }}
-		return z 
-	{{else }}
-		return z.Mul(x, x)
-	{{end}}
-}
 
 {{end}}
 
