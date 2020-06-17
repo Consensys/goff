@@ -75,7 +75,7 @@ func _mulGeneric{{.ElementName}}(z,x,y *{{.ElementName}}) {
 	{{ if .NoCarry}}
 		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "y"}}
 	{{ else }}
-		{{ template "mul_cios" dict "all" . "V1" "x" "V2" "y" "NoReturn" false}}
+		{{ template "mul_cios" dict "all" . "V1" "x" "V2" "y" "NoReturn" true}}
 	{{ end }}
 	{{ template "reduce" . }}
 }
