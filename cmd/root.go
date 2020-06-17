@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/consensys/bavard"
+	"github.com/consensys/goff/asm"
 	"github.com/consensys/goff/internal/templates/element"
 	"github.com/spf13/cobra"
 )
@@ -39,7 +40,6 @@ var (
 	fOutputDir   string
 	fPackageName string
 	fElementName string
-	fBenches     bool
 )
 
 func init() {
@@ -48,7 +48,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&fModulus, "modulus", "m", "", "field modulus (base 10)")
 	rootCmd.PersistentFlags().StringVarP(&fOutputDir, "output", "o", "", "destination path to create output files")
 	rootCmd.PersistentFlags().StringVarP(&fPackageName, "package", "p", "", "package name in generated files")
-	rootCmd.PersistentFlags().BoolVarP(&fBenches, "benches", "b", false, "set to true to generate montgomery multiplication (CIOS, FIPS, noCarry) benchmarks")
 
 	if bits.UintSize != 64 {
 		panic("goff only supports 64bits architectures")
@@ -68,15 +67,15 @@ func cmdGenerate(cmd *cobra.Command, args []string) {
 	}
 
 	// generate code
-	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, fBenches, false); err != nil {
+	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, false); err != nil {
 		fmt.Printf("\n%s\n", err.Error())
 		os.Exit(-1)
 	}
 }
 
-func GenerateFF(packageName, elementName, modulus, outputDir string, benches bool, noCollidingNames bool) error {
+func GenerateFF(packageName, elementName, modulus, outputDir string, noCollidingNames bool) error {
 	// compute field constants
-	F, err := newField(packageName, elementName, modulus, benches, noCollidingNames)
+	F, err := newField(packageName, elementName, modulus, noCollidingNames)
 	if err != nil {
 		return err
 	}
@@ -84,24 +83,20 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 	// source file templates
 	src := []string{
 		element.Base,
-		element.Add,
-		element.Sub,
 		element.Reduce,
 		element.Exp,
-		element.FromMont,
 		element.Conv,
 		element.MulCIOS,
-		element.MulFIPS,
 		element.MulNoCarry,
 		element.Sqrt,
+		element.Inverse,
+		element.Ops,
 	}
 
 	// test file templates
 	tst := []string{
 		element.MulCIOS,
-		element.MulFIPS,
 		element.MulNoCarry,
-		element.SquareNoCarryTemplate,
 		element.Reduce,
 		element.Test,
 	}
@@ -133,56 +128,24 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		return err
 	}
 
-	if F.ASM { // max words without having to deal with spilling
-		// generate mul.s
+	// if we generate assembly code
+	if F.ASM {
+		// generate ops.s
 		{
-			pathMulAsm := filepath.Join(outputDir, eName+"_mul_amd64.s")
-			f, err := os.Create(pathMulAsm)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-			builder := newAsmBuilder(f)
-			builder.Write("#include \"textflag.h\"")
-			if err := builder.mulNoCarry(F, mulAssign); err != nil {
-				return err
-			}
-			if err := builder.mulNoCarry(F, fromMont); err != nil {
+			pathMulAsm := filepath.Join(outputDir, eName+"_ops_amd64.s")
+			builder := asm.NewBuilder(pathMulAsm, F.ElementName, F.NbWords, F.Q)
+			if err := builder.Build(); err != nil {
 				return err
 			}
 
-			if err := builder.reduceFunc(F); err != nil {
-				return err
-			}
-
-			// generate mul_amd64.go
+			// generate ops_amd64.go
 			src := []string{
-				element.MontgomeryMultiplicationAMD64,
+				element.OpsAMD64,
+				element.Reduce,
+				element.MulCIOS,
+				element.MulNoCarry,
 			}
-			pathSrc := filepath.Join(outputDir, eName+"_mul_amd64.go")
-			if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
-				return err
-			}
-		}
-
-		if F.NoCarrySquare {
-			pathMulAsm := filepath.Join(outputDir, eName+"_square_amd64.s")
-			f, err := os.Create(pathMulAsm)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-			builder := newAsmBuilder(f)
-			builder.Write("#include \"textflag.h\"")
-			if err := builder.square(F); err != nil {
-				return err
-			}
-
-			// generate mul_amd64.go
-			src := []string{
-				element.SquareAMD64,
-			}
-			pathSrc := filepath.Join(outputDir, eName+"_square_amd64.go")
+			pathSrc := filepath.Join(outputDir, eName+"_ops_amd64.go")
 			if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
 				return err
 			}
@@ -191,14 +154,14 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 	}
 
 	{
-		// generate mul.go
+		// generate ops.go
 		src := []string{
-			element.MontgomeryMultiplication,
+			element.OpsNoAsm,
 			element.MulCIOS,
 			element.MulNoCarry,
 			element.Reduce,
 		}
-		pathSrc := filepath.Join(outputDir, eName+"_mul.go")
+		pathSrc := filepath.Join(outputDir, eName+"_ops_noasm.go")
 		bavardOptsCpy := make([]func(*bavard.Bavard) error, len(bavardOpts))
 		copy(bavardOptsCpy, bavardOpts)
 		if F.ASM {
@@ -209,25 +172,6 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		}
 	}
 
-	{
-		// generate square.go
-		src := []string{
-			element.SquareCIOSNoCarry,
-			element.SquareNoCarryTemplate,
-			element.MulCIOS,
-			element.MulNoCarry,
-			element.Reduce,
-		}
-		pathSrc := filepath.Join(outputDir, eName+"_square.go")
-		bavardOptsCpy := make([]func(*bavard.Bavard) error, len(bavardOpts))
-		copy(bavardOptsCpy, bavardOpts)
-		if F.ASM && F.NoCarrySquare {
-			bavardOptsCpy = append(bavardOptsCpy, bavard.BuildTag("!amd64"))
-		}
-		if err := bavard.Generate(pathSrc, src, F, bavardOptsCpy...); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

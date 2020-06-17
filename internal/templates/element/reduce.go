@@ -1,5 +1,6 @@
 package element
 
+// TODO this should  be changed to match ASM constant time version
 const Reduce = `
 {{ define "reduce" }}
 // if z > q --> z -= q
@@ -17,6 +18,5 @@ if !({{- range $i := reverse .NbWordsIndexesNoZero}} z[{{$i}}] < {{index $.Q $i}
 	{{- end}}
 }
 {{-  end }}
-
 
 `

@@ -69,7 +69,7 @@ func TestIntegration(t *testing.T) {
 
 	for elementName, modulus := range moduli {
 		// generate field
-		if err := GenerateFF("integration", elementName, modulus, parentDir, false, true); err != nil {
+		if err := GenerateFF("integration", elementName, modulus, parentDir, true); err != nil {
 			t.Fatal(elementName, err)
 		}
 	}

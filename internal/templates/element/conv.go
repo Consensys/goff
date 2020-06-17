@@ -1,26 +1,7 @@
 package element
 
-// note: not thourougly tested on moduli != .NoCarry
-const FromMont = `
-// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
-// sets and returns z = z * 1
-func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
-	fromMont{{.ElementName}}(z)
-	return z 
-}
-`
-
 const Conv = `
-// ToMont converts z to Montgomery form
-// sets and returns z = z * r^2
-func (z *{{.ElementName}}) ToMont() *{{.ElementName}} {
-	var rSquare = {{.ElementName}}{
-		{{- range $i := .RSquare}}
-		{{$i}},{{end}}
-	}
-	mulAssign{{.ElementName}}(z, &rSquare)
-	return z
-}
+
 
 // ToRegular returns z in regular form (doesn't mutate z)
 func (z {{.ElementName}}) ToRegular() {{.ElementName}} {
