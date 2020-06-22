@@ -85,18 +85,18 @@ func newField(packageName, elementName, modulus string, noCollidingNames bool) (
 	_qInv := big.NewInt(0)
 	extendedEuclideanAlgo(_r, &bModulus, _rInv, _qInv)
 	_qInv.Mod(_qInv, _r)
-	F.QInverse = toUint64Slice(_qInv)
+	F.QInverse = toUint64Slice(_qInv, F.NbWords)
 
 	//  rsquare
 	_rSquare := big.NewInt(2)
 	exponent := big.NewInt(int64(F.NbWords) * 64 * 2)
 	_rSquare.Exp(_rSquare, exponent, &bModulus)
-	F.RSquare = toUint64Slice(_rSquare)
+	F.RSquare = toUint64Slice(_rSquare, F.NbWords)
 
 	var one big.Int
 	one.SetUint64(1)
 	one.Lsh(&one, uint(F.NbWords)*64).Mod(&one, &bModulus)
-	F.One = toUint64Slice(&one)
+	F.One = toUint64Slice(&one, F.NbWords)
 
 	// indexes (template helpers)
 	F.NbWordsIndexesFull = make([]int, F.NbWords)
@@ -172,7 +172,7 @@ func newField(packageName, elementName, modulus string, noCollidingNames bool) (
 			g.Exp(&nonResidue, &s, &bModulus)
 			// store g in montgomery form
 			g.Lsh(&g, uint(F.NbWords)*64).Mod(&g, &bModulus)
-			F.SqrtG = toUint64Slice(&g)
+			F.SqrtG = toUint64Slice(&g, F.NbWords)
 
 			// store non residue in montgomery form
 			nonResidue.Lsh(&nonResidue, uint(F.NbWords)*64).Mod(&nonResidue, &bModulus)
@@ -193,8 +193,13 @@ func newField(packageName, elementName, modulus string, noCollidingNames bool) (
 	return F, nil
 }
 
-func toUint64Slice(b *big.Int) (s []uint64) {
-	s = make([]uint64, len(b.Bits()))
+func toUint64Slice(b *big.Int, nbWords ...int) (s []uint64) {
+	if len(nbWords) > 0 && nbWords[0] > len(b.Bits()) {
+		s = make([]uint64, nbWords[0])
+	} else {
+		s = make([]uint64, len(b.Bits()))
+	}
+
 	for i, v := range b.Bits() {
 		s[i] = (uint64)(v)
 	}
