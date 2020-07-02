@@ -27,6 +27,27 @@ package bn256
 
 import "math/bits"
 
+// Mul z = x * y mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *Element) Mul(x, y *Element) *Element {
+	_mulGenericElement(z, x, y)
+	return z
+}
+
+// Square z = x * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *Element) Square(x *Element) *Element {
+	_squareGenericElement(z, x)
+	return z
+}
+
+// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
+// sets and returns z = z * 1
+func (z *Element) FromMont() *Element {
+	_fromMontGenericElement(z)
+	return z
+}
+
 // Add z = x + y mod q
 func (z *Element) Add(x, y *Element) *Element {
 	var carry uint64
@@ -35,27 +56,6 @@ func (z *Element) Add(x, y *Element) *Element {
 	z[1], carry = bits.Add64(x[1], y[1], carry)
 	z[2], carry = bits.Add64(x[2], y[2], carry)
 	z[3], _ = bits.Add64(x[3], y[3], carry)
-
-	// if z > q --> z -= q
-	// note: this is NOT constant time
-	if !(z[3] < 3486998266802970665 || (z[3] == 3486998266802970665 && (z[2] < 13281191951274694749 || (z[2] == 13281191951274694749 && (z[1] < 10917124144477883021 || (z[1] == 10917124144477883021 && (z[0] < 4332616871279656263))))))) {
-		var b uint64
-		z[0], b = bits.Sub64(z[0], 4332616871279656263, 0)
-		z[1], b = bits.Sub64(z[1], 10917124144477883021, b)
-		z[2], b = bits.Sub64(z[2], 13281191951274694749, b)
-		z[3], _ = bits.Sub64(z[3], 3486998266802970665, b)
-	}
-	return z
-}
-
-// AddAssign z = z + x mod q
-func (z *Element) AddAssign(x *Element) *Element {
-	var carry uint64
-
-	z[0], carry = bits.Add64(z[0], x[0], 0)
-	z[1], carry = bits.Add64(z[1], x[1], carry)
-	z[2], carry = bits.Add64(z[2], x[2], carry)
-	z[3], _ = bits.Add64(z[3], x[3], carry)
 
 	// if z > q --> z -= q
 	// note: this is NOT constant time
@@ -97,23 +97,6 @@ func (z *Element) Sub(x, y *Element) *Element {
 	z[1], b = bits.Sub64(x[1], y[1], b)
 	z[2], b = bits.Sub64(x[2], y[2], b)
 	z[3], b = bits.Sub64(x[3], y[3], b)
-	if b != 0 {
-		var c uint64
-		z[0], c = bits.Add64(z[0], 4332616871279656263, 0)
-		z[1], c = bits.Add64(z[1], 10917124144477883021, c)
-		z[2], c = bits.Add64(z[2], 13281191951274694749, c)
-		z[3], _ = bits.Add64(z[3], 3486998266802970665, c)
-	}
-	return z
-}
-
-// SubAssign  z = z - x mod q
-func (z *Element) SubAssign(x *Element) *Element {
-	var b uint64
-	z[0], b = bits.Sub64(z[0], x[0], 0)
-	z[1], b = bits.Sub64(z[1], x[1], b)
-	z[2], b = bits.Sub64(z[2], x[2], b)
-	z[3], b = bits.Sub64(z[3], x[3], b)
 	if b != 0 {
 		var c uint64
 		z[0], c = bits.Add64(z[0], 4332616871279656263, 0)

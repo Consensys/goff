@@ -1,15 +1,18 @@
 package asm
 
 import (
+	"fmt"
+
 	"github.com/consensys/bavard"
 )
 
 func (b *Builder) fromMont(asm *bavard.Assembly) error {
-	stackSize := 0
+	stackSize := 8
 	if b.nbWords > SmallModulus {
 		stackSize = b.nbWords * 8
 	}
 	asm.FuncHeader("_fromMontADX"+b.elementName, stackSize, 8)
+	asm.WriteLn("NO_LOCAL_POINTERS")
 	asm.WriteLn(`
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
@@ -22,6 +25,10 @@ func (b *Builder) fromMont(asm *bavard.Assembly) error {
 	// 		for j=1 to N-1
 	// 		    (C,t[j-1]) := t[j] + m*q[j] + C
 	// 		t[N-1] = C`)
+
+	// check ADX instruction support
+	asm.CMPB("·supportAdx(SB)", 1)
+	asm.JNE("no_adx")
 
 	// registers
 	t := asm.PopRegisters(b.nbWords)
@@ -86,6 +93,13 @@ func (b *Builder) fromMont(asm *bavard.Assembly) error {
 	// ---------------------------------------------------------------------------------------------
 	// reduce
 	b.reduce(asm, t, r)
+	asm.RET()
+
+	// No adx
+	asm.WriteLn("no_adx:")
+	asm.MOVQ("res+0(FP)", bavard.AX)
+	asm.MOVQ(bavard.AX, "(SP)")
+	asm.WriteLn(fmt.Sprintf("CALL ·_fromMontGeneric%s(SB)", b.elementName))
 	asm.RET()
 	return nil
 }

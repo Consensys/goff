@@ -50,7 +50,6 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 	for i := 0; i < n; i++ {
 		if i == n/2 && sAdx {
 			supportAdx = false // testing without adx instruction
-			mulElement = _mulGenericElement
 		}
 		// sample 2 random big int
 		b1, _ := rand.Int(rand.Reader, modulus)

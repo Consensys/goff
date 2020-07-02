@@ -1,4 +1,6 @@
 #include "textflag.h"
+#include "funcdata.h"
+
 TEXT ·_mulLargeADXElement(SB), $96-200
 
 	// the algorithm is described here
@@ -1110,6 +1112,7 @@ TEXT ·_mulLargeADXElement(SB), $96-200
     RET
 
 TEXT ·_fromMontADXElement(SB), $96-8
+NO_LOCAL_POINTERS
 
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
@@ -1122,6 +1125,8 @@ TEXT ·_fromMontADXElement(SB), $96-8
 	// 		for j=1 to N-1
 	// 		    (C,t[j-1]) := t[j] + m*q[j] + C
 	// 		t[N-1] = C
+    CMPB ·supportAdx(SB), $0x0000000000000001
+    JNE no_adx
     MOVQ res+0(FP), R15
     MOVQ 0(R15), CX
     MOVQ 8(R15), BX
@@ -1736,6 +1741,11 @@ TEXT ·_fromMontADXElement(SB), $96-8
     MOVQ R12, 72(R15)
     MOVQ R13, 80(R15)
     MOVQ R14, 88(R15)
+    RET
+no_adx:
+    MOVQ res+0(FP), AX
+    MOVQ AX, (SP)
+CALL ·_fromMontGenericElement(SB)
     RET
 
 TEXT ·reduceElement(SB), $96-8

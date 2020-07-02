@@ -252,10 +252,16 @@ func (z *Element) Exp(x Element, exponent ...uint64) *Element {
 	for i := l; i >= 0; i-- {
 		z.Square(z)
 		if exponent[i/64]&(1<<uint(i%64)) != 0 {
-			z.MulAssign(&x)
+			z.Mul(z, &x)
 		}
 	}
 	return z
+}
+
+// ToMont converts z to Montgomery form
+// sets and returns z = z * r^2
+func (z *Element) ToMont() *Element {
+	return z.Mul(z, &rSquareElement)
 }
 
 // ToRegular returns z in regular form (doesn't mutate z)
@@ -542,51 +548,6 @@ func (z *Element) Inverse(x *Element) *Element {
 		z.Set(&s)
 	}
 
-	return z
-}
-
-// -------------------------------------------------------------------------------------------------
-// declarations
-// do modify tests.go with new declarations to ensure both path (ADX and generic) are tested
-var mulElement func(res, x, y *Element) = _mulGenericElement
-var squareElement func(res, x *Element) = _squareGenericElement
-var fromMontElement func(res *Element) = _fromMontGenericElement
-
-// -------------------------------------------------------------------------------------------------
-// APIs
-
-// ToMont converts z to Montgomery form
-// sets and returns z = z * r^2
-func (z *Element) ToMont() *Element {
-	mulElement(z, z, &rSquareElement)
-	return z
-}
-
-// Mul z = x * y mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *Element) Mul(x, y *Element) *Element {
-	mulElement(z, x, y)
-	return z
-}
-
-// MulAssign z = z * x mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *Element) MulAssign(x *Element) *Element {
-	mulElement(z, z, x)
-	return z
-}
-
-// Square z = x * x mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *Element) Square(x *Element) *Element {
-	squareElement(z, x)
-	return z
-}
-
-// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
-// sets and returns z = z * 1
-func (z *Element) FromMont() *Element {
-	fromMontElement(z)
 	return z
 }
 

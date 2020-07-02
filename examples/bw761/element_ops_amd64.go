@@ -19,21 +19,6 @@ package bw761
 
 import "math/bits"
 
-// set functions pointers to ADX version if instruction set available
-func init() {
-	if supportAdx {
-
-		mulElement = func(res, x, y *Element) {
-			_mulLargeADXElement(res, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], y[0], y[1], y[2], y[3], y[4], y[5], y[6], y[7], y[8], y[9], y[10], y[11])
-		}
-		squareElement = func(res, x *Element) {
-			_mulLargeADXElement(res, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11])
-		}
-
-		fromMontElement = _fromMontADXElement
-	}
-}
-
 // -------------------------------------------------------------------------------------------------
 // Declarations
 
@@ -47,8 +32,51 @@ func addElement(res, x, y *Element)
 func _fromMontADXElement(res *Element)
 
 //go:noescape
-//go:noescape
 func _mulLargeADXElement(res *Element, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11 uint64)
+
+// -------------------------------------------------------------------------------------------------
+// APIs
+
+// Add z = x + y mod q
+func (z *Element) Add(x, y *Element) *Element {
+	addElement(z, x, y)
+	return z
+}
+
+// Double z = x + x mod q, aka Lsh 1
+func (z *Element) Double(x *Element) *Element {
+	addElement(z, x, x)
+	return z
+}
+
+// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
+// sets and returns z = z * 1
+func (z *Element) FromMont() *Element {
+	_fromMontADXElement(z)
+	return z
+}
+
+// Mul z = x * y mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *Element) Mul(x, y *Element) *Element {
+	if supportAdx {
+		_mulLargeADXElement(z, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], y[0], y[1], y[2], y[3], y[4], y[5], y[6], y[7], y[8], y[9], y[10], y[11])
+	} else {
+		_mulGenericElement(z, x, y)
+	}
+	return z
+}
+
+// Square z = x * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *Element) Square(x *Element) *Element {
+	if supportAdx {
+		_mulLargeADXElement(z, x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11])
+	} else {
+		_squareGenericElement(z, x)
+	}
+	return z
+}
 
 // Sub  z = x - y mod q
 func (z *Element) Sub(x, y *Element) *Element {
@@ -80,56 +108,5 @@ func (z *Element) Sub(x, y *Element) *Element {
 		z[10], c = bits.Add64(z[10], 15098257552581525310, c)
 		z[11], _ = bits.Add64(z[11], 81882988782276106, c)
 	}
-	return z
-}
-
-// SubAssign  z = z - x mod q
-func (z *Element) SubAssign(x *Element) *Element {
-	var b uint64
-	z[0], b = bits.Sub64(z[0], x[0], 0)
-	z[1], b = bits.Sub64(z[1], x[1], b)
-	z[2], b = bits.Sub64(z[2], x[2], b)
-	z[3], b = bits.Sub64(z[3], x[3], b)
-	z[4], b = bits.Sub64(z[4], x[4], b)
-	z[5], b = bits.Sub64(z[5], x[5], b)
-	z[6], b = bits.Sub64(z[6], x[6], b)
-	z[7], b = bits.Sub64(z[7], x[7], b)
-	z[8], b = bits.Sub64(z[8], x[8], b)
-	z[9], b = bits.Sub64(z[9], x[9], b)
-	z[10], b = bits.Sub64(z[10], x[10], b)
-	z[11], b = bits.Sub64(z[11], x[11], b)
-	if b != 0 {
-		var c uint64
-		z[0], c = bits.Add64(z[0], 17626244516597989515, 0)
-		z[1], c = bits.Add64(z[1], 16614129118623039618, c)
-		z[2], c = bits.Add64(z[2], 1588918198704579639, c)
-		z[3], c = bits.Add64(z[3], 10998096788944562424, c)
-		z[4], c = bits.Add64(z[4], 8204665564953313070, c)
-		z[5], c = bits.Add64(z[5], 9694500593442880912, c)
-		z[6], c = bits.Add64(z[6], 274362232328168196, c)
-		z[7], c = bits.Add64(z[7], 8105254717682411801, c)
-		z[8], c = bits.Add64(z[8], 5945444129596489281, c)
-		z[9], c = bits.Add64(z[9], 13341377791855249032, c)
-		z[10], c = bits.Add64(z[10], 15098257552581525310, c)
-		z[11], _ = bits.Add64(z[11], 81882988782276106, c)
-	}
-	return z
-}
-
-// Add z = x + y mod q
-func (z *Element) Add(x, y *Element) *Element {
-	addElement(z, x, y)
-	return z
-}
-
-// AddAssign z = z + x mod q
-func (z *Element) AddAssign(x *Element) *Element {
-	addElement(z, z, x)
-	return z
-}
-
-// Double z = x + x mod q, aka Lsh 1
-func (z *Element) Double(x *Element) *Element {
-	addElement(z, x, x)
 	return z
 }

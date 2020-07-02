@@ -36,7 +36,6 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
     for i := 0; i < n; i++ {
 		if i == n/2 && sAdx {
 			supportAdx = false // testing without adx instruction
-			mul{{.ElementName}} = _mulGeneric{{.ElementName}}
 		}
         // sample 2 random big int
         b1, _ := rand.Int(rand.Reader, modulus)

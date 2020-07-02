@@ -17,17 +17,6 @@
 // Package bls377 contains field arithmetic operations
 package bls377
 
-// set functions pointers to ADX version if instruction set available
-func init() {
-	if supportAdx {
-
-		mulElement = _mulADXElement
-		squareElement = _squareADXElement
-
-		fromMontElement = _fromMontADXElement
-	}
-}
-
 // -------------------------------------------------------------------------------------------------
 // Declarations
 
@@ -49,17 +38,8 @@ func _squareADXElement(res, x *Element)
 //go:noescape
 func subElement(res, x, y *Element)
 
-// Sub  z = x - y mod q
-func (z *Element) Sub(x, y *Element) *Element {
-	subElement(z, x, y)
-	return z
-}
-
-// SubAssign  z = z - x mod q
-func (z *Element) SubAssign(x *Element) *Element {
-	subElement(z, z, x)
-	return z
-}
+// -------------------------------------------------------------------------------------------------
+// APIs
 
 // Add z = x + y mod q
 func (z *Element) Add(x, y *Element) *Element {
@@ -67,14 +47,35 @@ func (z *Element) Add(x, y *Element) *Element {
 	return z
 }
 
-// AddAssign z = z + x mod q
-func (z *Element) AddAssign(x *Element) *Element {
-	addElement(z, z, x)
-	return z
-}
-
 // Double z = x + x mod q, aka Lsh 1
 func (z *Element) Double(x *Element) *Element {
 	addElement(z, x, x)
+	return z
+}
+
+// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
+// sets and returns z = z * 1
+func (z *Element) FromMont() *Element {
+	_fromMontADXElement(z)
+	return z
+}
+
+// Sub  z = x - y mod q
+func (z *Element) Sub(x, y *Element) *Element {
+	subElement(z, x, y)
+	return z
+}
+
+// Mul z = x * y mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *Element) Mul(x, y *Element) *Element {
+	_mulADXElement(z, x, y)
+	return z
+}
+
+// Square z = x * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *Element) Square(x *Element) *Element {
+	_squareADXElement(z, x)
 	return z
 }
