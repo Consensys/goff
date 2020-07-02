@@ -436,8 +436,8 @@ func (z *Element) Sqrt(x *Element) *Element {
 		}
 
 		g.Square(&t)
-		y.MulAssign(&t)
-		b.MulAssign(&g)
+		y.Mul(&y, &t)
+		b.Mul(&b, &g)
 		r = m
 	}
 }

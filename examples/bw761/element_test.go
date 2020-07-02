@@ -89,21 +89,15 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 		var bMul, bAdd, bSub, bDiv, bNeg, bLsh, bInv, bExp, bExp2, bSquare big.Int
 
 		// e1 = mont(b1), e2 = mont(b2)
-		var e1, e2, eMul, eAdd, eSub, eDiv, eNeg, eLsh, eInv, eExp, eSquare, eMulAssign, eSubAssign, eAddAssign Element
+		var e1, e2, eMul, eAdd, eSub, eDiv, eNeg, eLsh, eInv, eExp, eSquare Element
 		e1.SetBigInt(b1)
 		e2.SetBigInt(b2)
 
 		// (e1*e2).FromMont() === b1*b2 mod q ... etc
 		eSquare.Square(&e1)
 		eMul.Mul(&e1, &e2)
-		eMulAssign.Set(&e1)
-		eMulAssign.MulAssign(&e2)
 		eAdd.Add(&e1, &e2)
-		eAddAssign.Set(&e1)
-		eAddAssign.AddAssign(&e2)
 		eSub.Sub(&e1, &e2)
-		eSubAssign.Set(&e1)
-		eSubAssign.SubAssign(&e2)
 		eDiv.Div(&e1, &e2)
 		eNeg.Neg(&e1)
 		eInv.Inverse(&e1)
@@ -126,11 +120,8 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 
 		cmpEandB(&eSquare, &bSquare, "Square")
 		cmpEandB(&eMul, &bMul, "Mul")
-		cmpEandB(&eMulAssign, &bMul, "MulAssign")
 		cmpEandB(&eAdd, &bAdd, "Add")
-		cmpEandB(&eAddAssign, &bAdd, "AddAssign")
 		cmpEandB(&eSub, &bSub, "Sub")
-		cmpEandB(&eSubAssign, &bSub, "SubAssign")
 		cmpEandB(&eDiv, &bDiv, "Div")
 		cmpEandB(&eNeg, &bNeg, "Neg")
 		cmpEandB(&eInv, &bInv, "Inv")
@@ -322,7 +313,7 @@ func BenchmarkSqrtELEMENT(b *testing.B) {
 	}
 }
 
-func BenchmarkMulAssignELEMENT(b *testing.B) {
+func BenchmarkMulELEMENT(b *testing.B) {
 	x := Element{
 		14305184132582319705,
 		8868935336694416555,
@@ -340,7 +331,7 @@ func BenchmarkMulAssignELEMENT(b *testing.B) {
 	benchResElement.SetOne()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		benchResElement.MulAssign(&x)
+		benchResElement.Mul(&benchResElement, &x)
 	}
 }
 

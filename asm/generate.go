@@ -37,12 +37,14 @@ func (b *Builder) Build() error {
 	asm := bavard.NewAssembly(f)
 	asm.Write("#include \"textflag.h\"")
 
-	// mul assign
-	if b.nbWords > 6 {
+	if b.nbWords > SmallModulus {
+		// mul
+		// fills up all available registers
 		if err := b.mulLarge(asm); err != nil {
 			return err
 		}
 	} else {
+		// mul
 		if err := b.mul(asm); err != nil {
 			return err
 		}
