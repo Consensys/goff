@@ -297,6 +297,21 @@ func One() Element {
 	return one
 }
 
+// MulAssign is deprecated, use Mul instead
+func (z *Element) MulAssign(x *Element) *Element {
+	return z.Mul(z, x)
+}
+
+// AddAssign is deprecated, use Add instead
+func (z *Element) AddAssign(x *Element) *Element {
+	return z.Add(z, x)
+}
+
+// SubAssign is deprecated, use Sub instead
+func (z *Element) SubAssign(x *Element) *Element {
+	return z.Sub(z, x)
+}
+
 // Exp z = x^exponent mod q
 // (not optimized)
 // exponent (non-montgomery form) is ordered from least significant word to most significant word
