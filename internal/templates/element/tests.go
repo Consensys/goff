@@ -145,6 +145,11 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 	supportAdx = sAdx
 }
 
+func Test{{toUpper .ElementName}}SetInterface(t *testing.T) {
+	// TODO 
+	t.Skip("not implemented")
+}
+
 func Test{{toUpper .ElementName}}IsRandom(t *testing.T) {
 	for i := 0; i < 50; i++ {
 		var x, y {{.ElementName}}

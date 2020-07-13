@@ -158,6 +158,11 @@ func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
 	supportAdx = sAdx
 }
 
+func TestELEMENTSetInterface(t *testing.T) {
+	// TODO
+	t.Skip("not implemented")
+}
+
 func TestELEMENTIsRandom(t *testing.T) {
 	for i := 0; i < 50; i++ {
 		var x, y Element

@@ -129,6 +129,31 @@ func (z *Element) Set(x *Element) *Element {
 	return z
 }
 
+// SetInterface converts i1 from uint64, int, string, or Element, big.Int into Element
+// panic if provided type is not supported
+func (z *Element) SetInterface(i1 interface{}) *Element {
+	switch c1 := i1.(type) {
+	case Element:
+		return z.Set(&c1)
+	case *Element:
+		return z.Set(c1)
+	case uint64:
+		return z.SetUint64(c1)
+	case int:
+		return z.SetString(strconv.Itoa(c1))
+	case string:
+		return z.SetString(c1)
+	case *big.Int:
+		return z.SetBigInt(c1)
+	case big.Int:
+		return z.SetBigInt(&c1)
+	case []byte:
+		return z.SetBytes(c1)
+	default:
+		panic("invalid type")
+	}
+}
+
 // SetZero z = 0
 func (z *Element) SetZero() *Element {
 	z[0] = 0
@@ -216,33 +241,6 @@ func One() Element {
 	var one Element
 	one.SetOne()
 	return one
-}
-
-// FromInterface converts i1 from uint64, int, string, or Element, big.Int into Element
-// panic if provided type is not supported
-func FromInterface(i1 interface{}) Element {
-	var val Element
-
-	switch c1 := i1.(type) {
-	case uint64:
-		val.SetUint64(c1)
-	case int:
-		val.SetString(strconv.Itoa(c1))
-	case string:
-		val.SetString(c1)
-	case big.Int:
-		val.SetBigInt(&c1)
-	case Element:
-		val = c1
-	case *Element:
-		val.Set(c1)
-	case []byte:
-		val.SetBytes(c1)
-	default:
-		panic("invalid type")
-	}
-
-	return val
 }
 
 // Exp z = x^exponent mod q
