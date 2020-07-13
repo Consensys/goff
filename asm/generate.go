@@ -28,7 +28,7 @@ func NewBuilder(path, elementName string, nbWords int, q []uint64) *Builder {
 	return &Builder{path, elementName, nbWords, nbWords - 1, q}
 }
 
-func (b *Builder) Build() error {
+func (b *Builder) Build(noCarrySquare bool) error {
 	f, err := os.Create(b.path)
 	if err != nil {
 		return err
@@ -49,9 +49,12 @@ func (b *Builder) Build() error {
 			return err
 		}
 		// square
-		if err := b.square(asm); err != nil {
-			return err
+		if noCarrySquare {
+			if err := b.square(asm); err != nil {
+				return err
+			}
 		}
+
 		// // sub
 		if err := b.sub(asm); err != nil {
 			return err
@@ -70,6 +73,11 @@ func (b *Builder) Build() error {
 
 	// add
 	if err := b.add(asm); err != nil {
+		return err
+	}
+
+	// double
+	if err := b.double(asm); err != nil {
 		return err
 	}
 

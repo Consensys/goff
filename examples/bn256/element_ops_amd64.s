@@ -1091,3 +1091,34 @@ TEXT ·addElement(SB), NOSPLIT, $0-24
     MOVQ BP, 16(AX)
     MOVQ SI, 24(AX)
     RET
+
+TEXT ·doubleElement(SB), NOSPLIT, $0-16
+    MOVQ x+8(FP), AX
+    MOVQ 0(AX), CX
+    MOVQ 8(AX), BX
+    MOVQ 16(AX), BP
+    MOVQ 24(AX), SI
+    ADDQ CX, CX
+    ADCQ BX, BX
+    ADCQ BP, BP
+    ADCQ SI, SI
+    // note that we don't check for the carry here, as this code was generated assuming F.NoCarry condition is set
+    // (see goff for more details)
+    MOVQ res+0(FP), AX
+    MOVQ CX, DI
+    SUBQ ·qElement+0(SB), DI
+    MOVQ BX, R8
+    SBBQ ·qElement+8(SB), R8
+    MOVQ BP, R9
+    SBBQ ·qElement+16(SB), R9
+    MOVQ SI, R10
+    SBBQ ·qElement+24(SB), R10
+    CMOVQCC DI, CX
+    CMOVQCC R8, BX
+    CMOVQCC R9, BP
+    CMOVQCC R10, SI
+    MOVQ CX, 0(AX)
+    MOVQ BX, 8(AX)
+    MOVQ BP, 16(AX)
+    MOVQ SI, 24(AX)
+    RET

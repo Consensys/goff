@@ -27,6 +27,9 @@ func reduceElement(res *Element)
 func addElement(res, x, y *Element)
 
 //go:noescape
+func doubleElement(res, x *Element)
+
+//go:noescape
 func _fromMontADXElement(res *Element)
 
 //go:noescape
@@ -49,7 +52,7 @@ func (z *Element) Add(x, y *Element) *Element {
 
 // Double z = x + x mod q, aka Lsh 1
 func (z *Element) Double(x *Element) *Element {
-	addElement(z, x, x)
+	doubleElement(z, x)
 	return z
 }
 
@@ -76,6 +79,8 @@ func (z *Element) Mul(x, y *Element) *Element {
 // Square z = x * x mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Square(x *Element) *Element {
+
 	_squareADXElement(z, x)
+
 	return z
 }

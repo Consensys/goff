@@ -13,6 +13,10 @@ func reduce{{.ElementName}}(res *{{.ElementName}})
 //go:noescape
 func add{{.ElementName}}(res,x,y *{{.ElementName}})
 
+
+//go:noescape
+func double{{.ElementName}}(res,x *{{.ElementName}})
+
 //go:noescape
 func _fromMontADX{{.ElementName}}(res *{{.ElementName}})
 
@@ -26,9 +30,10 @@ func _mulLargeADX{{.ElementName}}(res *{{.ElementName}} {{range $i := .NbWordsIn
 //go:noescape
 func _mulADX{{.ElementName}}(res,x,y *{{.ElementName}})
 
+{{if .NoCarrySquare}}
 //go:noescape
 func _squareADX{{.ElementName}}(res,x *{{.ElementName}})
-
+{{end}}
 //go:noescape
 func sub{{.ElementName}}(res,x,y *{{.ElementName}})
 
@@ -45,7 +50,7 @@ func (z *{{.ElementName}}) Add( x, y *{{.ElementName}}) *{{.ElementName}} {
 
 // Double z = x + x mod q, aka Lsh 1
 func (z *{{.ElementName}}) Double( x *{{.ElementName}}) *{{.ElementName}} {
-	add{{.ElementName}}(z, x, x)
+	double{{.ElementName}}(z, x)
 	return z 
 }
 
@@ -120,7 +125,11 @@ func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
 // Square z = x * x mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) Square(x *{{.ElementName}}) *{{.ElementName}} {
-	_squareADX{{.ElementName}}(z,x)
+	{{if .NoCarrySquare}}
+		_squareADX{{.ElementName}}(z,x)
+	{{else}}
+		_mulADX{{.ElementName}}(z, x, x)
+	{{end}}
 	return z
 }
 

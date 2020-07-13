@@ -134,7 +134,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 		{
 			pathMulAsm := filepath.Join(outputDir, eName+"_ops_amd64.s")
 			builder := asm.NewBuilder(pathMulAsm, F.ElementName, F.NbWords, F.Q)
-			if err := builder.Build(); err != nil {
+			if err := builder.Build(F.NoCarrySquare); err != nil {
 				return err
 			}
 

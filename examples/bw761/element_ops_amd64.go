@@ -29,6 +29,9 @@ func reduceElement(res *Element)
 func addElement(res, x, y *Element)
 
 //go:noescape
+func doubleElement(res, x *Element)
+
+//go:noescape
 func _fromMontADXElement(res *Element)
 
 //go:noescape
@@ -45,7 +48,7 @@ func (z *Element) Add(x, y *Element) *Element {
 
 // Double z = x + x mod q, aka Lsh 1
 func (z *Element) Double(x *Element) *Element {
-	addElement(z, x, x)
+	doubleElement(z, x)
 	return z
 }
 
