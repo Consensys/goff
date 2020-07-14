@@ -33,7 +33,7 @@ jobs:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run: go get golang.org/x/tools/cmd/goimports
       - run: go generate ./...
-      - run: gotestsum --junitfile  /tmp/test-results/results.xml -- -short -count=1
+      - run: gotestsum --junitfile  /tmp/test-results/results.xml -- ./... -short -count=1
       - store_test_results:
           path: /tmp/test-results
 workflows:
