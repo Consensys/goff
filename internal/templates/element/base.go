@@ -208,17 +208,20 @@ func One() {{.ElementName}} {
 
 {{end}}
 
-// MulAssign is deprecated, use Mul instead
+// MulAssign is deprecated
+// Deprecated: use Mul instead
 func (z *{{.ElementName}}) MulAssign(x *{{.ElementName}}) *{{.ElementName}} {
 	return z.Mul(z, x)
 }
 
-// AddAssign is deprecated, use Add instead
+// AddAssign is deprecated
+// Deprecated: use Add instead
 func (z *{{.ElementName}}) AddAssign(x *{{.ElementName}}) *{{.ElementName}} {
 	return z.Add(z, x)
 }
 
-// SubAssign is deprecated, use Sub instead
+// SubAssign is deprecated
+// Deprecated: use Sub instead
 func (z *{{.ElementName}}) SubAssign(x *{{.ElementName}}) *{{.ElementName}} {
 	return z.Sub(z, x)
 }

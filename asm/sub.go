@@ -4,7 +4,7 @@ import (
 	"github.com/consensys/bavard"
 )
 
-func (b *Builder) sub(asm *bavard.Assembly) error {
+func (b *builder) sub(asm *bavard.Assembly) error {
 	asm.FuncHeader("sub"+b.elementName, 0, 24)
 
 	// registers

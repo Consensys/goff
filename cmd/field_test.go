@@ -26,7 +26,6 @@ import (
 // integration test will create modulus for various field sizes and run tests
 
 func TestIntegration(t *testing.T) {
-	t.Fatal("fail for circle ci")
 	parentDir := "./integration_test"
 	os.RemoveAll(parentDir)
 	err := os.MkdirAll(parentDir, 0700)

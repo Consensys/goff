@@ -4,10 +4,10 @@ import (
 	"github.com/consensys/bavard"
 )
 
-func (b *Builder) double(asm *bavard.Assembly) error {
+func (b *builder) double(asm *bavard.Assembly) error {
 	// func header
 	stackSize := 0
-	if b.nbWords > SmallModulus {
+	if b.nbWords > smallModulus {
 		stackSize = b.nbWords * 8
 	}
 	asm.FuncHeader("double"+b.elementName, stackSize, 16)
@@ -43,10 +43,10 @@ func (b *Builder) double(asm *bavard.Assembly) error {
 	return nil
 }
 
-func (b *Builder) add(asm *bavard.Assembly) error {
+func (b *builder) add(asm *bavard.Assembly) error {
 	// func header
 	stackSize := 0
-	if b.nbWords > SmallModulus {
+	if b.nbWords > smallModulus {
 		stackSize = b.nbWords * 8
 	}
 	asm.FuncHeader("add"+b.elementName, stackSize, 24)

@@ -4,7 +4,7 @@ import (
 	"github.com/consensys/bavard"
 )
 
-func (b *Builder) square(asm *bavard.Assembly) error {
+func (b *builder) square(asm *bavard.Assembly) error {
 	asm.FuncHeader("_squareADX"+b.elementName, 0, 16)
 	asm.WriteLn(`
 	// the algorithm is described here

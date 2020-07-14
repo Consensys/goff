@@ -6,9 +6,9 @@ import (
 	"github.com/consensys/bavard"
 )
 
-func (b *Builder) fromMont(asm *bavard.Assembly) error {
+func (b *builder) fromMont(asm *bavard.Assembly) error {
 	stackSize := 8
-	if b.nbWords > SmallModulus {
+	if b.nbWords > smallModulus {
 		stackSize = b.nbWords * 8
 	}
 	asm.FuncHeader("_fromMontADX"+b.elementName, stackSize, 8)

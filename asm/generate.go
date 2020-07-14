@@ -7,7 +7,7 @@ import (
 	"github.com/consensys/bavard"
 )
 
-const SmallModulus = 6
+const smallModulus = 6
 
 func qAt(index int, elementName string) string {
 	return fmt.Sprintf("·q%s+%d(SB)", elementName, index*8)
@@ -17,18 +17,20 @@ func qInv0(elementName string) string {
 	return fmt.Sprintf("·q%sInv0(SB)", elementName)
 }
 
-type Builder struct {
+type builder struct {
 	path                      string
 	elementName               string
 	nbWords, nbWordsLastIndex int
 	q                         []uint64
 }
 
-func NewBuilder(path, elementName string, nbWords int, q []uint64) *Builder {
-	return &Builder{path, elementName, nbWords, nbWords - 1, q}
+// NewBuilder returns a builder object to help generated assembly code for some operations
+func NewBuilder(path, elementName string, nbWords int, q []uint64) *builder {
+	return &builder{path, elementName, nbWords, nbWords - 1, q}
 }
 
-func (b *Builder) Build(noCarrySquare bool) error {
+// Build ...
+func (b *builder) Build(noCarrySquare bool) error {
 	f, err := os.Create(b.path)
 	if err != nil {
 		return err
@@ -37,7 +39,7 @@ func (b *Builder) Build(noCarrySquare bool) error {
 	asm := bavard.NewAssembly(f)
 	asm.Write("#include \"textflag.h\"")
 
-	if b.nbWords > SmallModulus {
+	if b.nbWords > smallModulus {
 		// mul
 		// fills up all available registers
 		if err := b.mulLarge(asm); err != nil {

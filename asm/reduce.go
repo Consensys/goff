@@ -6,9 +6,9 @@ import (
 	"github.com/consensys/bavard"
 )
 
-func (b *Builder) reduceFn(asm *bavard.Assembly) error {
+func (b *builder) reduceFn(asm *bavard.Assembly) error {
 	stackSize := 0
-	if b.nbWords > SmallModulus {
+	if b.nbWords > smallModulus {
 		stackSize = b.nbWords * 8
 	}
 	asm.FuncHeader("reduce"+b.elementName, stackSize, 8)
@@ -28,8 +28,8 @@ func (b *Builder) reduceFn(asm *bavard.Assembly) error {
 	return nil
 }
 
-func (b *Builder) reduce(asm *bavard.Assembly, t []bavard.Register, result bavard.Register) error {
-	if b.nbWords > SmallModulus {
+func (b *builder) reduce(asm *bavard.Assembly, t []bavard.Register, result bavard.Register) error {
+	if b.nbWords > smallModulus {
 		return b.reduceLarge(asm, t, result)
 	}
 	// u = t - q
@@ -59,7 +59,7 @@ func (b *Builder) reduce(asm *bavard.Assembly, t []bavard.Register, result bavar
 	return nil
 }
 
-func (b *Builder) reduceLarge(asm *bavard.Assembly, t []bavard.Register, result bavard.Register) error {
+func (b *builder) reduceLarge(asm *bavard.Assembly, t []bavard.Register, result bavard.Register) error {
 	// u = t - q
 	u := make([]string, b.nbWords)
 

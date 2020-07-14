@@ -73,6 +73,7 @@ func cmdGenerate(cmd *cobra.Command, args []string) {
 	}
 }
 
+// GenerateFF will generate go (and .s) files in outputDir for modulus (in base 10)
 func GenerateFF(packageName, elementName, modulus, outputDir string, noCollidingNames bool) error {
 	// compute field constants
 	F, err := newField(packageName, elementName, modulus, noCollidingNames)

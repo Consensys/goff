@@ -16,4 +16,5 @@
 
 package cmd
 
+// Version goff version
 const Version = "v0.3.1"

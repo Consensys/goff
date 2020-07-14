@@ -6,7 +6,7 @@ import (
 	"github.com/consensys/bavard"
 )
 
-func (b *Builder) mul(asm *bavard.Assembly) error {
+func (b *builder) mul(asm *bavard.Assembly) error {
 	asm.WriteLn("")
 	asm.WriteLn("#include \"funcdata.h\"")
 	asm.FuncHeader("_mulADX"+b.elementName, 0, 24)
@@ -127,7 +127,7 @@ func (b *Builder) mul(asm *bavard.Assembly) error {
 	return nil
 }
 
-func (b *Builder) mulLarge(asm *bavard.Assembly) error {
+func (b *builder) mulLarge(asm *bavard.Assembly) error {
 	asm.WriteLn("")
 	asm.WriteLn("#include \"funcdata.h\"")
 	argSize := 8 + 2*b.nbWords*8 // 8 for res ptr, then 8 for each word for x and y
@@ -229,7 +229,7 @@ func (b *Builder) mulLarge(asm *bavard.Assembly) error {
 	return nil
 }
 
-func (b *Builder) mulNoAdx(asm *bavard.Assembly, x, y bavard.Register) {
+func (b *builder) mulNoAdx(asm *bavard.Assembly, x, y bavard.Register) {
 	// registers
 	t := asm.PopRegisters(b.nbWords)
 	C := asm.PopRegister()
