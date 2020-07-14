@@ -3,10 +3,9 @@ jobs:
   build:
     docker:
       - image: circleci/golang:latest
-    environment:
-      TEST_RESULTS: /tmp/test-results
     steps:
       - checkout
+      - run: mkdir -p  /tmp/test-results
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -17,30 +16,10 @@ jobs:
       - run: go generate ./...
       - run: go vet -v ./...
       - run: go build -v ./...
+      - run: gotestsum --junitfile  /tmp/test-results/results.xml -- ./... -short -count=1
+      - store_test_results:
+          path: /tmp/test-results
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
-  test:
-    docker:
-      - image: circleci/golang:latest
-    environment:
-    steps:
-      - checkout
-      - run: mkdir -p  /tmp/test-results
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run: go get golang.org/x/tools/cmd/goimports
-      - run: go generate ./...
-      - run: gotestsum --junitfile  /tmp/test-results/results.xml -- ./... -short -count=1
-      - store_test_results:
-          path: /tmp/test-results
-workflows:
-  version: 2
-  test:
-    jobs:
-    - build
-    - test:
-        requires:
-        - build
