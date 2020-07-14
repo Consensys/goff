@@ -76,7 +76,7 @@ var a, b Element
 a.SetUint64(2)
 b.SetString("984896738")
 
-a.Mul(a, b) // alternatively: a.MulAssign(b)
+a.Mul(a, b)
 
 a.Sub(a, a)
  .Add(a, b)

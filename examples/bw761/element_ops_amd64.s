@@ -1,4 +1,6 @@
 #include "textflag.h"
+#include "funcdata.h"
+
 TEXT ·_mulLargeADXElement(SB), $96-200
 
 	// the algorithm is described here
@@ -1110,6 +1112,7 @@ TEXT ·_mulLargeADXElement(SB), $96-200
     RET
 
 TEXT ·_fromMontADXElement(SB), $96-8
+NO_LOCAL_POINTERS
 
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
@@ -1122,6 +1125,8 @@ TEXT ·_fromMontADXElement(SB), $96-8
 	// 		for j=1 to N-1
 	// 		    (C,t[j-1]) := t[j] + m*q[j] + C
 	// 		t[N-1] = C
+    CMPB ·supportAdx(SB), $0x0000000000000001
+    JNE no_adx
     MOVQ res+0(FP), R15
     MOVQ 0(R15), CX
     MOVQ 8(R15), BX
@@ -1737,6 +1742,11 @@ TEXT ·_fromMontADXElement(SB), $96-8
     MOVQ R13, 80(R15)
     MOVQ R14, 88(R15)
     RET
+no_adx:
+    MOVQ res+0(FP), AX
+    MOVQ AX, (SP)
+CALL ·_fromMontGenericElement(SB)
+    RET
 
 TEXT ·reduceElement(SB), $96-8
     MOVQ res+0(FP), CX
@@ -1829,6 +1839,85 @@ TEXT ·addElement(SB), $96-24
     ADCQ 72(AX), R12
     ADCQ 80(AX), R13
     ADCQ 88(AX), R14
+    // note that we don't check for the carry here, as this code was generated assuming F.NoCarry condition is set
+    // (see goff for more details)
+    MOVQ res+0(FP), AX
+    MOVQ CX, t0-8(SP)
+    SUBQ ·qElement+0(SB), CX
+    MOVQ BX, t1-16(SP)
+    SBBQ ·qElement+8(SB), BX
+    MOVQ BP, t2-24(SP)
+    SBBQ ·qElement+16(SB), BP
+    MOVQ SI, t3-32(SP)
+    SBBQ ·qElement+24(SB), SI
+    MOVQ DI, t4-40(SP)
+    SBBQ ·qElement+32(SB), DI
+    MOVQ R8, t5-48(SP)
+    SBBQ ·qElement+40(SB), R8
+    MOVQ R9, t6-56(SP)
+    SBBQ ·qElement+48(SB), R9
+    MOVQ R10, t7-64(SP)
+    SBBQ ·qElement+56(SB), R10
+    MOVQ R11, t8-72(SP)
+    SBBQ ·qElement+64(SB), R11
+    MOVQ R12, t9-80(SP)
+    SBBQ ·qElement+72(SB), R12
+    MOVQ R13, t10-88(SP)
+    SBBQ ·qElement+80(SB), R13
+    MOVQ R14, t11-96(SP)
+    SBBQ ·qElement+88(SB), R14
+    CMOVQCS t0-8(SP), CX
+    CMOVQCS t1-16(SP), BX
+    CMOVQCS t2-24(SP), BP
+    CMOVQCS t3-32(SP), SI
+    CMOVQCS t4-40(SP), DI
+    CMOVQCS t5-48(SP), R8
+    CMOVQCS t6-56(SP), R9
+    CMOVQCS t7-64(SP), R10
+    CMOVQCS t8-72(SP), R11
+    CMOVQCS t9-80(SP), R12
+    CMOVQCS t10-88(SP), R13
+    CMOVQCS t11-96(SP), R14
+    MOVQ CX, 0(AX)
+    MOVQ BX, 8(AX)
+    MOVQ BP, 16(AX)
+    MOVQ SI, 24(AX)
+    MOVQ DI, 32(AX)
+    MOVQ R8, 40(AX)
+    MOVQ R9, 48(AX)
+    MOVQ R10, 56(AX)
+    MOVQ R11, 64(AX)
+    MOVQ R12, 72(AX)
+    MOVQ R13, 80(AX)
+    MOVQ R14, 88(AX)
+    RET
+
+TEXT ·doubleElement(SB), $96-16
+    MOVQ x+8(FP), AX
+    MOVQ 0(AX), CX
+    MOVQ 8(AX), BX
+    MOVQ 16(AX), BP
+    MOVQ 24(AX), SI
+    MOVQ 32(AX), DI
+    MOVQ 40(AX), R8
+    MOVQ 48(AX), R9
+    MOVQ 56(AX), R10
+    MOVQ 64(AX), R11
+    MOVQ 72(AX), R12
+    MOVQ 80(AX), R13
+    MOVQ 88(AX), R14
+    ADDQ CX, CX
+    ADCQ BX, BX
+    ADCQ BP, BP
+    ADCQ SI, SI
+    ADCQ DI, DI
+    ADCQ R8, R8
+    ADCQ R9, R9
+    ADCQ R10, R10
+    ADCQ R11, R11
+    ADCQ R12, R12
+    ADCQ R13, R13
+    ADCQ R14, R14
     // note that we don't check for the carry here, as this code was generated assuming F.NoCarry condition is set
     // (see goff for more details)
     MOVQ res+0(FP), AX

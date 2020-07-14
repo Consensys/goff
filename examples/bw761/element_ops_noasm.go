@@ -27,6 +27,27 @@ package bw761
 
 import "math/bits"
 
+// Mul z = x * y mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *Element) Mul(x, y *Element) *Element {
+	_mulGenericElement(z, x, y)
+	return z
+}
+
+// Square z = x * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *Element) Square(x *Element) *Element {
+	_squareGenericElement(z, x)
+	return z
+}
+
+// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
+// sets and returns z = z * 1
+func (z *Element) FromMont() *Element {
+	_fromMontGenericElement(z)
+	return z
+}
+
 // Add z = x + y mod q
 func (z *Element) Add(x, y *Element) *Element {
 	var carry uint64
@@ -43,43 +64,6 @@ func (z *Element) Add(x, y *Element) *Element {
 	z[9], carry = bits.Add64(x[9], y[9], carry)
 	z[10], carry = bits.Add64(x[10], y[10], carry)
 	z[11], _ = bits.Add64(x[11], y[11], carry)
-
-	// if z > q --> z -= q
-	// note: this is NOT constant time
-	if !(z[11] < 81882988782276106 || (z[11] == 81882988782276106 && (z[10] < 15098257552581525310 || (z[10] == 15098257552581525310 && (z[9] < 13341377791855249032 || (z[9] == 13341377791855249032 && (z[8] < 5945444129596489281 || (z[8] == 5945444129596489281 && (z[7] < 8105254717682411801 || (z[7] == 8105254717682411801 && (z[6] < 274362232328168196 || (z[6] == 274362232328168196 && (z[5] < 9694500593442880912 || (z[5] == 9694500593442880912 && (z[4] < 8204665564953313070 || (z[4] == 8204665564953313070 && (z[3] < 10998096788944562424 || (z[3] == 10998096788944562424 && (z[2] < 1588918198704579639 || (z[2] == 1588918198704579639 && (z[1] < 16614129118623039618 || (z[1] == 16614129118623039618 && (z[0] < 17626244516597989515))))))))))))))))))))))) {
-		var b uint64
-		z[0], b = bits.Sub64(z[0], 17626244516597989515, 0)
-		z[1], b = bits.Sub64(z[1], 16614129118623039618, b)
-		z[2], b = bits.Sub64(z[2], 1588918198704579639, b)
-		z[3], b = bits.Sub64(z[3], 10998096788944562424, b)
-		z[4], b = bits.Sub64(z[4], 8204665564953313070, b)
-		z[5], b = bits.Sub64(z[5], 9694500593442880912, b)
-		z[6], b = bits.Sub64(z[6], 274362232328168196, b)
-		z[7], b = bits.Sub64(z[7], 8105254717682411801, b)
-		z[8], b = bits.Sub64(z[8], 5945444129596489281, b)
-		z[9], b = bits.Sub64(z[9], 13341377791855249032, b)
-		z[10], b = bits.Sub64(z[10], 15098257552581525310, b)
-		z[11], _ = bits.Sub64(z[11], 81882988782276106, b)
-	}
-	return z
-}
-
-// AddAssign z = z + x mod q
-func (z *Element) AddAssign(x *Element) *Element {
-	var carry uint64
-
-	z[0], carry = bits.Add64(z[0], x[0], 0)
-	z[1], carry = bits.Add64(z[1], x[1], carry)
-	z[2], carry = bits.Add64(z[2], x[2], carry)
-	z[3], carry = bits.Add64(z[3], x[3], carry)
-	z[4], carry = bits.Add64(z[4], x[4], carry)
-	z[5], carry = bits.Add64(z[5], x[5], carry)
-	z[6], carry = bits.Add64(z[6], x[6], carry)
-	z[7], carry = bits.Add64(z[7], x[7], carry)
-	z[8], carry = bits.Add64(z[8], x[8], carry)
-	z[9], carry = bits.Add64(z[9], x[9], carry)
-	z[10], carry = bits.Add64(z[10], x[10], carry)
-	z[11], _ = bits.Add64(z[11], x[11], carry)
 
 	// if z > q --> z -= q
 	// note: this is NOT constant time
@@ -153,39 +137,6 @@ func (z *Element) Sub(x, y *Element) *Element {
 	z[9], b = bits.Sub64(x[9], y[9], b)
 	z[10], b = bits.Sub64(x[10], y[10], b)
 	z[11], b = bits.Sub64(x[11], y[11], b)
-	if b != 0 {
-		var c uint64
-		z[0], c = bits.Add64(z[0], 17626244516597989515, 0)
-		z[1], c = bits.Add64(z[1], 16614129118623039618, c)
-		z[2], c = bits.Add64(z[2], 1588918198704579639, c)
-		z[3], c = bits.Add64(z[3], 10998096788944562424, c)
-		z[4], c = bits.Add64(z[4], 8204665564953313070, c)
-		z[5], c = bits.Add64(z[5], 9694500593442880912, c)
-		z[6], c = bits.Add64(z[6], 274362232328168196, c)
-		z[7], c = bits.Add64(z[7], 8105254717682411801, c)
-		z[8], c = bits.Add64(z[8], 5945444129596489281, c)
-		z[9], c = bits.Add64(z[9], 13341377791855249032, c)
-		z[10], c = bits.Add64(z[10], 15098257552581525310, c)
-		z[11], _ = bits.Add64(z[11], 81882988782276106, c)
-	}
-	return z
-}
-
-// SubAssign  z = z - x mod q
-func (z *Element) SubAssign(x *Element) *Element {
-	var b uint64
-	z[0], b = bits.Sub64(z[0], x[0], 0)
-	z[1], b = bits.Sub64(z[1], x[1], b)
-	z[2], b = bits.Sub64(z[2], x[2], b)
-	z[3], b = bits.Sub64(z[3], x[3], b)
-	z[4], b = bits.Sub64(z[4], x[4], b)
-	z[5], b = bits.Sub64(z[5], x[5], b)
-	z[6], b = bits.Sub64(z[6], x[6], b)
-	z[7], b = bits.Sub64(z[7], x[7], b)
-	z[8], b = bits.Sub64(z[8], x[8], b)
-	z[9], b = bits.Sub64(z[9], x[9], b)
-	z[10], b = bits.Sub64(z[10], x[10], b)
-	z[11], b = bits.Sub64(z[11], x[11], b)
 	if b != 0 {
 		var c uint64
 		z[0], c = bits.Add64(z[0], 17626244516597989515, 0)

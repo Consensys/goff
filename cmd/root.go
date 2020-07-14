@@ -108,6 +108,13 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 	pathSrcArith := filepath.Join(outputDir, "arith.go")
 	pathTest := filepath.Join(outputDir, eName+"_test.go")
 
+	// remove old format generated files
+	oldFiles := []string{"_mul.go", "_mul_amd64.go", "_mul_amd64.s",
+		"_square.go", "_square_amd64.go", "_square_amd64.s"}
+	for _, of := range oldFiles {
+		os.Remove(filepath.Join(outputDir, eName+of))
+	}
+
 	bavardOpts := []func(*bavard.Bavard) error{
 		bavard.Apache2("ConsenSys AG", 2020),
 		bavard.Package(F.PackageName, "contains field arithmetic operations"),
@@ -134,7 +141,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 		{
 			pathMulAsm := filepath.Join(outputDir, eName+"_ops_amd64.s")
 			builder := asm.NewBuilder(pathMulAsm, F.ElementName, F.NbWords, F.Q)
-			if err := builder.Build(); err != nil {
+			if err := builder.Build(F.NoCarrySquare); err != nil {
 				return err
 			}
 

@@ -47,10 +47,10 @@ func (z *{{.ElementName}}) Sqrt(x *{{.ElementName}}) *{{.ElementName}} {
 			{{$i}},{{end}}
 		)
 		beta.Square(&alpha).
-			MulAssign(&tx).
-			SubAssign(&one).
-			MulAssign(x).
-			MulAssign(&alpha)
+			Mul(&beta, &tx).
+			Sub(&beta, &one).
+			Mul(&beta, x).
+			Mul(&beta, &alpha)
 		
 		// as we didn't compute the legendre symbol, ensure we found beta such that beta * beta = x
 		square.Square(&beta)
@@ -117,8 +117,8 @@ func (z *{{.ElementName}}) Sqrt(x *{{.ElementName}}) *{{.ElementName}} {
 			}
 
 			g.Square(&t)
-			y.MulAssign(&t)
-			b.MulAssign(&g)
+			y.Mul(&y, &t)
+			b.Mul(&b, &g)
 			r = m
 		}
 

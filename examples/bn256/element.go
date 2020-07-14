@@ -121,6 +121,31 @@ func (z *Element) Set(x *Element) *Element {
 	return z
 }
 
+// SetInterface converts i1 from uint64, int, string, or Element, big.Int into Element
+// panic if provided type is not supported
+func (z *Element) SetInterface(i1 interface{}) *Element {
+	switch c1 := i1.(type) {
+	case Element:
+		return z.Set(&c1)
+	case *Element:
+		return z.Set(c1)
+	case uint64:
+		return z.SetUint64(c1)
+	case int:
+		return z.SetString(strconv.Itoa(c1))
+	case string:
+		return z.SetString(c1)
+	case *big.Int:
+		return z.SetBigInt(c1)
+	case big.Int:
+		return z.SetBigInt(&c1)
+	case []byte:
+		return z.SetBytes(c1)
+	default:
+		panic("invalid type")
+	}
+}
+
 // SetZero z = 0
 func (z *Element) SetZero() *Element {
 	z[0] = 0
@@ -200,31 +225,19 @@ func One() Element {
 	return one
 }
 
-// FromInterface converts i1 from uint64, int, string, or Element, big.Int into Element
-// panic if provided type is not supported
-func FromInterface(i1 interface{}) Element {
-	var val Element
+// MulAssign is deprecated, use Mul instead
+func (z *Element) MulAssign(x *Element) *Element {
+	return z.Mul(z, x)
+}
 
-	switch c1 := i1.(type) {
-	case uint64:
-		val.SetUint64(c1)
-	case int:
-		val.SetString(strconv.Itoa(c1))
-	case string:
-		val.SetString(c1)
-	case big.Int:
-		val.SetBigInt(&c1)
-	case Element:
-		val = c1
-	case *Element:
-		val.Set(c1)
-	case []byte:
-		val.SetBytes(c1)
-	default:
-		panic("invalid type")
-	}
+// AddAssign is deprecated, use Add instead
+func (z *Element) AddAssign(x *Element) *Element {
+	return z.Add(z, x)
+}
 
-	return val
+// SubAssign is deprecated, use Sub instead
+func (z *Element) SubAssign(x *Element) *Element {
+	return z.Sub(z, x)
 }
 
 // Exp z = x^exponent mod q
@@ -252,10 +265,16 @@ func (z *Element) Exp(x Element, exponent ...uint64) *Element {
 	for i := l; i >= 0; i-- {
 		z.Square(z)
 		if exponent[i/64]&(1<<uint(i%64)) != 0 {
-			z.MulAssign(&x)
+			z.Mul(z, &x)
 		}
 	}
 	return z
+}
+
+// ToMont converts z to Montgomery form
+// sets and returns z = z * r^2
+func (z *Element) ToMont() *Element {
+	return z.Mul(z, &rSquareElement)
 }
 
 // ToRegular returns z in regular form (doesn't mutate z)
@@ -542,51 +561,6 @@ func (z *Element) Inverse(x *Element) *Element {
 		z.Set(&s)
 	}
 
-	return z
-}
-
-// -------------------------------------------------------------------------------------------------
-// declarations
-// do modify tests.go with new declarations to ensure both path (ADX and generic) are tested
-var mulElement func(res, x, y *Element) = _mulGenericElement
-var squareElement func(res, x *Element) = _squareGenericElement
-var fromMontElement func(res *Element) = _fromMontGenericElement
-
-// -------------------------------------------------------------------------------------------------
-// APIs
-
-// ToMont converts z to Montgomery form
-// sets and returns z = z * r^2
-func (z *Element) ToMont() *Element {
-	mulElement(z, z, &rSquareElement)
-	return z
-}
-
-// Mul z = x * y mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *Element) Mul(x, y *Element) *Element {
-	mulElement(z, x, y)
-	return z
-}
-
-// MulAssign z = z * x mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *Element) MulAssign(x *Element) *Element {
-	mulElement(z, z, x)
-	return z
-}
-
-// Square z = x * x mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *Element) Square(x *Element) *Element {
-	squareElement(z, x)
-	return z
-}
-
-// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
-// sets and returns z = z * 1
-func (z *Element) FromMont() *Element {
-	fromMontElement(z)
 	return z
 }
 

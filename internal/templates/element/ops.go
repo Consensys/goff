@@ -3,51 +3,6 @@ package element
 // Ops is included with all builds (regardless of architecture or if F.ASM is set)
 const Ops = `
 
-// -------------------------------------------------------------------------------------------------
-// declarations
-// do modify tests.go with new declarations to ensure both path (ADX and generic) are tested
-var mul{{.ElementName}} func (res,x,y *{{.ElementName}}) = _mulGeneric{{.ElementName}}
-var square{{.ElementName}} func (res,x *{{.ElementName}}) = _squareGeneric{{.ElementName}}
-var fromMont{{.ElementName}} func (res *{{.ElementName}}) = _fromMontGeneric{{.ElementName}}
-
-// -------------------------------------------------------------------------------------------------
-// APIs
-
-// ToMont converts z to Montgomery form
-// sets and returns z = z * r^2
-func (z *{{.ElementName}}) ToMont() *{{.ElementName}} {
-	mul{{.ElementName}}(z, z, &rSquare{{.ElementName}})
-	return z
-}
-
-// Mul z = x * y mod q 
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
-	mul{{.ElementName}}(z, x, y)
-	return z
-}
-
-// MulAssign z = z * x mod q 
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *{{.ElementName}}) MulAssign(x *{{.ElementName}}) *{{.ElementName}} {
-	mul{{.ElementName}}(z,z,x)
-	return z 
-}
-
-// Square z = x * x mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *{{.ElementName}}) Square(x *{{.ElementName}}) *{{.ElementName}} {
-	square{{.ElementName}}(z,x)
-	return z
-}
-
-// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
-// sets and returns z = z * 1
-func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
-	fromMont{{.ElementName}}(z)
-	return z
-}
-
 
 // Generic (no ADX instructions, no AMD64) versions
 

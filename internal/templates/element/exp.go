@@ -26,7 +26,7 @@ func (z *{{.ElementName}}) Exp(x {{.ElementName}}, exponent ...uint64) *{{.Eleme
 	for i := l; i >= 0; i-- {
 		z.Square(z)
 		if exponent[i / 64]&(1<<uint(i%64)) != 0 {
-			z.MulAssign(&x)
+			z.Mul(z, &x)
 		}
 	}
 	return z

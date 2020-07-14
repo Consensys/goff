@@ -6,7 +6,6 @@ import (
 
 func (b *Builder) square(asm *bavard.Assembly) error {
 	asm.FuncHeader("_squareADX"+b.elementName, 0, 16)
-
 	asm.WriteLn(`
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
@@ -21,8 +20,11 @@ func (b *Builder) square(asm *bavard.Assembly) error {
 	//     C, t[j-1] = q[j]*m +  t[j] + C
 	// t[N-1] = C + A
 
-	// if adx and mulx instructions are not available, uses MUL algorithm.
 	`)
+
+	// check ADX instruction support
+	asm.CMPB("·supportAdx(SB)", 1)
+	asm.JNE("no_adx")
 
 	// registers
 	t := asm.PopRegisters(b.nbWords)
@@ -176,5 +178,19 @@ func (b *Builder) square(asm *bavard.Assembly) error {
 	asm.MOVQ("res+0(FP)", r)
 	b.reduce(asm, t, r)
 	asm.RET()
+
+	// ---------------------------------------------------------------------------------------------
+	// no MULX, ADX instructions
+	{
+		asm.WriteLn("no_adx:")
+		asm.Reset()
+		x := asm.PopRegister()
+		y := asm.PopRegister()
+		// dereference x and y
+		asm.MOVQ("x+8(FP)", x)
+		asm.MOVQ("x+8(FP)", y)
+		b.mulNoAdx(asm, x, y)
+	}
+
 	return nil
 }

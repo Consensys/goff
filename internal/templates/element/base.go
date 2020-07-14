@@ -102,6 +102,31 @@ func (z *{{.ElementName}}) Set(x *{{.ElementName}}) *{{.ElementName}} {
 	return z
 }
 
+// SetInterface converts i1 from uint64, int, string, or {{.ElementName}}, big.Int into {{.ElementName}}
+// panic if provided type is not supported
+func (z *{{.ElementName}}) SetInterface(i1 interface{}) *{{.ElementName}} {
+	switch c1 := i1.(type) {
+	case {{.ElementName}}:
+		return z.Set(&c1)
+	case *{{.ElementName}}:
+		return z.Set(c1)
+	case uint64:
+		return z.SetUint64(c1)
+	case int:
+		return z.SetString(strconv.Itoa(c1))
+	case string:
+		return z.SetString(c1)
+	case *big.Int:
+		return z.SetBigInt(c1)
+	case big.Int:
+		return z.SetBigInt(&c1)
+	case []byte:
+		return z.SetBytes(c1)
+	default:
+		panic("invalid type")
+	}
+}
+
 // SetZero z = 0
 func (z *{{.ElementName}}) SetZero() *{{.ElementName}} {
 	{{- range $i := .NbWordsIndexesFull}}
@@ -181,33 +206,23 @@ func One() {{.ElementName}} {
 	return one
 }
 
-// FromInterface converts i1 from uint64, int, string, or {{.ElementName}}, big.Int into {{.ElementName}}
-// panic if provided type is not supported
-func FromInterface(i1 interface{}) {{.ElementName}} {
-	var val {{.ElementName}}
-
-	switch c1 := i1.(type) {
-	case uint64:
-		val.SetUint64(c1)
-	case int:
-		val.SetString(strconv.Itoa(c1))
-	case string:
-		val.SetString(c1)
-	case big.Int:
-		val.SetBigInt(&c1)
-	case {{.ElementName}}:
-		val = c1
-	case *{{.ElementName}}:
-		val.Set(c1)
-	case []byte:
-		val.SetBytes(c1)
-	default:
-		panic("invalid type")
-	}
-
-	return val
-}
 {{end}}
+
+// MulAssign is deprecated, use Mul instead
+func (z *{{.ElementName}}) MulAssign(x *{{.ElementName}}) *{{.ElementName}} {
+	return z.Mul(z, x)
+}
+
+// AddAssign is deprecated, use Add instead
+func (z *{{.ElementName}}) AddAssign(x *{{.ElementName}}) *{{.ElementName}} {
+	return z.Add(z, x)
+}
+
+// SubAssign is deprecated, use Sub instead
+func (z *{{.ElementName}}) SubAssign(x *{{.ElementName}}) *{{.ElementName}} {
+	return z.Sub(z, x)
+}
+
 
 
 `
