@@ -177,7 +177,7 @@ func (z *{{.ElementName}}) Equal(x *{{.ElementName}}) bool {
 
 // IsZero returns z == 0
 func (z *{{.ElementName}}) IsZero() bool {
-	return ( {{- range $i :=  reverse .NbWordsIndexesNoZero}} z[{{$i}}] | {{end}}z[0]) == 0
+	return {{- range $i :=  reverse .NbWordsIndexesNoZero}} z[{{$i}}] == 0 && {{end}} z[0] == 0
 }
 
 
