@@ -22,6 +22,9 @@ import (
 	"math/big"
 	"math/bits"
 	"testing"
+
+	"github.com/leanovate/gopter"
+	"github.com/leanovate/gopter/prop"
 )
 
 func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
@@ -401,4 +404,245 @@ func (z *Element) testReduce() *Element {
 		z[11], _ = bits.Sub64(z[11], 81882988782276106, b)
 	}
 	return z
+}
+
+// -------------------------------------------------------------------------------------------------
+// Gopter tests
+
+func TestELEMENTMul(t *testing.T) {
+
+	parameters := gopter.DefaultTestParameters()
+	parameters.MinSuccessfulTests = 10000
+
+	properties := gopter.NewProperties(parameters)
+
+	genA := genElement()
+	genB := genElement()
+
+	properties.Property("Having the receiver as operand should output the same result", prop.ForAll(
+		func(a, b testPairElement) bool {
+			var c, d Element
+			d.Set(&a.element)
+			c.Mul(&a.element, &b.element)
+			a.element.Mul(&a.element, &b.element)
+			b.element.Mul(&d, &b.element)
+			return a.element.Equal(&b.element) && a.element.Equal(&c) && b.element.Equal(&c)
+		},
+		genA,
+		genB,
+	))
+
+	properties.Property("Operation result must match big.Int result", prop.ForAll(
+		func(a, b testPairElement) bool {
+			var c Element
+			c.Mul(&a.element, &b.element)
+
+			var d, e big.Int
+			d.Mul(&a.bigint, &b.bigint).Mod(&d, ElementModulus())
+
+			return c.FromMont().ToBigInt(&e).Cmp(&d) == 0
+		},
+		genA,
+		genB,
+	))
+
+	properties.Property("Operation result must be smaller than modulus", prop.ForAll(
+		func(a, b testPairElement) bool {
+			var c Element
+			c.Mul(&a.element, &b.element)
+			return !c.biggerOrEqualElementModulus()
+		},
+		genA,
+		genB,
+	))
+
+	properties.TestingRun(t, gopter.ConsoleReporter(false))
+}
+
+func TestELEMENTSquare(t *testing.T) {
+
+	parameters := gopter.DefaultTestParameters()
+	parameters.MinSuccessfulTests = 10000
+
+	properties := gopter.NewProperties(parameters)
+
+	genA := genElement()
+
+	properties.Property("Having the receiver as operand should output the same result", prop.ForAll(
+		func(a testPairElement) bool {
+			var b Element
+			b.Square(&a.element)
+			a.element.Square(&a.element)
+			return a.element.Equal(&b)
+		},
+		genA,
+	))
+
+	properties.Property("Operation result must match big.Int result", prop.ForAll(
+		func(a testPairElement) bool {
+			var b Element
+			b.Square(&a.element)
+
+			var d, e big.Int
+			d.Mul(&a.bigint, &a.bigint).Mod(&d, ElementModulus())
+
+			return b.FromMont().ToBigInt(&e).Cmp(&d) == 0
+		},
+		genA,
+	))
+
+	properties.Property("Operation result must be smaller than modulus", prop.ForAll(
+		func(a testPairElement) bool {
+			var b Element
+			b.Square(&a.element)
+			return !b.biggerOrEqualElementModulus()
+		},
+		genA,
+	))
+
+	properties.Property("Square(x) == Mul(x,x)", prop.ForAll(
+		func(a testPairElement) bool {
+			var b, c Element
+			b.Square(&a.element)
+			c.Mul(&a.element, &a.element)
+			return c.Equal(&b)
+		},
+		genA,
+	))
+
+	properties.TestingRun(t, gopter.ConsoleReporter(false))
+}
+
+type testPairElement struct {
+	element Element
+	bigint  big.Int
+}
+
+func (z *Element) biggerOrEqualElementModulus() bool {
+	if z[11] > qElement[11] {
+		return true
+	}
+	if z[11] < qElement[11] {
+		return false
+	}
+
+	if z[10] > qElement[10] {
+		return true
+	}
+	if z[10] < qElement[10] {
+		return false
+	}
+
+	if z[9] > qElement[9] {
+		return true
+	}
+	if z[9] < qElement[9] {
+		return false
+	}
+
+	if z[8] > qElement[8] {
+		return true
+	}
+	if z[8] < qElement[8] {
+		return false
+	}
+
+	if z[7] > qElement[7] {
+		return true
+	}
+	if z[7] < qElement[7] {
+		return false
+	}
+
+	if z[6] > qElement[6] {
+		return true
+	}
+	if z[6] < qElement[6] {
+		return false
+	}
+
+	if z[5] > qElement[5] {
+		return true
+	}
+	if z[5] < qElement[5] {
+		return false
+	}
+
+	if z[4] > qElement[4] {
+		return true
+	}
+	if z[4] < qElement[4] {
+		return false
+	}
+
+	if z[3] > qElement[3] {
+		return true
+	}
+	if z[3] < qElement[3] {
+		return false
+	}
+
+	if z[2] > qElement[2] {
+		return true
+	}
+	if z[2] < qElement[2] {
+		return false
+	}
+
+	if z[1] > qElement[1] {
+		return true
+	}
+	if z[1] < qElement[1] {
+		return false
+	}
+
+	return z[0] >= qElement[0]
+}
+
+func genElement() gopter.Gen {
+	return func(genParams *gopter.GenParameters) *gopter.GenResult {
+		var g testPairElement
+
+		g.element = Element{
+			genParams.NextUint64(),
+			genParams.NextUint64(),
+			genParams.NextUint64(),
+			genParams.NextUint64(),
+			genParams.NextUint64(),
+			genParams.NextUint64(),
+			genParams.NextUint64(),
+			genParams.NextUint64(),
+			genParams.NextUint64(),
+			genParams.NextUint64(),
+			genParams.NextUint64(),
+			genParams.NextUint64(),
+		}
+		if qElement[11] != ^uint64(0) {
+			g.element[11] %= (qElement[11] + 1)
+		}
+
+		for g.element.biggerOrEqualElementModulus() {
+			g.element = Element{
+				genParams.NextUint64(),
+				genParams.NextUint64(),
+				genParams.NextUint64(),
+				genParams.NextUint64(),
+				genParams.NextUint64(),
+				genParams.NextUint64(),
+				genParams.NextUint64(),
+				genParams.NextUint64(),
+				genParams.NextUint64(),
+				genParams.NextUint64(),
+				genParams.NextUint64(),
+				genParams.NextUint64(),
+			}
+			if qElement[11] != ^uint64(0) {
+				g.element[11] %= (qElement[11] + 1)
+			}
+		}
+
+		g.element.ToBigIntRegular(&g.bigint)
+		genResult := gopter.NewGenResult(g, gopter.NoShrinker)
+		return genResult
+	}
 }

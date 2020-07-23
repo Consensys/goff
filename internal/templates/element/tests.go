@@ -8,7 +8,9 @@ import (
 	"math/bits"
 	"testing"
 	"fmt"
-    mrand "math/rand"
+	mrand "math/rand"
+	"github.com/leanovate/gopter"
+	"github.com/leanovate/gopter/prop"
 )
 
 func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
@@ -364,6 +366,166 @@ func (z *{{.ElementName}}) testReduce() *{{.ElementName}} {
 
 {{end}}
 
+
+// -------------------------------------------------------------------------------------------------
+// Gopter tests
+
+func Test{{toUpper .ElementName}}Mul(t *testing.T) {
+
+	parameters := gopter.DefaultTestParameters()
+	parameters.MinSuccessfulTests = 10000
+
+	properties := gopter.NewProperties(parameters)
+
+	genA := gen{{.ElementName}}()
+	genB := gen{{.ElementName}}()
+
+	properties.Property("Having the receiver as operand should output the same result", prop.ForAll(
+		func(a, b testPair{{.ElementName}}) bool {
+			var c, d {{.ElementName}}
+			d.Set(&a.element)
+			c.Mul(&a.element, &b.element)
+			a.element.Mul(&a.element, &b.element)
+			b.element.Mul(&d, &b.element)
+			return a.element.Equal(&b.element) && a.element.Equal(&c) && b.element.Equal(&c)
+		},
+		genA,
+		genB,
+	))
+
+	properties.Property("Operation result must match big.Int result", prop.ForAll(
+		func(a, b testPair{{.ElementName}}) bool {
+			var c {{.ElementName}}
+			c.Mul(&a.element, &b.element)
+
+			var d, e big.Int 
+			d.Mul(&a.bigint, &b.bigint).Mod(&d, {{.ElementName}}Modulus())
+
+			return c.FromMont().ToBigInt(&e).Cmp(&d) == 0 
+		},
+		genA,
+		genB,
+	))
+
+	properties.Property("Operation result must be smaller than modulus", prop.ForAll(
+		func(a, b testPair{{.ElementName}}) bool {
+			var c {{.ElementName}}
+			c.Mul(&a.element, &b.element)
+			return !c.biggerOrEqual{{.ElementName}}Modulus()
+		},
+		genA,
+		genB,
+	))
+
+
+	properties.TestingRun(t, gopter.ConsoleReporter(false))
+}
+
+
+
+func Test{{toUpper .ElementName}}Square(t *testing.T) {
+
+	parameters := gopter.DefaultTestParameters()
+	parameters.MinSuccessfulTests = 10000
+
+	properties := gopter.NewProperties(parameters)
+
+	genA := gen{{.ElementName}}()
+
+	properties.Property("Having the receiver as operand should output the same result", prop.ForAll(
+		func(a testPair{{.ElementName}}) bool {
+			var b {{.ElementName}}
+			b.Square(&a.element)
+			a.element.Square(&a.element)
+			return a.element.Equal(&b) 
+		},
+		genA,
+	))
+
+	properties.Property("Operation result must match big.Int result", prop.ForAll(
+		func(a testPair{{.ElementName}}) bool {
+			var b {{.ElementName}}
+			b.Square(&a.element)
+
+			var d, e big.Int 
+			d.Mul(&a.bigint, &a.bigint).Mod(&d, {{.ElementName}}Modulus())
+
+			return b.FromMont().ToBigInt(&e).Cmp(&d) == 0 
+		},
+		genA,
+	))
+
+	properties.Property("Operation result must be smaller than modulus", prop.ForAll(
+		func(a testPair{{.ElementName}}) bool {
+			var b {{.ElementName}}
+			b.Square(&a.element)
+			return !b.biggerOrEqual{{.ElementName}}Modulus()
+		},
+		genA,
+	))
+
+	properties.Property("Square(x) == Mul(x,x)", prop.ForAll(
+		func(a testPair{{.ElementName}}) bool {
+			var b,c  {{.ElementName}}
+			b.Square(&a.element)
+			c.Mul(&a.element, &a.element)
+			return c.Equal(&b)
+		},
+		genA,
+	))
+
+
+	properties.TestingRun(t, gopter.ConsoleReporter(false))
+}
+
+
+
+type testPair{{.ElementName}} struct {
+	element {{.ElementName}}
+	bigint       big.Int
+}
+
+func (z *{{.ElementName}}) biggerOrEqual{{.ElementName}}Modulus() bool {
+	{{- range $i :=  reverse .NbWordsIndexesNoZero}}
+	if z[{{$i}}] > q{{$.ElementName}}[{{$i}}] {
+		return true
+	}
+	if z[{{$i}}] < q{{$.ElementName}}[{{$i}}] {
+		return false
+	}
+	{{end}}
+	
+	return z[0] >= q{{.ElementName}}[0]
+}
+
+func gen{{.ElementName}}() gopter.Gen {
+	return func(genParams *gopter.GenParameters) *gopter.GenResult {
+		var g testPair{{.ElementName}}
+
+		g.element = {{.ElementName}}{
+			{{- range $i := .NbWordsIndexesFull}}
+			genParams.NextUint64(),{{end}}
+		}
+		if q{{.ElementName}}[{{.NbWordsLastIndex}}] != ^uint64(0) {
+			g.element[{{.NbWordsLastIndex}}] %= (q{{.ElementName}}[{{.NbWordsLastIndex}}] +1 )
+		}
+		
+
+		for g.element.biggerOrEqual{{.ElementName}}Modulus() {
+			g.element = {{.ElementName}}{
+				{{- range $i := .NbWordsIndexesFull}}
+				genParams.NextUint64(),{{end}}
+			}
+			if q{{.ElementName}}[{{.NbWordsLastIndex}}] != ^uint64(0) {
+				g.element[{{.NbWordsLastIndex}}] %= (q{{.ElementName}}[{{.NbWordsLastIndex}}] +1 )
+			}
+		}
+
+		g.element.ToBigIntRegular(&g.bigint)
+		genResult := gopter.NewGenResult(g, gopter.NoShrinker)
+		return genResult
+	}
+}
 
 
 `
