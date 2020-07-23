@@ -262,33 +262,21 @@ func (z *Element) SubAssign(x *Element) *Element {
 }
 
 // Exp z = x^exponent mod q
-// (not optimized)
-// exponent (non-montgomery form) is ordered from least significant word to most significant word
-func (z *Element) Exp(x Element, exponent ...uint64) *Element {
-	r := 0
-	msb := 0
-	for i := len(exponent) - 1; i >= 0; i-- {
-		if exponent[i] == 0 {
-			r++
-		} else {
-			msb = (i * 64) + bits.Len64(exponent[i])
-			break
-		}
-	}
-	exponent = exponent[:len(exponent)-r]
-	if len(exponent) == 0 {
+func (z *Element) Exp(x Element, exponent *big.Int) *Element {
+	var bZero big.Int
+	if exponent.Cmp(&bZero) == 0 {
 		return z.SetOne()
 	}
 
 	z.Set(&x)
 
-	l := msb - 2
-	for i := l; i >= 0; i-- {
+	for i := exponent.BitLen() - 2; i >= 0; i-- {
 		z.Square(z)
-		if exponent[i/64]&(1<<uint(i%64)) != 0 {
+		if exponent.Bit(i) == 1 {
 			z.Mul(z, &x)
 		}
 	}
+
 	return z
 }
 
@@ -363,18 +351,22 @@ func (z *Element) SetString(s string) *Element {
 	return z.SetBigInt(x)
 }
 
+var (
+	_bLegendreExponentElement *big.Int
+	_bSqrtExponentElement     *big.Int
+)
+
+func init() {
+	_bLegendreExponentElement, _ = new(big.Int).SetString("d0088f51cbff34d258dd3db21a5d66bb23ba5c279c2895fb39869507b587b120f55ffff58a9ffffdcff7fffffffd555", 16)
+	const sqrtExponentElement = "680447a8e5ff9a692c6e9ed90d2eb35d91dd2e13ce144afd9cc34a83dac3d8907aaffffac54ffffee7fbfffffffeaab"
+	_bSqrtExponentElement, _ = new(big.Int).SetString(sqrtExponentElement, 16)
+}
+
 // Legendre returns the Legendre symbol of z (either +1, -1, or 0.)
 func (z *Element) Legendre() int {
 	var l Element
 	// z^((q-1)/2)
-	l.Exp(*z,
-		15924587544893707605,
-		1105070755758604287,
-		12941209323636816658,
-		12843041017062132063,
-		2706051889235351147,
-		936899308823769933,
-	)
+	l.Exp(*z, _bLegendreExponentElement)
 
 	if l.IsZero() {
 		return 0
@@ -394,14 +386,7 @@ func (z *Element) Sqrt(x *Element) *Element {
 	// q ≡ 3 (mod 4)
 	// using  z ≡ ± x^((p+1)/4) (mod q)
 	var y, square Element
-	y.Exp(*x,
-		17185665809301629611,
-		552535377879302143,
-		15693976698673184137,
-		15644892545385841839,
-		10576397981472451381,
-		468449654411884966,
-	)
+	y.Exp(*x, _bSqrtExponentElement)
 	// as we didn't compute the legendre symbol, ensure we found y such that y * y = x
 	square.Square(&y)
 	if square.Equal(x) {

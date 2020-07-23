@@ -32,7 +32,7 @@ type field struct {
 	ASM                  bool
 	RSquare              []uint64
 	One                  []uint64
-	LegendreExponent     []uint64
+	LegendreExponent     string // big.Int to base16 string
 	NoCarry              bool
 	NoCarrySquare        bool // used if NoCarry is set, but some op may overflow in square optimization
 	SqrtQ3Mod4           bool
@@ -40,13 +40,14 @@ type field struct {
 	SqrtTonelliShanks    bool
 	SqrtE                uint64
 	SqrtS                []uint64
-	SqrtAtkinExponent    []uint64
-	SqrtSMinusOneOver2   []uint64
+	SqrtAtkinExponent    string   // big.Int to base16 string
+	SqrtSMinusOneOver2   string   // big.Int to base16 string
+	SqrtQ3Mod4Exponent   string   // big.Int to base16 string
 	SqrtG                []uint64 // NonResidue ^  SqrtR (montgomery form)
-	SqrtQ3Mod4Exponent   []uint64
-	NonResidue           []uint64 // (montgomery form)
-	Version              string
-	NoCollidingNames     bool // if multiple elements are generated in the same package, triggers name collisions
+
+	NonResidue       []uint64 // (montgomery form)
+	Version          string
+	NoCollidingNames bool // if multiple elements are generated in the same package, triggers name collisions
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -121,7 +122,7 @@ func newField(packageName, elementName, modulus string, noCollidingNames bool) (
 	legendreExponent.SetUint64(1)
 	legendreExponent.Sub(&bModulus, &legendreExponent)
 	legendreExponent.Rsh(&legendreExponent, 1)
-	F.LegendreExponent = toUint64Slice(&legendreExponent)
+	F.LegendreExponent = legendreExponent.Text(16)
 
 	// Sqrt pre computes
 	var qMod big.Int
@@ -134,7 +135,7 @@ func newField(packageName, elementName, modulus string, noCollidingNames bool) (
 		sqrtExponent.SetUint64(1)
 		sqrtExponent.Add(&bModulus, &sqrtExponent)
 		sqrtExponent.Rsh(&sqrtExponent, 2)
-		F.SqrtQ3Mod4Exponent = toUint64Slice(&sqrtExponent)
+		F.SqrtQ3Mod4Exponent = sqrtExponent.Text(16)
 	} else {
 		// q ≡ 1 (mod 4)
 		qMod.SetUint64(8)
@@ -144,7 +145,7 @@ func newField(packageName, elementName, modulus string, noCollidingNames bool) (
 			// see modSqrt5Mod8Prime in math/big/int.go
 			F.SqrtAtkin = true
 			e := new(big.Int).Rsh(&bModulus, 3) // e = (q - 5) / 8
-			F.SqrtAtkinExponent = toUint64Slice(e)
+			F.SqrtAtkinExponent = e.Text(16)
 		} else {
 			// use Tonelli-Shanks
 			F.SqrtTonelliShanks = true
@@ -180,7 +181,7 @@ func newField(packageName, elementName, modulus string, noCollidingNames bool) (
 
 			// (s+1) /2
 			s.Sub(&s, &one).Rsh(&s, 1)
-			F.SqrtSMinusOneOver2 = toUint64Slice(&s)
+			F.SqrtSMinusOneOver2 = s.Text(16)
 		}
 	}
 

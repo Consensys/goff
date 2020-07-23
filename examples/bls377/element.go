@@ -262,33 +262,21 @@ func (z *Element) SubAssign(x *Element) *Element {
 }
 
 // Exp z = x^exponent mod q
-// (not optimized)
-// exponent (non-montgomery form) is ordered from least significant word to most significant word
-func (z *Element) Exp(x Element, exponent ...uint64) *Element {
-	r := 0
-	msb := 0
-	for i := len(exponent) - 1; i >= 0; i-- {
-		if exponent[i] == 0 {
-			r++
-		} else {
-			msb = (i * 64) + bits.Len64(exponent[i])
-			break
-		}
-	}
-	exponent = exponent[:len(exponent)-r]
-	if len(exponent) == 0 {
+func (z *Element) Exp(x Element, exponent *big.Int) *Element {
+	var bZero big.Int
+	if exponent.Cmp(&bZero) == 0 {
 		return z.SetOne()
 	}
 
 	z.Set(&x)
 
-	l := msb - 2
-	for i := l; i >= 0; i-- {
+	for i := exponent.BitLen() - 2; i >= 0; i-- {
 		z.Square(z)
-		if exponent[i/64]&(1<<uint(i%64)) != 0 {
+		if exponent.Bit(i) == 1 {
 			z.Mul(z, &x)
 		}
 	}
+
 	return z
 }
 
@@ -363,18 +351,22 @@ func (z *Element) SetString(s string) *Element {
 	return z.SetBigInt(x)
 }
 
+var (
+	_bLegendreExponentElement *big.Int
+	_bSqrtExponentElement     *big.Int
+)
+
+func init() {
+	_bLegendreExponentElement, _ = new(big.Int).SetString("d71d230be28875631d82e03650a49d8d116cf9807a89c78f79b117dd04a4000b85aea2180000004284600000000000", 16)
+	const sqrtExponentElement = "35c748c2f8a21d58c760b80d94292763445b3e601ea271e3de6c45f741290002e16ba88600000010a11"
+	_bSqrtExponentElement, _ = new(big.Int).SetString(sqrtExponentElement, 16)
+}
+
 // Legendre returns the Legendre symbol of z (either +1, -1, or 0.)
 func (z *Element) Legendre() int {
 	var l Element
 	// z^((q-1)/2)
-	l.Exp(*z,
-		4793061456545316864,
-		830261717530312704,
-		10338489135656117248,
-		10165025652810090951,
-		7142008483575014557,
-		60549156353247349,
-	)
+	l.Exp(*z, _bLegendreExponentElement)
 
 	if l.IsZero() {
 		return 0
@@ -397,14 +389,7 @@ func (z *Element) Sqrt(x *Element) *Element {
 
 	var y, b, t, w Element
 	// w = x^((s-1)/2))
-	w.Exp(*x,
-		13441098641003579921,
-		14150156177295552022,
-		12963050682622819814,
-		828901211384460357,
-		8398139675458767990,
-		860,
-	)
+	w.Exp(*x, _bSqrtExponentElement)
 
 	// y = x^((s+1)/2)) = w * x
 	y.Mul(x, &w)

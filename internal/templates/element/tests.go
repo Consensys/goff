@@ -12,7 +12,7 @@ import (
 )
 
 func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
-    modulus, _ := new(big.Int).SetString("{{.Modulus}}", 10)
+    modulus := {{.ElementName}}Modulus()
 	cmpEandB := func(e *{{.ElementName}}, b *big.Int, name string) {
 		var _e big.Int
 		if e.FromMont().ToBigInt(&_e).Cmp(b) != 0 {
@@ -37,17 +37,17 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 		if i == n/2 && sAdx {
 			supportAdx = false // testing without adx instruction
 		}
-        // sample 2 random big int
+        // sample 3 random big int
         b1, _ := rand.Int(rand.Reader, modulus)
-        b2, _ := rand.Int(rand.Reader, modulus)
-        rExp := mrand.Uint64()
+		b2, _ := rand.Int(rand.Reader, modulus)
+		b3, _ := rand.Int(rand.Reader, modulus) // exponent
         
 
         // adding edge cases
         // TODO need more edge cases
         switch i {
         case 0:
-            rExp = 0
+			b3.SetUint64(0)
             b1.SetUint64(0)
         case 1:
             b2.SetUint64(0)
@@ -55,13 +55,13 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
             b1.SetUint64(0)
             b2.SetUint64(0)
         case 3:
-            rExp = 0
+            b3.SetUint64(0)
         case 4:
-            rExp = 1
-        case 5:
-			rExp = ^uint64(0) // max uint
+            b3.SetUint64(1)
+		case 5:
+			b3.SetUint64(^uint64(0))
 		case 6:
-			rExp = 2
+			b3.SetUint64(2)
 			b1.Set(&modulusMinusOne)
 		case 7:
 			b2.Set(&modulusMinusOne)
@@ -70,9 +70,8 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 			b2.Set(&modulusMinusOne)
         }
 
-        rbExp := new(big.Int).SetUint64(rExp)
 
-        var bMul, bAdd, bSub, bDiv, bNeg, bLsh, bInv, bExp, bExp2,  bSquare big.Int
+        var bMul, bAdd, bSub, bDiv, bNeg, bLsh, bInv, bExp, bSquare big.Int
 
         // e1 = mont(b1), e2 = mont(b2)
         var e1, e2, eMul,  eAdd, eSub, eDiv, eNeg, eLsh, eInv, eExp, eSquare {{.ElementName}}
@@ -87,7 +86,7 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
         eDiv.Div(&e1, &e2)
         eNeg.Neg(&e1)
         eInv.Inverse(&e1)
-		eExp.Exp(e1, rExp)
+		eExp.Exp(e1, b3)
         eLsh.Double(&e1)
 
         // same operations with big int
@@ -101,7 +100,7 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
         bNeg.Neg(b1).Mod(&bNeg, modulus)
 
         bInv.ModInverse(b1, modulus)
-		bExp.Exp(b1, rbExp, modulus)
+		bExp.Exp(b1, b3, modulus)
         bLsh.Lsh(b1, 1).Mod(&bLsh, modulus)
 
         cmpEandB(&eSquare, &bSquare, "Square")
@@ -124,22 +123,13 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 		}
 
 		// these are slow, killing circle ci
-		if n <= 5 {
+		if n <= 10 {
 			// sqrt 
-			var eSqrt, eExp2 {{.ElementName}}
+			var eSqrt {{.ElementName}}
 			var bSqrt big.Int
 			bSqrt.ModSqrt(b1, modulus)
 			eSqrt.Sqrt(&e1)
 			cmpEandB(&eSqrt, &bSqrt, "Sqrt")
-	
-			bits := b2.Bits()
-			exponent := make([]uint64, len(bits))
-			for k := 0; k < len(bits); k++ {
-				exponent[k] = uint64(bits[k])
-			}
-			eExp2.Exp(e1, exponent...)
-			bExp2.Exp(b1, b2, modulus)
-			cmpEandB(&eExp2, &bExp2, "Exp multi words")
 		}
 	}
 	supportAdx = sAdx
@@ -220,9 +210,10 @@ func BenchmarkExp{{toUpper .ElementName}}(b *testing.B) {
 	var x {{.ElementName}}
 	x.SetRandom()
 	benchRes{{.ElementName}}.SetRandom()
+	b1, _ := rand.Int(rand.Reader, {{.ElementName}}Modulus())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		benchRes{{.ElementName}}.Exp(x, mrand.Uint64())
+		benchRes{{.ElementName}}.Exp(x, b1)
 	}
 }
 
