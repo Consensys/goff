@@ -91,7 +91,6 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 		element.MulNoCarry,
 		element.Sqrt,
 		element.Inverse,
-		element.Ops,
 	}
 
 	// test file templates
@@ -111,7 +110,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 
 	// remove old format generated files
 	oldFiles := []string{"_mul.go", "_mul_amd64.go", "_mul_amd64.s",
-		"_square.go", "_square_amd64.go", "_square_amd64.s"}
+		"_square.go", "_square_amd64.go", "_square_amd64.s", "_ops_amd64.go"}
 	for _, of := range oldFiles {
 		os.Remove(filepath.Join(outputDir, eName+of))
 	}
@@ -141,22 +140,39 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 		// generate ops.s
 		{
 			pathMulAsm := filepath.Join(outputDir, eName+"_ops_amd64.s")
-			builder := asm.NewBuilder(pathMulAsm, F.ElementName, F.NbWords, F.Q)
-			if err := builder.Build(F.NoCarrySquare); err != nil {
+			f, err := os.Create(pathMulAsm)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			builder := asm.NewBuilder(f, F.ElementName, F.NbWords, F.Q, F.NoCarrySquare)
+			if err := builder.Build(); err != nil {
 				return err
 			}
 
-			// generate ops_amd64.go
-			src := []string{
-				element.OpsAMD64,
-				element.Reduce,
-				element.MulCIOS,
-				element.MulNoCarry,
+			{
+				// generate ops_decl.go
+				src := []string{
+					element.Ops,
+					element.Reduce,
+					element.MulCIOS,
+					element.MulNoCarry,
+				}
+				pathSrc := filepath.Join(outputDir, eName+"_ops_decl.go")
+				if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
+					return err
+				}
 			}
-			pathSrc := filepath.Join(outputDir, eName+"_ops_amd64.go")
-			if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
-				return err
-			}
+			// if F.NbWords > 6 {
+			// 	// generate ops_amd64.go
+			// 	src := []string{
+			// 		element.OpsAMD64,
+			// 	}
+			// 	pathSrc := filepath.Join(outputDir, eName+"_ops_amd64.go")
+			// 	if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
+			// 		return err
+			// 	}
+			// }
 		}
 
 	}

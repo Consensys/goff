@@ -3,6 +3,51 @@ package element
 // Ops is included with all builds (regardless of architecture or if F.ASM is set)
 const Ops = `
 
+import "math/bits"
+
+// -------------------------------------------------------------------------------------------------
+// Declarations
+
+
+//go:noescape
+func Add{{.ElementName}}(res,x,y *{{.ElementName}})
+
+//go:noescape
+func Sub{{.ElementName}}(res,x,y *{{.ElementName}})
+
+//go:noescape
+func Neg{{.ElementName}}(res,x *{{.ElementName}})
+
+//go:noescape
+func Double{{.ElementName}}(res,x *{{.ElementName}})
+
+//go:noescape
+func Mul{{.ElementName}}(res,x,y *{{.ElementName}})
+
+//go:noescape
+func Square{{.ElementName}}(res,x *{{.ElementName}})
+
+//go:noescape
+func FromMont{{.ElementName}}(res *{{.ElementName}})
+
+//go:noescape
+func Reduce{{.ElementName}}(res *{{.ElementName}})
+
+
+// E2
+
+//go:noescape
+func Add{{.ElementName}}2(res,x,y *{{.ElementName}})
+
+//go:noescape
+func Sub{{.ElementName}}2(res,x,y *{{.ElementName}})
+
+//go:noescape
+func Double{{.ElementName}}2(res,x *{{.ElementName}})
+
+//go:noescape
+func Neg{{.ElementName}}2(res,x *{{.ElementName}})
+
 
 // Generic (no ADX instructions, no AMD64) versions
 

@@ -9,29 +9,22 @@ const OpsNoAsm = `
 
 import "math/bits"
 
-// Mul z = x * y mod q 
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
+func Mul(z, x, y *{{.ElementName}}) {
 	_mulGeneric{{.ElementName}}(z, x, y)
-	return z
 }
 
-// Square z = x * x mod q
-// see https://hackmd.io/@zkteam/modular_multiplication
-func (z *{{.ElementName}}) Square(x *{{.ElementName}}) *{{.ElementName}} {
+func Square(z, x *{{.ElementName}}) {
 	_squareGeneric{{.ElementName}}(z,x)
-	return z
 }
 
 // FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
 // sets and returns z = z * 1
-func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
+func FromMont(z *{{.ElementName}} ) {
 	_fromMontGeneric{{.ElementName}}(z)
-	return z
 }
 
 // Add z = x + y mod q
-func (z *{{.ElementName}}) Add( x, y *{{.ElementName}}) *{{.ElementName}} {
+func Add(z,  x, y *{{.ElementName}}) {
 	var carry uint64
 	{{$k := sub $.NbWords 1}}
 	z[0], carry = bits.Add64(x[0], y[0], 0)
@@ -53,16 +46,15 @@ func (z *{{.ElementName}}) Add( x, y *{{.ElementName}}) *{{.ElementName}} {
 			{{- range $i := .NbWordsIndexesNoZero}}
 				z[{{$i}}], carry = bits.Sub64(z[{{$i}}], {{index $.Q $i}}, carry)
 			{{- end}}
-			return z
+			return 
 		}
 	{{- end}}
 
 	{{ template "reduce" .}}
-	return z 
 }
 
 // Double z = x + x mod q, aka Lsh 1
-func (z *{{.ElementName}}) Double( x *{{.ElementName}}) *{{.ElementName}} {
+func Double(z,  x *{{.ElementName}}) {
 	var carry uint64
 	{{$k := sub $.NbWords 1}}
 	z[0], carry = bits.Add64(x[0], x[0], 0)
@@ -84,17 +76,16 @@ func (z *{{.ElementName}}) Double( x *{{.ElementName}}) *{{.ElementName}} {
 			{{- range $i := .NbWordsIndexesNoZero}}
 				z[{{$i}}], carry = bits.Sub64(z[{{$i}}], {{index $.Q $i}}, carry)
 			{{- end}}
-			return z
+			return 
 		}
 	{{- end}}
 
 	{{ template "reduce" .}}
-	return z 
 }
 
 
 // Sub  z = x - y mod q
-func (z *{{.ElementName}}) Sub( x, y *{{.ElementName}}) *{{.ElementName}} {
+func Sub(z,  x, y *{{.ElementName}}) {
 	var b uint64
 	z[0], b = bits.Sub64(x[0], y[0], 0)
 	{{- range $i := .NbWordsIndexesNoZero}}
@@ -111,9 +102,24 @@ func (z *{{.ElementName}}) Sub( x, y *{{.ElementName}}) *{{.ElementName}} {
 			{{- end}}
 		{{- end}}
 	}
-	return z
 }
 
+// Neg z = q - x 
+func Neg(z,  x *{{.ElementName}}) {
+	if x.IsZero() {
+		z.SetZero()
+		return
+	}
+	var borrow uint64
+	z[0], borrow = bits.Sub64({{index $.Q 0}}, x[0], 0)
+	{{- range $i := .NbWordsIndexesNoZero}}
+		{{- if eq $i $.NbWordsLastIndex}}
+			z[{{$i}}], _ = bits.Sub64({{index $.Q $i}}, x[{{$i}}], borrow)
+		{{- else}}
+			z[{{$i}}], borrow = bits.Sub64({{index $.Q $i}}, x[{{$i}}], borrow)
+		{{- end}}
+	{{- end}}
+}
 
 
 {{- if eq .ASM false }}

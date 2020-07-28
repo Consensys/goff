@@ -144,24 +144,6 @@ func (z *{{.ElementName}}) SetOne() *{{.ElementName}} {
 }
 
 
-// Neg z = q - x 
-func (z *{{.ElementName}}) Neg( x *{{.ElementName}}) *{{.ElementName}} {
-	if x.IsZero() {
-		return z.SetZero()
-	}
-	var borrow uint64
-	z[0], borrow = bits.Sub64({{index $.Q 0}}, x[0], 0)
-	{{- range $i := .NbWordsIndexesNoZero}}
-		{{- if eq $i $.NbWordsLastIndex}}
-			z[{{$i}}], _ = bits.Sub64({{index $.Q $i}}, x[{{$i}}], borrow)
-		{{- else}}
-			z[{{$i}}], borrow = bits.Sub64({{index $.Q $i}}, x[{{$i}}], borrow)
-		{{- end}}
-	{{- end}}
-	return z
-}
-
-
 // Div z = x*y^-1 mod q 
 func (z *{{.ElementName}}) Div( x, y *{{.ElementName}}) *{{.ElementName}} {
 	var yInv {{.ElementName}}
@@ -225,6 +207,56 @@ func (z *{{.ElementName}}) AddAssign(x *{{.ElementName}}) *{{.ElementName}} {
 func (z *{{.ElementName}}) SubAssign(x *{{.ElementName}}) *{{.ElementName}} {
 	return z.Sub(z, x)
 }
+
+
+// API with assembly impl
+
+// Mul z = x * y mod q 
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
+	Mul{{.ElementName}}(z, x, y)
+	return z
+}
+
+// Square z = x * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *{{.ElementName}}) Square(x *{{.ElementName}}) *{{.ElementName}} {
+	Square{{.ElementName}}(z,x)
+	return z
+}
+
+// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
+// sets and returns z = z * 1
+func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
+	FromMont{{.ElementName}}(z)
+	return z
+}
+
+// Add z = x + y mod q
+func (z *{{.ElementName}}) Add( x, y *{{.ElementName}}) *{{.ElementName}} {
+	Add{{.ElementName}}(z, x, y)
+	return z 
+}
+
+// Double z = x + x mod q, aka Lsh 1
+func (z *{{.ElementName}}) Double( x *{{.ElementName}}) *{{.ElementName}} {
+	Double{{.ElementName}}(z, x)
+	return z 
+}
+
+
+// Sub  z = x - y mod q
+func (z *{{.ElementName}}) Sub( x, y *{{.ElementName}}) *{{.ElementName}} {
+	Sub{{.ElementName}}(z, x, y)
+	return z
+}
+
+// Neg z = q - x 
+func (z *{{.ElementName}}) Neg( x *{{.ElementName}}) *{{.ElementName}} {
+	Neg{{.ElementName}}(z, x)
+	return z
+}
+
 
 
 
