@@ -41,25 +41,25 @@ import (
 // 6891450384315732539396789682275657542479668912536150109513790160209623422243491736087683183289411687640864567753786613451161759120554247759349511699125301598951605099378508850372543631423596795951899700429969112842764913119068299
 type Element [12]uint64
 
-// ElementLimbs number of 64 bits words needed to represent Element
-const ElementLimbs = 12
+// Limbs number of 64 bits words needed to represent Element
+const Limbs = 12
 
-// ElementBits number bits needed to represent Element
-const ElementBits = 761
+// Bits number bits needed to represent Element
+const Bits = 761
 
 // field modulus stored as big.Int
-var _ElementModulus big.Int
-var onceElementModulus sync.Once
+var _modulus big.Int
+var onceModulus sync.Once
 
 // ElementModulus returns q as a big.Int
 // q =
 //
 // 6891450384315732539396789682275657542479668912536150109513790160209623422243491736087683183289411687640864567753786613451161759120554247759349511699125301598951605099378508850372543631423596795951899700429969112842764913119068299
-func ElementModulus() *big.Int {
-	onceElementModulus.Do(func() {
-		_ElementModulus.SetString("6891450384315732539396789682275657542479668912536150109513790160209623422243491736087683183289411687640864567753786613451161759120554247759349511699125301598951605099378508850372543631423596795951899700429969112842764913119068299", 10)
+func Modulus() *big.Int {
+	onceModulus.Do(func() {
+		_modulus.SetString("6891450384315732539396789682275657542479668912536150109513790160209623422243491736087683183289411687640864567753786613451161759120554247759349511699125301598951605099378508850372543631423596795951899700429969112842764913119068299", 10)
 	})
-	return &_ElementModulus
+	return &_modulus
 }
 
 // q (modulus)
@@ -82,7 +82,7 @@ var qElement = Element{
 var qElementInv0 uint64 = 744663313386281181
 
 // rSquare
-var rSquareElement = Element{
+var rSquare = Element{
 	14305184132582319705,
 	8868935336694416555,
 	9196887162930508889,
@@ -102,10 +102,10 @@ var rSquareElement = Element{
 func (z *Element) Bytes() []byte {
 	var _z Element
 	_z.Set(z).FromMont()
-	res := make([]byte, ElementLimbs*8)
-	binary.BigEndian.PutUint64(res[(ElementLimbs-1)*8:], _z[0])
-	for i := ElementLimbs - 2; i >= 0; i-- {
-		binary.BigEndian.PutUint64(res[i*8:(i+1)*8], _z[ElementLimbs-1-i])
+	res := make([]byte, Limbs*8)
+	binary.BigEndian.PutUint64(res[(Limbs-1)*8:], _z[0])
+	for i := Limbs - 2; i >= 0; i-- {
+		binary.BigEndian.PutUint64(res[i*8:(i+1)*8], _z[Limbs-1-i])
 	}
 	return res
 }
@@ -299,45 +299,45 @@ func (z *Element) SubAssign(x *Element) *Element {
 // Mul z = x * y mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Mul(x, y *Element) *Element {
-	MulElement(z, x, y)
+	Mul(z, x, y)
 	return z
 }
 
 // Square z = x * x mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Square(x *Element) *Element {
-	SquareElement(z, x)
+	Square(z, x)
 	return z
 }
 
 // FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
 // sets and returns z = z * 1
 func (z *Element) FromMont() *Element {
-	FromMontElement(z)
+	FromMont(z)
 	return z
 }
 
 // Add z = x + y mod q
 func (z *Element) Add(x, y *Element) *Element {
-	AddElement(z, x, y)
+	Add(z, x, y)
 	return z
 }
 
 // Double z = x + x mod q, aka Lsh 1
 func (z *Element) Double(x *Element) *Element {
-	DoubleElement(z, x)
+	Double(z, x)
 	return z
 }
 
 // Sub  z = x - y mod q
 func (z *Element) Sub(x, y *Element) *Element {
-	SubElement(z, x, y)
+	Sub(z, x, y)
 	return z
 }
 
 // Neg z = q - x
 func (z *Element) Neg(x *Element) *Element {
-	NegElement(z, x)
+	Neg(z, x)
 	return z
 }
 
@@ -363,7 +363,7 @@ func (z *Element) Exp(x Element, exponent *big.Int) *Element {
 // ToMont converts z to Montgomery form
 // sets and returns z = z * r^2
 func (z *Element) ToMont() *Element {
-	return z.Mul(z, &rSquareElement)
+	return z.Mul(z, &rSquare)
 }
 
 // ToRegular returns z in regular form (doesn't mutate z)
@@ -395,7 +395,7 @@ func (z *Element) SetBigInt(v *big.Int) *Element {
 	z.SetZero()
 
 	zero := big.NewInt(0)
-	q := ElementModulus()
+	q := Modulus()
 
 	// fast path
 	c := v.Cmp(q)

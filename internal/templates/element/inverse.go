@@ -10,7 +10,7 @@ const Inverse = `
 func (z *{{.ElementName}}) Inverse( x *{{.ElementName}}) *{{.ElementName}} {
 	var _xNonMont big.Int
 	x.ToBigIntRegular( &_xNonMont)
-	_xNonMont.ModInverse(&_xNonMont, {{.ElementName}}Modulus())
+	_xNonMont.ModInverse(&_xNonMont, Modulus())
 	z.SetBigInt(&_xNonMont)
 	return z
 }

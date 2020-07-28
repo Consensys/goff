@@ -150,31 +150,22 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 				return err
 			}
 
-			{
-				// generate ops_decl.go
-				src := []string{
-					element.Ops,
-					element.Reduce,
-					element.MulCIOS,
-					element.MulNoCarry,
-				}
-				pathSrc := filepath.Join(outputDir, eName+"_ops_decl.go")
-				if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
-					return err
-				}
-			}
-			// if F.NbWords > 6 {
-			// 	// generate ops_amd64.go
-			// 	src := []string{
-			// 		element.OpsAMD64,
-			// 	}
-			// 	pathSrc := filepath.Join(outputDir, eName+"_ops_amd64.go")
-			// 	if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
-			// 		return err
-			// 	}
-			// }
 		}
 
+	}
+
+	{
+		// generate ops_decl.go
+		src := []string{
+			element.Ops,
+			element.Reduce,
+			element.MulCIOS,
+			element.MulNoCarry,
+		}
+		pathSrc := filepath.Join(outputDir, eName+"_ops_decl.go")
+		if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
+			return err
+		}
 	}
 
 	{

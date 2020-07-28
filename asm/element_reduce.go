@@ -9,7 +9,7 @@ func generateReduce() {
 	if nbWords > smallModulus {
 		stackSize = nbWords * 8
 	}
-	fnHeader("Reduce"+elementName, stackSize, 8)
+	fnHeader("Reduce", stackSize, 8)
 
 	// registers
 	r := popRegister()

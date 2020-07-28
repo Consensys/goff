@@ -1,7 +1,7 @@
 package asm
 
 func generateNeg() {
-	fnHeader("Neg"+elementName, 0, 16)
+	fnHeader("Neg", 0, 16)
 
 	// labels
 	nonZero := newLabel()
@@ -52,7 +52,7 @@ func generateNeg() {
 }
 
 func generateNegE2() {
-	fnHeader("Neg"+elementName+"2", 0, 16)
+	fnHeader("Neg"+"2", 0, 16)
 
 	nonZeroA := newLabel()
 	nonZeroB := newLabel()

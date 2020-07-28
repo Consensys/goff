@@ -1,9 +1,5 @@
 package asm
 
-import (
-	"fmt"
-)
-
 func generateInnerMul(isSquare bool) {
 
 	noAdx := newLabel()
@@ -124,7 +120,7 @@ func generateMul() {
 	if nbWords > smallModulus {
 		stackSize = nbWords * 8
 	}
-	fnHeader("Mul"+elementName, stackSize, 24, dx, ax)
+	fnHeader("Mul", stackSize, 24, dx, ax)
 	writeLn(`
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
@@ -246,12 +242,12 @@ func generateInnerMulLarge(isSquare bool) {
 	movq("x+8(FP)", ax)
 	movq(ax, "8(SP)")
 	if isSquare {
-		writeLn(fmt.Sprintf("CALL ·_squareGeneric%s(SB)", elementName))
+		writeLn("CALL ·_squareGeneric(SB)")
 		ret()
 	} else {
 		movq("y+16(FP)", ax)
 		movq(ax, "16(SP)")
-		writeLn(fmt.Sprintf("CALL ·_mulGeneric%s(SB)", elementName))
+		writeLn("CALL ·_mulGeneric(SB)")
 		ret()
 	}
 

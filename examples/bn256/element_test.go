@@ -28,7 +28,7 @@ import (
 )
 
 func TestELEMENTCorrectnessAgainstBigInt(t *testing.T) {
-	modulus := ElementModulus()
+	modulus := Modulus()
 	cmpEandB := func(e *Element, b *big.Int, name string) {
 		var _e big.Int
 		if e.FromMont().ToBigInt(&_e).Cmp(b) != 0 {
@@ -165,9 +165,9 @@ func TestELEMENTIsRandom(t *testing.T) {
 	}
 }
 
-func TestByteElement(t *testing.T) {
+func TestByte(t *testing.T) {
 
-	modulus := ElementModulus()
+	modulus := Modulus()
 
 	// test values
 	var bs [3][]byte
@@ -224,7 +224,7 @@ func BenchmarkExpELEMENT(b *testing.B) {
 	var x Element
 	x.SetRandom()
 	benchResElement.SetRandom()
-	b1, _ := rand.Int(rand.Reader, ElementModulus())
+	b1, _ := rand.Int(rand.Reader, Modulus())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		benchResElement.Exp(x, b1)
@@ -359,7 +359,7 @@ func TestELEMENTreduce(t *testing.T) {
 
 	for _, s := range testData {
 		expected := s
-		ReduceElement(&s)
+		Reduce(&s)
 		expected.testReduce()
 		if !s.Equal(&expected) {
 			t.Fatal("reduce failed")
@@ -392,8 +392,8 @@ func TestELEMENTMul(t *testing.T) {
 
 	properties := gopter.NewProperties(parameters)
 
-	genA := genElement()
-	genB := genElement()
+	genA := gen()
+	genB := gen()
 
 	properties.Property("Having the receiver as operand should output the same result", prop.ForAll(
 		func(a, b testPairElement) bool {
@@ -414,7 +414,7 @@ func TestELEMENTMul(t *testing.T) {
 			c.Mul(&a.element, &b.element)
 
 			var d, e big.Int
-			d.Mul(&a.bigint, &b.bigint).Mod(&d, ElementModulus())
+			d.Mul(&a.bigint, &b.bigint).Mod(&d, Modulus())
 
 			return c.FromMont().ToBigInt(&e).Cmp(&d) == 0
 		},
@@ -426,7 +426,7 @@ func TestELEMENTMul(t *testing.T) {
 		func(a, b testPairElement) bool {
 			var c Element
 			c.Mul(&a.element, &b.element)
-			return !c.biggerOrEqualElementModulus()
+			return !c.biggerOrEqualModulus()
 		},
 		genA,
 		genB,
@@ -442,7 +442,7 @@ func TestELEMENTSquare(t *testing.T) {
 
 	properties := gopter.NewProperties(parameters)
 
-	genA := genElement()
+	genA := gen()
 
 	properties.Property("Having the receiver as operand should output the same result", prop.ForAll(
 		func(a testPairElement) bool {
@@ -460,7 +460,7 @@ func TestELEMENTSquare(t *testing.T) {
 			b.Square(&a.element)
 
 			var d, e big.Int
-			d.Mul(&a.bigint, &a.bigint).Mod(&d, ElementModulus())
+			d.Mul(&a.bigint, &a.bigint).Mod(&d, Modulus())
 
 			return b.FromMont().ToBigInt(&e).Cmp(&d) == 0
 		},
@@ -471,7 +471,7 @@ func TestELEMENTSquare(t *testing.T) {
 		func(a testPairElement) bool {
 			var b Element
 			b.Square(&a.element)
-			return !b.biggerOrEqualElementModulus()
+			return !b.biggerOrEqualModulus()
 		},
 		genA,
 	))
@@ -506,7 +506,7 @@ func BenchmarkAddELEMENT2(b *testing.B) {
 	y.b.SetRandom()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		AddElement2(&b2ResElement.a, &x.a, &y.a)
+		Add2(&b2ResElement.a, &x.a, &y.a)
 	}
 }
 
@@ -518,7 +518,7 @@ func BenchmarkDoubleELEMENT2(b *testing.B) {
 	x.b.SetRandom()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		DoubleElement2(&b2ResElement.a, &x.a)
+		Double2(&b2ResElement.a, &x.a)
 	}
 }
 
@@ -530,7 +530,7 @@ func BenchmarkNegELEMENT2(b *testing.B) {
 	x.b.SetRandom()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NegElement2(&b2ResElement.a, &x.a)
+		Neg2(&b2ResElement.a, &x.a)
 	}
 }
 
@@ -544,7 +544,7 @@ func BenchmarkSubELEMENT2(b *testing.B) {
 	y.b.SetRandom()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		SubElement2(&b2ResElement.a, &x.a, &y.a)
+		Sub2(&b2ResElement.a, &x.a, &y.a)
 	}
 }
 
@@ -563,7 +563,7 @@ func TestELEMENTSubE2(t *testing.T) {
 			f.a = c.element
 			f.b = d.element
 
-			SubElement2(&g.a, &e.a, &f.a)
+			Sub2(&g.a, &e.a, &f.a)
 
 			var h, i Element
 			h.Sub(&a.element, &c.element)
@@ -571,10 +571,10 @@ func TestELEMENTSubE2(t *testing.T) {
 
 			return h.Equal(&g.a) && i.Equal(&g.b)
 		},
-		genElement(),
-		genElement(),
-		genElement(),
-		genElement(),
+		gen(),
+		gen(),
+		gen(),
+		gen(),
 	))
 
 	properties.TestingRun(t, gopter.ConsoleReporter(false))
@@ -593,7 +593,7 @@ func TestELEMENTNegE2(t *testing.T) {
 			e.a = a.element
 			e.b = b.element
 
-			NegElement2(&g.a, &e.a)
+			Neg2(&g.a, &e.a)
 
 			var h, i Element
 			h.Neg(&a.element)
@@ -601,8 +601,8 @@ func TestELEMENTNegE2(t *testing.T) {
 
 			return h.Equal(&g.a) && i.Equal(&g.b)
 		},
-		genElement(),
-		genElement(),
+		gen(),
+		gen(),
 	))
 
 	properties.TestingRun(t, gopter.ConsoleReporter(false))
@@ -621,7 +621,7 @@ func TestELEMENTDoubleE2(t *testing.T) {
 			e.a = a.element
 			e.b = b.element
 
-			DoubleElement2(&g.a, &e.a)
+			Double2(&g.a, &e.a)
 
 			var h, i Element
 			h.Double(&a.element)
@@ -629,8 +629,8 @@ func TestELEMENTDoubleE2(t *testing.T) {
 
 			return h.Equal(&g.a) && i.Equal(&g.b)
 		},
-		genElement(),
-		genElement(),
+		gen(),
+		gen(),
 	))
 
 	properties.TestingRun(t, gopter.ConsoleReporter(false))
@@ -651,7 +651,7 @@ func TestELEMENTAddE2(t *testing.T) {
 			f.a = c.element
 			f.b = d.element
 
-			AddElement2(&g.a, &e.a, &f.a)
+			Add2(&g.a, &e.a, &f.a)
 
 			var h, i Element
 			h.Add(&a.element, &c.element)
@@ -659,10 +659,10 @@ func TestELEMENTAddE2(t *testing.T) {
 
 			return h.Equal(&g.a) && i.Equal(&g.b)
 		},
-		genElement(),
-		genElement(),
-		genElement(),
-		genElement(),
+		gen(),
+		gen(),
+		gen(),
+		gen(),
 	))
 
 	properties.TestingRun(t, gopter.ConsoleReporter(false))
@@ -673,7 +673,7 @@ type testPairElement struct {
 	bigint  big.Int
 }
 
-func (z *Element) biggerOrEqualElementModulus() bool {
+func (z *Element) biggerOrEqualModulus() bool {
 	if z[3] > qElement[3] {
 		return true
 	}
@@ -698,7 +698,7 @@ func (z *Element) biggerOrEqualElementModulus() bool {
 	return z[0] >= qElement[0]
 }
 
-func genElement() gopter.Gen {
+func gen() gopter.Gen {
 	return func(genParams *gopter.GenParameters) *gopter.GenResult {
 		var g testPairElement
 
@@ -712,7 +712,7 @@ func genElement() gopter.Gen {
 			g.element[3] %= (qElement[3] + 1)
 		}
 
-		for g.element.biggerOrEqualElementModulus() {
+		for g.element.biggerOrEqualModulus() {
 			g.element = Element{
 				genParams.NextUint64(),
 				genParams.NextUint64(),

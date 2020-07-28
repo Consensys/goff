@@ -10,17 +10,17 @@ const OpsNoAsm = `
 import "math/bits"
 
 func Mul(z, x, y *{{.ElementName}}) {
-	_mulGeneric{{.ElementName}}(z, x, y)
+	_mulGeneric(z, x, y)
 }
 
 func Square(z, x *{{.ElementName}}) {
-	_squareGeneric{{.ElementName}}(z,x)
+	_squareGeneric(z,x)
 }
 
 // FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
 // sets and returns z = z * 1
 func FromMont(z *{{.ElementName}} ) {
-	_fromMontGeneric{{.ElementName}}(z)
+	_fromMontGeneric(z)
 }
 
 // Add z = x + y mod q
@@ -125,7 +125,7 @@ func Neg(z,  x *{{.ElementName}}) {
 {{- if eq .ASM false }}
 
 // for test purposes
-func reduce{{.ElementName}}(z *{{.ElementName}})  {
+func reduce(z *{{.ElementName}})  {
 	{{ template "reduce" . }}
 }
 {{- end}}

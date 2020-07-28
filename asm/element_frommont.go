@@ -1,15 +1,11 @@
 package asm
 
-import (
-	"fmt"
-)
-
 func generateFromMont() {
 	stackSize := 8
 	if nbWords > smallModulus {
 		stackSize = nbWords * 8
 	}
-	fnHeader("FromMont"+elementName, stackSize, 8, dx, ax)
+	fnHeader("FromMont", stackSize, 8, dx, ax)
 	writeLn("NO_LOCAL_POINTERS")
 	writeLn(`
 	// the algorithm is described here
@@ -95,7 +91,7 @@ func generateFromMont() {
 	label(noAdx)
 	movq("res+0(FP)", ax)
 	movq(ax, "(SP)")
-	writeLn(fmt.Sprintf("CALL ·_fromMontGeneric%s(SB)", elementName))
+	writeLn("CALL ·_fromMontGeneric(SB)")
 	ret()
 
 }

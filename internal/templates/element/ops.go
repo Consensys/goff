@@ -5,53 +5,55 @@ const Ops = `
 
 import "math/bits"
 
+{{if .ASM}}
 // -------------------------------------------------------------------------------------------------
 // Declarations
 
 
 //go:noescape
-func Add{{.ElementName}}(res,x,y *{{.ElementName}})
+func Add(res,x,y *{{.ElementName}})
 
 //go:noescape
-func Sub{{.ElementName}}(res,x,y *{{.ElementName}})
+func Sub(res,x,y *{{.ElementName}})
 
 //go:noescape
-func Neg{{.ElementName}}(res,x *{{.ElementName}})
+func Neg(res,x *{{.ElementName}})
 
 //go:noescape
-func Double{{.ElementName}}(res,x *{{.ElementName}})
+func Double(res,x *{{.ElementName}})
 
 //go:noescape
-func Mul{{.ElementName}}(res,x,y *{{.ElementName}})
+func Mul(res,x,y *{{.ElementName}})
 
 //go:noescape
-func Square{{.ElementName}}(res,x *{{.ElementName}})
+func Square(res,x *{{.ElementName}})
 
 //go:noescape
-func FromMont{{.ElementName}}(res *{{.ElementName}})
+func FromMont(res *{{.ElementName}})
 
 //go:noescape
-func Reduce{{.ElementName}}(res *{{.ElementName}})
+func Reduce(res *{{.ElementName}})
 
 
 // E2
 
 //go:noescape
-func Add{{.ElementName}}2(res,x,y *{{.ElementName}})
+func Add2(res,x,y *{{.ElementName}})
 
 //go:noescape
-func Sub{{.ElementName}}2(res,x,y *{{.ElementName}})
+func Sub2(res,x,y *{{.ElementName}})
 
 //go:noescape
-func Double{{.ElementName}}2(res,x *{{.ElementName}})
+func Double2(res,x *{{.ElementName}})
 
 //go:noescape
-func Neg{{.ElementName}}2(res,x *{{.ElementName}})
+func Neg2(res,x *{{.ElementName}})
 
+{{end}}
 
 // Generic (no ADX instructions, no AMD64) versions
 
-func _mulGeneric{{.ElementName}}(z,x,y *{{.ElementName}}) {
+func _mulGeneric(z,x,y *{{.ElementName}}) {
 	{{ if .NoCarry}}
 		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "y"}}
 	{{ else }}
@@ -61,7 +63,7 @@ func _mulGeneric{{.ElementName}}(z,x,y *{{.ElementName}}) {
 }
 
 
-func _squareGeneric{{.ElementName}}(z,x *{{.ElementName}}) {
+func _squareGeneric(z,x *{{.ElementName}}) {
 	{{ if .NoCarry}}
 		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "x"}}
 	{{ else }}
@@ -70,7 +72,7 @@ func _squareGeneric{{.ElementName}}(z,x *{{.ElementName}}) {
 	{{ template "reduce" . }}
 }
 
-func _fromMontGeneric{{.ElementName}}(z *{{.ElementName}}) {
+func _fromMontGeneric(z *{{.ElementName}}) {
 	// the following lines implement z = z * 1
 	// with a modified CIOS montgomery multiplication
 	{{- range $j := .NbWordsIndexesFull}}

@@ -16,7 +16,7 @@
 #include "textflag.h"
 #include "funcdata.h"
 
-TEXT ·MulElement(SB), NOSPLIT, $0-24
+TEXT ·Mul(SB), NOSPLIT, $0-24
 
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
@@ -919,7 +919,7 @@ l1:
     MOVQ R8, 40(R15)
     RET
 
-TEXT ·SquareElement(SB), NOSPLIT, $0-16
+TEXT ·Square(SB), NOSPLIT, $0-16
 
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
@@ -1801,7 +1801,7 @@ l2:
     MOVQ R8, 40(R15)
     RET
 
-TEXT ·FromMontElement(SB), $8-8
+TEXT ·FromMont(SB), $8-8
 NO_LOCAL_POINTERS
 
 	// the algorithm is described here
@@ -2020,10 +2020,10 @@ NO_LOCAL_POINTERS
 l3:
     MOVQ res+0(FP), AX
     MOVQ AX, (SP)
-CALL ·_fromMontGenericElement(SB)
+CALL ·_fromMontGeneric(SB)
     RET
 
-TEXT ·ReduceElement(SB), NOSPLIT, $0-8
+TEXT ·Reduce(SB), NOSPLIT, $0-8
     MOVQ res+0(FP), AX
     MOVQ 0(AX), DX
     MOVQ 8(AX), CX
@@ -2057,7 +2057,7 @@ TEXT ·ReduceElement(SB), NOSPLIT, $0-8
     MOVQ DI, 40(AX)
     RET
 
-TEXT ·AddElement(SB), NOSPLIT, $0-24
+TEXT ·Add(SB), NOSPLIT, $0-24
     MOVQ x+8(FP), AX
     MOVQ 0(AX), BX
     MOVQ 8(AX), BP
@@ -2099,7 +2099,7 @@ TEXT ·AddElement(SB), NOSPLIT, $0-24
     MOVQ R9, 40(CX)
     RET
 
-TEXT ·AddElement2(SB), NOSPLIT, $0-24
+TEXT ·Add2(SB), NOSPLIT, $0-24
     MOVQ x+8(FP), AX
     MOVQ 0(AX), BX
     MOVQ 8(AX), BP
@@ -2177,7 +2177,7 @@ TEXT ·AddElement2(SB), NOSPLIT, $0-24
     MOVQ R9, 88(CX)
     RET
 
-TEXT ·SubElement(SB), NOSPLIT, $0-24
+TEXT ·Sub(SB), NOSPLIT, $0-24
     MOVQ x+8(FP), DI
     MOVQ 0(DI), AX
     MOVQ 8(DI), DX
@@ -2220,7 +2220,7 @@ TEXT ·SubElement(SB), NOSPLIT, $0-24
     MOVQ SI, 40(R9)
     RET
 
-TEXT ·SubElement2(SB), NOSPLIT, $0-24
+TEXT ·Sub2(SB), NOSPLIT, $0-24
     MOVQ x+8(FP), DI
     MOVQ y+16(FP), R8
     MOVQ 0(DI), AX
@@ -2303,7 +2303,7 @@ TEXT ·SubElement2(SB), NOSPLIT, $0-24
     MOVQ SI, 88(R9)
     RET
 
-TEXT ·DoubleElement(SB), NOSPLIT, $0-16
+TEXT ·Double(SB), NOSPLIT, $0-16
     MOVQ res+0(FP), DX
     MOVQ x+8(FP), AX
     MOVQ 0(AX), CX
@@ -2344,7 +2344,7 @@ TEXT ·DoubleElement(SB), NOSPLIT, $0-16
     MOVQ R8, 40(DX)
     RET
 
-TEXT ·DoubleElement2(SB), NOSPLIT, $0-16
+TEXT ·Double2(SB), NOSPLIT, $0-16
     MOVQ res+0(FP), DX
     MOVQ x+8(FP), AX
     MOVQ 0(AX), CX
@@ -2421,7 +2421,7 @@ TEXT ·DoubleElement2(SB), NOSPLIT, $0-16
     MOVQ R8, 88(DX)
     RET
 
-TEXT ·NegElement(SB), NOSPLIT, $0-16
+TEXT ·Neg(SB), NOSPLIT, $0-16
     MOVQ res+0(FP), DX
     MOVQ x+8(FP), AX
     MOVQ 0(AX), BX
@@ -2463,7 +2463,7 @@ l4:
     MOVQ CX, 40(DX)
     RET
 
-TEXT ·NegElement2(SB), NOSPLIT, $0-16
+TEXT ·Neg2(SB), NOSPLIT, $0-16
     MOVQ res+0(FP), DX
     MOVQ x+8(FP), AX
     MOVQ 0(AX), BX

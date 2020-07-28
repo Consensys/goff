@@ -23,46 +23,46 @@ import "math/bits"
 // Declarations
 
 //go:noescape
-func AddElement(res, x, y *Element)
+func Add(res, x, y *Element)
 
 //go:noescape
-func SubElement(res, x, y *Element)
+func Sub(res, x, y *Element)
 
 //go:noescape
-func NegElement(res, x *Element)
+func Neg(res, x *Element)
 
 //go:noescape
-func DoubleElement(res, x *Element)
+func Double(res, x *Element)
 
 //go:noescape
-func MulElement(res, x, y *Element)
+func Mul(res, x, y *Element)
 
 //go:noescape
-func SquareElement(res, x *Element)
+func Square(res, x *Element)
 
 //go:noescape
-func FromMontElement(res *Element)
+func FromMont(res *Element)
 
 //go:noescape
-func ReduceElement(res *Element)
+func Reduce(res *Element)
 
 // E2
 
 //go:noescape
-func AddElement2(res, x, y *Element)
+func Add2(res, x, y *Element)
 
 //go:noescape
-func SubElement2(res, x, y *Element)
+func Sub2(res, x, y *Element)
 
 //go:noescape
-func DoubleElement2(res, x *Element)
+func Double2(res, x *Element)
 
 //go:noescape
-func NegElement2(res, x *Element)
+func Neg2(res, x *Element)
 
 // Generic (no ADX instructions, no AMD64) versions
 
-func _mulGenericElement(z, x, y *Element) {
+func _mulGeneric(z, x, y *Element) {
 
 	var t [12]uint64
 	var c [3]uint64
@@ -434,7 +434,7 @@ func _mulGenericElement(z, x, y *Element) {
 	}
 }
 
-func _squareGenericElement(z, x *Element) {
+func _squareGeneric(z, x *Element) {
 
 	var t [12]uint64
 	var c [3]uint64
@@ -806,7 +806,7 @@ func _squareGenericElement(z, x *Element) {
 	}
 }
 
-func _fromMontGenericElement(z *Element) {
+func _fromMontGeneric(z *Element) {
 	// the following lines implement z = z * 1
 	// with a modified CIOS montgomery multiplication
 	{

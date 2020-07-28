@@ -28,17 +28,17 @@ package fp
 import "math/bits"
 
 func Mul(z, x, y *Element) {
-	_mulGenericElement(z, x, y)
+	_mulGeneric(z, x, y)
 }
 
 func Square(z, x *Element) {
-	_squareGenericElement(z, x)
+	_squareGeneric(z, x)
 }
 
 // FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
 // sets and returns z = z * 1
 func FromMont(z *Element) {
-	_fromMontGenericElement(z)
+	_fromMontGeneric(z)
 }
 
 // Add z = x + y mod q

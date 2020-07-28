@@ -16,7 +16,7 @@
 #include "textflag.h"
 #include "funcdata.h"
 
-TEXT ·MulElement(SB), $96-24
+TEXT ·Mul(SB), $96-24
 
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
@@ -1435,10 +1435,10 @@ l1:
     MOVQ AX, 8(SP)
     MOVQ y+16(FP), AX
     MOVQ AX, 16(SP)
-CALL ·_mulGenericElement(SB)
+CALL ·_mulGeneric(SB)
     RET
 
-TEXT ·SquareElement(SB), $96-16
+TEXT ·Square(SB), $96-16
 
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
@@ -2856,10 +2856,10 @@ l2:
     MOVQ AX, (SP)
     MOVQ x+8(FP), AX
     MOVQ AX, 8(SP)
-CALL ·_squareGenericElement(SB)
+CALL ·_squareGeneric(SB)
     RET
 
-TEXT ·FromMontElement(SB), $96-8
+TEXT ·FromMont(SB), $96-8
 NO_LOCAL_POINTERS
 
 	// the algorithm is described here
@@ -3493,10 +3493,10 @@ NO_LOCAL_POINTERS
 l3:
     MOVQ res+0(FP), AX
     MOVQ AX, (SP)
-CALL ·_fromMontGenericElement(SB)
+CALL ·_fromMontGeneric(SB)
     RET
 
-TEXT ·ReduceElement(SB), $96-8
+TEXT ·Reduce(SB), $96-8
     MOVQ res+0(FP), AX
     MOVQ 0(AX), DX
     MOVQ 8(AX), CX
@@ -3560,7 +3560,7 @@ TEXT ·ReduceElement(SB), $96-8
     MOVQ R13, 88(AX)
     RET
 
-TEXT ·AddElement(SB), $96-24
+TEXT ·Add(SB), $96-24
     MOVQ x+8(FP), AX
     MOVQ 0(AX), BX
     MOVQ 8(AX), BP
@@ -3638,7 +3638,7 @@ TEXT ·AddElement(SB), $96-24
     MOVQ R15, 88(CX)
     RET
 
-TEXT ·AddElement2(SB), $96-24
+TEXT ·Add2(SB), $96-24
     MOVQ x+8(FP), AX
     MOVQ 0(AX), BX
     MOVQ 8(AX), BP
@@ -3788,7 +3788,7 @@ TEXT ·AddElement2(SB), $96-24
     MOVQ R15, 184(CX)
     RET
 
-TEXT ·SubElement(SB), NOSPLIT, $0-24
+TEXT ·Sub(SB), NOSPLIT, $0-24
     MOVQ x+8(FP), R13
     MOVQ 0(R13), AX
     MOVQ 8(R13), DX
@@ -3844,7 +3844,7 @@ l4:
     MOVQ R12, 88(R15)
     RET
 
-TEXT ·SubElement2(SB), NOSPLIT, $0-24
+TEXT ·Sub2(SB), NOSPLIT, $0-24
     MOVQ x+8(FP), R13
     MOVQ y+16(FP), R14
     MOVQ 0(R13), AX
@@ -3953,7 +3953,7 @@ l6:
     MOVQ R12, 184(R15)
     RET
 
-TEXT ·DoubleElement(SB), $96-16
+TEXT ·Double(SB), $96-16
     MOVQ res+0(FP), DX
     MOVQ x+8(FP), AX
     MOVQ 0(AX), CX
@@ -4030,7 +4030,7 @@ TEXT ·DoubleElement(SB), $96-16
     MOVQ R14, 88(DX)
     RET
 
-TEXT ·DoubleElement2(SB), $96-16
+TEXT ·Double2(SB), $96-16
     MOVQ res+0(FP), DX
     MOVQ x+8(FP), AX
     MOVQ 0(AX), CX
@@ -4179,7 +4179,7 @@ TEXT ·DoubleElement2(SB), $96-16
     MOVQ R14, 184(DX)
     RET
 
-TEXT ·NegElement(SB), NOSPLIT, $0-16
+TEXT ·Neg(SB), NOSPLIT, $0-16
     MOVQ res+0(FP), DX
     MOVQ x+8(FP), AX
     MOVQ 0(AX), BX
@@ -4254,7 +4254,7 @@ l7:
     MOVQ CX, 88(DX)
     RET
 
-TEXT ·NegElement2(SB), NOSPLIT, $0-16
+TEXT ·Neg2(SB), NOSPLIT, $0-16
     MOVQ res+0(FP), DX
     MOVQ x+8(FP), AX
     MOVQ 0(AX), BX

@@ -41,25 +41,25 @@ import (
 // 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
 type Element [6]uint64
 
-// ElementLimbs number of 64 bits words needed to represent Element
-const ElementLimbs = 6
+// Limbs number of 64 bits words needed to represent Element
+const Limbs = 6
 
-// ElementBits number bits needed to represent Element
-const ElementBits = 381
+// Bits number bits needed to represent Element
+const Bits = 381
 
 // field modulus stored as big.Int
-var _ElementModulus big.Int
-var onceElementModulus sync.Once
+var _modulus big.Int
+var onceModulus sync.Once
 
 // ElementModulus returns q as a big.Int
 // q =
 //
 // 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
-func ElementModulus() *big.Int {
-	onceElementModulus.Do(func() {
-		_ElementModulus.SetString("4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787", 10)
+func Modulus() *big.Int {
+	onceModulus.Do(func() {
+		_modulus.SetString("4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787", 10)
 	})
-	return &_ElementModulus
+	return &_modulus
 }
 
 // q (modulus)
@@ -76,7 +76,7 @@ var qElement = Element{
 var qElementInv0 uint64 = 9940570264628428797
 
 // rSquare
-var rSquareElement = Element{
+var rSquare = Element{
 	17644856173732828998,
 	754043588434789617,
 	10224657059481499349,
@@ -90,10 +90,10 @@ var rSquareElement = Element{
 func (z *Element) Bytes() []byte {
 	var _z Element
 	_z.Set(z).FromMont()
-	res := make([]byte, ElementLimbs*8)
-	binary.BigEndian.PutUint64(res[(ElementLimbs-1)*8:], _z[0])
-	for i := ElementLimbs - 2; i >= 0; i-- {
-		binary.BigEndian.PutUint64(res[i*8:(i+1)*8], _z[ElementLimbs-1-i])
+	res := make([]byte, Limbs*8)
+	binary.BigEndian.PutUint64(res[(Limbs-1)*8:], _z[0])
+	for i := Limbs - 2; i >= 0; i-- {
+		binary.BigEndian.PutUint64(res[i*8:(i+1)*8], _z[Limbs-1-i])
 	}
 	return res
 }
@@ -251,45 +251,45 @@ func (z *Element) SubAssign(x *Element) *Element {
 // Mul z = x * y mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Mul(x, y *Element) *Element {
-	MulElement(z, x, y)
+	Mul(z, x, y)
 	return z
 }
 
 // Square z = x * x mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *Element) Square(x *Element) *Element {
-	SquareElement(z, x)
+	Square(z, x)
 	return z
 }
 
 // FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
 // sets and returns z = z * 1
 func (z *Element) FromMont() *Element {
-	FromMontElement(z)
+	FromMont(z)
 	return z
 }
 
 // Add z = x + y mod q
 func (z *Element) Add(x, y *Element) *Element {
-	AddElement(z, x, y)
+	Add(z, x, y)
 	return z
 }
 
 // Double z = x + x mod q, aka Lsh 1
 func (z *Element) Double(x *Element) *Element {
-	DoubleElement(z, x)
+	Double(z, x)
 	return z
 }
 
 // Sub  z = x - y mod q
 func (z *Element) Sub(x, y *Element) *Element {
-	SubElement(z, x, y)
+	Sub(z, x, y)
 	return z
 }
 
 // Neg z = q - x
 func (z *Element) Neg(x *Element) *Element {
-	NegElement(z, x)
+	Neg(z, x)
 	return z
 }
 
@@ -315,7 +315,7 @@ func (z *Element) Exp(x Element, exponent *big.Int) *Element {
 // ToMont converts z to Montgomery form
 // sets and returns z = z * r^2
 func (z *Element) ToMont() *Element {
-	return z.Mul(z, &rSquareElement)
+	return z.Mul(z, &rSquare)
 }
 
 // ToRegular returns z in regular form (doesn't mutate z)
@@ -347,7 +347,7 @@ func (z *Element) SetBigInt(v *big.Int) *Element {
 	z.SetZero()
 
 	zero := big.NewInt(0)
-	q := ElementModulus()
+	q := Modulus()
 
 	// fast path
 	c := v.Cmp(q)

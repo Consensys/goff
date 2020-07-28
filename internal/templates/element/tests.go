@@ -14,7 +14,7 @@ import (
 )
 
 func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
-    modulus := {{.ElementName}}Modulus()
+    modulus := Modulus()
 	cmpEandB := func(e *{{.ElementName}}, b *big.Int, name string) {
 		var _e big.Int
 		if e.FromMont().ToBigInt(&_e).Cmp(b) != 0 {
@@ -153,9 +153,9 @@ func Test{{toUpper .ElementName}}IsRandom(t *testing.T) {
 	}
 }
 
-func TestByte{{.ElementName}}(t *testing.T) {
+func TestByte(t *testing.T) {
 
-	modulus := {{.ElementName}}Modulus()
+	modulus := Modulus()
 
 	// test values
 	var bs [3][]byte
@@ -212,7 +212,7 @@ func BenchmarkExp{{toUpper .ElementName}}(b *testing.B) {
 	var x {{.ElementName}}
 	x.SetRandom()
 	benchRes{{.ElementName}}.SetRandom()
-	b1, _ := rand.Int(rand.Reader, {{.ElementName}}Modulus())
+	b1, _ := rand.Int(rand.Reader, Modulus())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		benchRes{{.ElementName}}.Exp(x, b1)
@@ -349,7 +349,7 @@ func Test{{toUpper .ElementName}}reduce(t *testing.T) {
 
 	for _, s := range testData {
 		expected := s
-		Reduce{{.ElementName}}(&s)
+		Reduce(&s)
 		expected.testReduce()
 		if !s.Equal(&expected) {
 			t.Fatal("reduce failed")
@@ -377,8 +377,8 @@ func Test{{toUpper .ElementName}}Mul(t *testing.T) {
 
 	properties := gopter.NewProperties(parameters)
 
-	genA := gen{{.ElementName}}()
-	genB := gen{{.ElementName}}()
+	genA := gen()
+	genB := gen()
 
 	properties.Property("Having the receiver as operand should output the same result", prop.ForAll(
 		func(a, b testPair{{.ElementName}}) bool {
@@ -399,7 +399,7 @@ func Test{{toUpper .ElementName}}Mul(t *testing.T) {
 			c.Mul(&a.element, &b.element)
 
 			var d, e big.Int 
-			d.Mul(&a.bigint, &b.bigint).Mod(&d, {{.ElementName}}Modulus())
+			d.Mul(&a.bigint, &b.bigint).Mod(&d, Modulus())
 
 			return c.FromMont().ToBigInt(&e).Cmp(&d) == 0 
 		},
@@ -411,7 +411,7 @@ func Test{{toUpper .ElementName}}Mul(t *testing.T) {
 		func(a, b testPair{{.ElementName}}) bool {
 			var c {{.ElementName}}
 			c.Mul(&a.element, &b.element)
-			return !c.biggerOrEqual{{.ElementName}}Modulus()
+			return !c.biggerOrEqualModulus()
 		},
 		genA,
 		genB,
@@ -430,7 +430,7 @@ func Test{{toUpper .ElementName}}Square(t *testing.T) {
 
 	properties := gopter.NewProperties(parameters)
 
-	genA := gen{{.ElementName}}()
+	genA := gen()
 
 	properties.Property("Having the receiver as operand should output the same result", prop.ForAll(
 		func(a testPair{{.ElementName}}) bool {
@@ -448,7 +448,7 @@ func Test{{toUpper .ElementName}}Square(t *testing.T) {
 			b.Square(&a.element)
 
 			var d, e big.Int 
-			d.Mul(&a.bigint, &a.bigint).Mod(&d, {{.ElementName}}Modulus())
+			d.Mul(&a.bigint, &a.bigint).Mod(&d, Modulus())
 
 			return b.FromMont().ToBigInt(&e).Cmp(&d) == 0 
 		},
@@ -459,7 +459,7 @@ func Test{{toUpper .ElementName}}Square(t *testing.T) {
 		func(a testPair{{.ElementName}}) bool {
 			var b {{.ElementName}}
 			b.Square(&a.element)
-			return !b.biggerOrEqual{{.ElementName}}Modulus()
+			return !b.biggerOrEqualModulus()
 		},
 		genA,
 	))
@@ -499,7 +499,7 @@ func BenchmarkAdd{{toUpper .ElementName}}2(b *testing.B) {
 	y.b.SetRandom()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Add{{.ElementName}}2(&b2Res{{.ElementName}}.a, &x.a, &y.a)
+		Add2(&b2Res{{.ElementName}}.a, &x.a, &y.a)
 	}
 }
 
@@ -511,7 +511,7 @@ func BenchmarkDouble{{toUpper .ElementName}}2(b *testing.B) {
 	x.b.SetRandom()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Double{{.ElementName}}2(&b2Res{{.ElementName}}.a, &x.a)
+		Double2(&b2Res{{.ElementName}}.a, &x.a)
 	}
 }
 
@@ -523,7 +523,7 @@ func BenchmarkNeg{{toUpper .ElementName}}2(b *testing.B) {
 	x.b.SetRandom()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Neg{{.ElementName}}2(&b2Res{{.ElementName}}.a, &x.a)
+		Neg2(&b2Res{{.ElementName}}.a, &x.a)
 	}
 }
 
@@ -537,7 +537,7 @@ func BenchmarkSub{{toUpper .ElementName}}2(b *testing.B) {
 	y.b.SetRandom()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Sub{{.ElementName}}2(&b2Res{{.ElementName}}.a, &x.a, &y.a)
+		Sub2(&b2Res{{.ElementName}}.a, &x.a, &y.a)
 	}
 }
 
@@ -556,7 +556,7 @@ func Test{{toUpper .ElementName}}SubE2(t *testing.T) {
 			f.a = c.element
 			f.b = d.element
 
-			Sub{{.ElementName}}2(&g.a,&e.a,&f.a)
+			Sub2(&g.a,&e.a,&f.a)
 
 			var h, i {{.ElementName}}
 			h.Sub(&a.element, &c.element)
@@ -564,10 +564,10 @@ func Test{{toUpper .ElementName}}SubE2(t *testing.T) {
 
 			return h.Equal(&g.a) && i.Equal(&g.b)
 		},
-		gen{{.ElementName}}(),
-		gen{{.ElementName}}(),
-		gen{{.ElementName}}(),
-		gen{{.ElementName}}(),
+		gen(),
+		gen(),
+		gen(),
+		gen(),
 	))
 
 
@@ -587,7 +587,7 @@ func Test{{toUpper .ElementName}}NegE2(t *testing.T) {
 			e.a = a.element
 			e.b = b.element
 
-			Neg{{.ElementName}}2(&g.a,&e.a)
+			Neg2(&g.a,&e.a)
 
 			var h, i {{.ElementName}}
 			h.Neg(&a.element)
@@ -595,8 +595,8 @@ func Test{{toUpper .ElementName}}NegE2(t *testing.T) {
 
 			return h.Equal(&g.a) && i.Equal(&g.b)
 		},
-		gen{{.ElementName}}(),
-		gen{{.ElementName}}(),
+		gen(),
+		gen(),
 	))
 
 
@@ -617,7 +617,7 @@ func Test{{toUpper .ElementName}}DoubleE2(t *testing.T) {
 			e.a = a.element
 			e.b = b.element
 
-			Double{{.ElementName}}2(&g.a,&e.a)
+			Double2(&g.a,&e.a)
 
 			var h, i {{.ElementName}}
 			h.Double(&a.element)
@@ -625,8 +625,8 @@ func Test{{toUpper .ElementName}}DoubleE2(t *testing.T) {
 
 			return h.Equal(&g.a) && i.Equal(&g.b)
 		},
-		gen{{.ElementName}}(),
-		gen{{.ElementName}}(),
+		gen(),
+		gen(),
 	))
 
 
@@ -649,7 +649,7 @@ func Test{{toUpper .ElementName}}AddE2(t *testing.T) {
 			f.a = c.element
 			f.b = d.element
 
-			Add{{.ElementName}}2(&g.a,&e.a,&f.a)
+			Add2(&g.a,&e.a,&f.a)
 
 			var h, i {{.ElementName}}
 			h.Add(&a.element, &c.element)
@@ -657,10 +657,10 @@ func Test{{toUpper .ElementName}}AddE2(t *testing.T) {
 
 			return h.Equal(&g.a) && i.Equal(&g.b)
 		},
-		gen{{.ElementName}}(),
-		gen{{.ElementName}}(),
-		gen{{.ElementName}}(),
-		gen{{.ElementName}}(),
+		gen(),
+		gen(),
+		gen(),
+		gen(),
 	))
 
 
@@ -675,7 +675,7 @@ type testPair{{.ElementName}} struct {
 	bigint       big.Int
 }
 
-func (z *{{.ElementName}}) biggerOrEqual{{.ElementName}}Modulus() bool {
+func (z *{{.ElementName}}) biggerOrEqualModulus() bool {
 	{{- range $i :=  reverse .NbWordsIndexesNoZero}}
 	if z[{{$i}}] > q{{$.ElementName}}[{{$i}}] {
 		return true
@@ -688,7 +688,7 @@ func (z *{{.ElementName}}) biggerOrEqual{{.ElementName}}Modulus() bool {
 	return z[0] >= q{{.ElementName}}[0]
 }
 
-func gen{{.ElementName}}() gopter.Gen {
+func gen() gopter.Gen {
 	return func(genParams *gopter.GenParameters) *gopter.GenResult {
 		var g testPair{{.ElementName}}
 
@@ -701,7 +701,7 @@ func gen{{.ElementName}}() gopter.Gen {
 		}
 		
 
-		for g.element.biggerOrEqual{{.ElementName}}Modulus() {
+		for g.element.biggerOrEqualModulus() {
 			g.element = {{.ElementName}}{
 				{{- range $i := .NbWordsIndexesFull}}
 				genParams.NextUint64(),{{end}}
