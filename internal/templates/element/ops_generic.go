@@ -9,22 +9,21 @@ const OpsNoAsm = `
 
 import "math/bits"
 
-func Mul(z, x, y *{{.ElementName}}) {
+func mul(z, x, y *{{.ElementName}}) {
 	_mulGeneric(z, x, y)
 }
 
-func Square(z, x *{{.ElementName}}) {
+func square(z, x *{{.ElementName}}) {
 	_squareGeneric(z,x)
 }
 
 // FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
 // sets and returns z = z * 1
-func FromMont(z *{{.ElementName}} ) {
+func fromMont(z *{{.ElementName}} ) {
 	_fromMontGeneric(z)
 }
 
-// Add z = x + y mod q
-func Add(z,  x, y *{{.ElementName}}) {
+func add(z,  x, y *{{.ElementName}}) {
 	var carry uint64
 	{{$k := sub $.NbWords 1}}
 	z[0], carry = bits.Add64(x[0], y[0], 0)
@@ -53,8 +52,7 @@ func Add(z,  x, y *{{.ElementName}}) {
 	{{ template "reduce" .}}
 }
 
-// Double z = x + x mod q, aka Lsh 1
-func Double(z,  x *{{.ElementName}}) {
+func double(z,  x *{{.ElementName}}) {
 	var carry uint64
 	{{$k := sub $.NbWords 1}}
 	z[0], carry = bits.Add64(x[0], x[0], 0)
@@ -84,8 +82,7 @@ func Double(z,  x *{{.ElementName}}) {
 }
 
 
-// Sub  z = x - y mod q
-func Sub(z,  x, y *{{.ElementName}}) {
+func sub(z,  x, y *{{.ElementName}}) {
 	var b uint64
 	z[0], b = bits.Sub64(x[0], y[0], 0)
 	{{- range $i := .NbWordsIndexesNoZero}}
@@ -104,8 +101,7 @@ func Sub(z,  x, y *{{.ElementName}}) {
 	}
 }
 
-// Neg z = q - x 
-func Neg(z,  x *{{.ElementName}}) {
+func neg(z,  x *{{.ElementName}}) {
 	if x.IsZero() {
 		z.SetZero()
 		return
