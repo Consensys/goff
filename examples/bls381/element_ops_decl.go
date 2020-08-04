@@ -48,18 +48,6 @@ func Reduce(res *Element)
 
 // E2
 
-//go:noescape
-func Add2(res, x, y *Element)
-
-//go:noescape
-func Sub2(res, x, y *Element)
-
-//go:noescape
-func Double2(res, x *Element)
-
-//go:noescape
-func Neg2(res, x *Element)
-
 // Generic (no ADX instructions, no AMD64) versions
 
 func _mulGeneric(z, x, y *Element) {

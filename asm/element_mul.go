@@ -1,5 +1,92 @@
 package asm
 
+func mulAdx(yat, xat func(int) string, uglyHook func(int)) []register {
+	// registers
+	t := popRegisters(nbWords)
+	A := popRegister()
+
+	for i := 0; i < nbWords; i++ {
+		xorq(dx, dx)
+
+		movq(yat(i), dx)
+		// for j=0 to N-1
+		//    (A,t[j])  := t[j] + x[j]*y[i] + A
+		for j := 0; j < nbWords; j++ {
+			xj := xat(j)
+
+			reg := A
+			if i == 0 {
+				if j == 0 {
+					mulxq(xj, t[j], t[j+1])
+				} else if j != nbWordsLastIndex {
+					reg = t[j+1]
+				}
+			} else if j != 0 {
+				adcxq(A, t[j])
+			}
+
+			if !(i == 0 && j == 0) {
+				mulxq(xj, ax, reg)
+				adoxq(ax, t[j])
+			}
+		}
+		if uglyHook != nil {
+			uglyHook(i)
+		}
+
+		comment("add the last carries to " + string(A))
+		movq(0, dx)
+		adcxq(dx, A)
+		adoxq(dx, A)
+
+		// m := t[0]*q'[0] mod W
+		m := dx
+		movq(t[0], dx)
+		mulxq(qInv0(), m, ax, "m := t[0]*q'[0] mod W")
+
+		// clear the carry flags
+		xorq(ax, ax)
+
+		// C,_ := t[0] + m*q[0]
+		comment("C,_ := t[0] + m*q[0]")
+
+		needPop := false
+		if availableRegisters() == 0 {
+			needPop = true
+			pushq(A)
+			pushRegister(A)
+		}
+		tmp := popRegister()
+		mulxq(qAt(0), ax, tmp)
+		adcxq(t[0], ax)
+		movq(tmp, t[0])
+		pushRegister(tmp)
+		if needPop {
+			A = popRegister()
+			popq(A)
+		}
+
+		comment("for j=1 to N-1")
+		comment("    (C,t[j-1]) := t[j] + m*q[j] + C")
+
+		// for j=1 to N-1
+		//    (C,t[j-1]) := t[j] + m*q[j] + C
+		for j := 1; j < nbWords; j++ {
+			adcxq(t[j], t[j-1])
+			mulxq(qAt(j), ax, t[j])
+			adoxq(ax, t[j-1])
+		}
+		movq(0, ax)
+		adcxq(ax, t[nbWordsLastIndex])
+		adoxq(A, t[nbWordsLastIndex])
+	}
+
+	// free registers
+	pushRegister(A)
+
+	return t
+}
+
 func generateInnerMul(isSquare bool) {
 
 	noAdx := newLabel()
@@ -8,90 +95,39 @@ func generateInnerMul(isSquare bool) {
 	cmpb("·supportAdx(SB)", 1)
 	jne(noAdx)
 	{
-		// registers
-		t := popRegisters(nbWords)
-		x := popRegister()
-		y := popRegister()
-		A := popRegister()
-		tmp := popRegister()
-
+		var t []register
 		if isSquare {
+			x := popRegister()
 			movq("x+8(FP)", x)
-			movq("x+8(FP)", y)
+
+			xat := func(i int) string {
+				return x.at(i)
+			}
+			t = mulAdx(xat, xat, nil)
+			pushRegister(x, x)
 		} else {
+			x := popRegister()
+			y := popRegister()
 			movq("x+8(FP)", x)
 			movq("y+16(FP)", y)
+
+			yat := func(i int) string {
+				return y.at(i)
+			}
+			xat := func(i int) string {
+				return x.at(i)
+			}
+			t = mulAdx(yat, xat, nil)
+			pushRegister(x, y)
 		}
 
-		for i := 0; i < nbWords; i++ {
-			xorq(dx, dx)
-
-			movq(y.at(i), dx)
-			// for j=0 to N-1
-			//    (A,t[j])  := t[j] + x[j]*y[i] + A
-			for j := 0; j < nbWords; j++ {
-				xj := x.at(j)
-
-				reg := A
-				if i == 0 {
-					if j == 0 {
-						mulxq(xj, t[j], t[j+1])
-					} else if j != nbWordsLastIndex {
-						reg = t[j+1]
-					}
-				} else if j != 0 {
-					adcxq(A, t[j])
-				}
-
-				if !(i == 0 && j == 0) {
-					mulxq(xj, ax, reg)
-					adoxq(ax, t[j])
-				}
-			}
-
-			comment("add the last carries to " + string(A))
-			movq(0, dx)
-			adcxq(dx, A)
-			adoxq(dx, A)
-
-			// m := t[0]*q'[0] mod W
-			regM := dx
-			movq(t[0], dx)
-			mulxq(qInv0(), regM, ax, "m := t[0]*q'[0] mod W")
-
-			// clear the carry flags
-			xorq(ax, ax)
-
-			// C,_ := t[0] + m*q[0]
-			comment("C,_ := t[0] + m*q[0]")
-
-			mulxq(qAt(0), ax, tmp)
-			adcxq(t[0], ax)
-			movq(tmp, t[0])
-
-			comment("for j=1 to N-1")
-			comment("    (C,t[j-1]) := t[j] + m*q[j] + C")
-
-			// for j=1 to N-1
-			//    (C,t[j-1]) := t[j] + m*q[j] + C
-			for j := 1; j < nbWords; j++ {
-				adcxq(t[j], t[j-1])
-				mulxq(qAt(j), ax, t[j])
-				adoxq(ax, t[j-1])
-			}
-			movq(0, ax)
-			adcxq(ax, t[nbWordsLastIndex])
-			adoxq(A, t[nbWordsLastIndex])
-		}
-
-		// free registers
-		pushRegister(y, A, tmp)
-
+		r := popRegister()
 		// ---------------------------------------------------------------------------------------------
 		// reduce
-		movq("res+0(FP)", x)
-		_reduce(t, x)
+		movq("res+0(FP)", r)
+		_reduce(t, r)
 		ret()
+		pushRegister(r)
 	}
 
 	// ---------------------------------------------------------------------------------------------

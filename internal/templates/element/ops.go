@@ -37,17 +37,6 @@ func Reduce(res *{{.ElementName}})
 
 // E2
 
-//go:noescape
-func Add2(res,x,y *{{.ElementName}})
-
-//go:noescape
-func Sub2(res,x,y *{{.ElementName}})
-
-//go:noescape
-func Double2(res,x *{{.ElementName}})
-
-//go:noescape
-func Neg2(res,x *{{.ElementName}})
 
 {{end}}
 

@@ -22,7 +22,7 @@ func generateReduce() {
 	ret()
 }
 
-func _reduce(t []register, result register, rOffset ...int) {
+func _reduce(t []register, result interface{}, rOffset ...int) {
 	if nbWords > smallModulus {
 		reduceLarge(t, result, rOffset...)
 		return
@@ -54,7 +54,7 @@ func _reduce(t []register, result register, rOffset ...int) {
 	pushRegister(u...)
 }
 
-func reduceLarge(t []register, result register, rOffset ...int) {
+func reduceLarge(t []register, result interface{}, rOffset ...int) {
 	// u = t - q
 	u := make([]string, nbWords)
 

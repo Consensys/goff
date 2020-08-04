@@ -82,19 +82,65 @@ func (asm *assembly) Build() error {
 
 	// add
 	generateAdd()
-	generateAddE2()
 
 	// sub
 	generateSub()
-	generateSubE2()
 
 	// double
 	generateDouble()
-	generateDoubleE2()
 
 	// neg
 	generateNeg()
+
+	return nil
+}
+
+// SpecialCurve is likely temporary --> this should move into gurvy package in the future
+type SpecialCurve int
+
+const (
+	NONE SpecialCurve = iota
+	BN256
+	BLS381
+)
+
+// Build ...
+func (asm *assembly) BuildE2(specialCurve SpecialCurve) error {
+
+	apache2 := `
+// Copyright %d %s
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+	`
+	license := fmt.Sprintf(apache2, 2020, "ConsenSys Software Inc.")
+	writeLn(license)
+
+	writeLn("#include \"textflag.h\"")
+	writeLn("#include \"funcdata.h\"")
+
+	generateAddE2()
+	generateSubE2()
+	generateDoubleE2()
 	generateNegE2()
+
+	switch specialCurve {
+	case BN256:
+		generateSquareE2BN256()
+		generateMulE2BN256()
+		generateMulByNonResidueE2BN256()
+	case BLS381:
+		fmt.Println("bls381 e2 square, mul and mul by non residue not implemented in asm")
+	}
 
 	return nil
 }

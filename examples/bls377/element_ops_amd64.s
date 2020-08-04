@@ -33,327 +33,327 @@ TEXT ·Mul(SB), NOSPLIT, $0-24
 	
     CMPB ·supportAdx(SB), $0x0000000000000001
     JNE l1
-    MOVQ x+8(FP), DI
-    MOVQ y+16(FP), R8
+    MOVQ x+8(FP), R14
+    MOVQ y+16(FP), R15
     XORQ DX, DX
-    MOVQ 0(R8), DX
-    MULXQ 0(DI), R14, R15
-    MULXQ 8(DI), AX, CX
-    ADOXQ AX, R15
-    MULXQ 16(DI), AX, BX
-    ADOXQ AX, CX
-    MULXQ 24(DI), AX, BP
+    MOVQ 0(R15), DX
+    MULXQ 0(R14), CX, BX
+    MULXQ 8(R14), AX, BP
     ADOXQ AX, BX
-    MULXQ 32(DI), AX, SI
+    MULXQ 16(R14), AX, SI
     ADOXQ AX, BP
-    MULXQ 40(DI), AX, R9
+    MULXQ 24(R14), AX, DI
     ADOXQ AX, SI
+    MULXQ 32(R14), AX, R8
+    ADOXQ AX, DI
+    MULXQ 40(R14), AX, R9
+    ADOXQ AX, R8
     // add the last carries to R9
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R9
     ADOXQ DX, R9
-    MOVQ R14, DX
+    MOVQ CX, DX
     MULXQ ·qElementInv0(SB), DX, AX                        // m := t[0]*q'[0] mod W
     XORQ AX, AX
     // C,_ := t[0] + m*q[0]
     MULXQ ·qElement+0(SB), AX, R10
-    ADCXQ R14, AX
-    MOVQ R10, R14
+    ADCXQ CX, AX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    ADCXQ R15, R14
-    MULXQ ·qElement+8(SB), AX, R15
-    ADOXQ AX, R14
-    ADCXQ CX, R15
-    MULXQ ·qElement+16(SB), AX, CX
-    ADOXQ AX, R15
     ADCXQ BX, CX
-    MULXQ ·qElement+24(SB), AX, BX
+    MULXQ ·qElement+8(SB), AX, BX
     ADOXQ AX, CX
     ADCXQ BP, BX
-    MULXQ ·qElement+32(SB), AX, BP
+    MULXQ ·qElement+16(SB), AX, BP
     ADOXQ AX, BX
     ADCXQ SI, BP
-    MULXQ ·qElement+40(SB), AX, SI
+    MULXQ ·qElement+24(SB), AX, SI
     ADOXQ AX, BP
+    ADCXQ DI, SI
+    MULXQ ·qElement+32(SB), AX, DI
+    ADOXQ AX, SI
+    ADCXQ R8, DI
+    MULXQ ·qElement+40(SB), AX, R8
+    ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
-    ADCXQ AX, SI
-    ADOXQ R9, SI
+    ADCXQ AX, R8
+    ADOXQ R9, R8
     XORQ DX, DX
-    MOVQ 8(R8), DX
-    MULXQ 0(DI), AX, R9
-    ADOXQ AX, R14
-    ADCXQ R9, R15
-    MULXQ 8(DI), AX, R9
-    ADOXQ AX, R15
-    ADCXQ R9, CX
-    MULXQ 16(DI), AX, R9
+    MOVQ 8(R15), DX
+    MULXQ 0(R14), AX, R9
     ADOXQ AX, CX
     ADCXQ R9, BX
-    MULXQ 24(DI), AX, R9
+    MULXQ 8(R14), AX, R9
     ADOXQ AX, BX
     ADCXQ R9, BP
-    MULXQ 32(DI), AX, R9
+    MULXQ 16(R14), AX, R9
     ADOXQ AX, BP
     ADCXQ R9, SI
-    MULXQ 40(DI), AX, R9
+    MULXQ 24(R14), AX, R9
     ADOXQ AX, SI
+    ADCXQ R9, DI
+    MULXQ 32(R14), AX, R9
+    ADOXQ AX, DI
+    ADCXQ R9, R8
+    MULXQ 40(R14), AX, R9
+    ADOXQ AX, R8
     // add the last carries to R9
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R9
     ADOXQ DX, R9
-    MOVQ R14, DX
+    MOVQ CX, DX
     MULXQ ·qElementInv0(SB), DX, AX                        // m := t[0]*q'[0] mod W
     XORQ AX, AX
     // C,_ := t[0] + m*q[0]
-    MULXQ ·qElement+0(SB), AX, R10
-    ADCXQ R14, AX
-    MOVQ R10, R14
+    MULXQ ·qElement+0(SB), AX, R11
+    ADCXQ CX, AX
+    MOVQ R11, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    ADCXQ R15, R14
-    MULXQ ·qElement+8(SB), AX, R15
-    ADOXQ AX, R14
-    ADCXQ CX, R15
-    MULXQ ·qElement+16(SB), AX, CX
-    ADOXQ AX, R15
     ADCXQ BX, CX
-    MULXQ ·qElement+24(SB), AX, BX
+    MULXQ ·qElement+8(SB), AX, BX
     ADOXQ AX, CX
     ADCXQ BP, BX
-    MULXQ ·qElement+32(SB), AX, BP
+    MULXQ ·qElement+16(SB), AX, BP
     ADOXQ AX, BX
     ADCXQ SI, BP
-    MULXQ ·qElement+40(SB), AX, SI
+    MULXQ ·qElement+24(SB), AX, SI
     ADOXQ AX, BP
+    ADCXQ DI, SI
+    MULXQ ·qElement+32(SB), AX, DI
+    ADOXQ AX, SI
+    ADCXQ R8, DI
+    MULXQ ·qElement+40(SB), AX, R8
+    ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
-    ADCXQ AX, SI
-    ADOXQ R9, SI
+    ADCXQ AX, R8
+    ADOXQ R9, R8
     XORQ DX, DX
-    MOVQ 16(R8), DX
-    MULXQ 0(DI), AX, R9
-    ADOXQ AX, R14
-    ADCXQ R9, R15
-    MULXQ 8(DI), AX, R9
-    ADOXQ AX, R15
-    ADCXQ R9, CX
-    MULXQ 16(DI), AX, R9
+    MOVQ 16(R15), DX
+    MULXQ 0(R14), AX, R9
     ADOXQ AX, CX
     ADCXQ R9, BX
-    MULXQ 24(DI), AX, R9
+    MULXQ 8(R14), AX, R9
     ADOXQ AX, BX
     ADCXQ R9, BP
-    MULXQ 32(DI), AX, R9
+    MULXQ 16(R14), AX, R9
     ADOXQ AX, BP
     ADCXQ R9, SI
-    MULXQ 40(DI), AX, R9
+    MULXQ 24(R14), AX, R9
     ADOXQ AX, SI
+    ADCXQ R9, DI
+    MULXQ 32(R14), AX, R9
+    ADOXQ AX, DI
+    ADCXQ R9, R8
+    MULXQ 40(R14), AX, R9
+    ADOXQ AX, R8
     // add the last carries to R9
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R9
     ADOXQ DX, R9
-    MOVQ R14, DX
+    MOVQ CX, DX
     MULXQ ·qElementInv0(SB), DX, AX                        // m := t[0]*q'[0] mod W
     XORQ AX, AX
     // C,_ := t[0] + m*q[0]
-    MULXQ ·qElement+0(SB), AX, R10
-    ADCXQ R14, AX
-    MOVQ R10, R14
+    MULXQ ·qElement+0(SB), AX, R12
+    ADCXQ CX, AX
+    MOVQ R12, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    ADCXQ R15, R14
-    MULXQ ·qElement+8(SB), AX, R15
-    ADOXQ AX, R14
-    ADCXQ CX, R15
-    MULXQ ·qElement+16(SB), AX, CX
-    ADOXQ AX, R15
     ADCXQ BX, CX
-    MULXQ ·qElement+24(SB), AX, BX
+    MULXQ ·qElement+8(SB), AX, BX
     ADOXQ AX, CX
     ADCXQ BP, BX
-    MULXQ ·qElement+32(SB), AX, BP
+    MULXQ ·qElement+16(SB), AX, BP
     ADOXQ AX, BX
     ADCXQ SI, BP
-    MULXQ ·qElement+40(SB), AX, SI
+    MULXQ ·qElement+24(SB), AX, SI
     ADOXQ AX, BP
+    ADCXQ DI, SI
+    MULXQ ·qElement+32(SB), AX, DI
+    ADOXQ AX, SI
+    ADCXQ R8, DI
+    MULXQ ·qElement+40(SB), AX, R8
+    ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
-    ADCXQ AX, SI
-    ADOXQ R9, SI
+    ADCXQ AX, R8
+    ADOXQ R9, R8
     XORQ DX, DX
-    MOVQ 24(R8), DX
-    MULXQ 0(DI), AX, R9
-    ADOXQ AX, R14
-    ADCXQ R9, R15
-    MULXQ 8(DI), AX, R9
-    ADOXQ AX, R15
-    ADCXQ R9, CX
-    MULXQ 16(DI), AX, R9
+    MOVQ 24(R15), DX
+    MULXQ 0(R14), AX, R9
     ADOXQ AX, CX
     ADCXQ R9, BX
-    MULXQ 24(DI), AX, R9
+    MULXQ 8(R14), AX, R9
     ADOXQ AX, BX
     ADCXQ R9, BP
-    MULXQ 32(DI), AX, R9
+    MULXQ 16(R14), AX, R9
     ADOXQ AX, BP
     ADCXQ R9, SI
-    MULXQ 40(DI), AX, R9
+    MULXQ 24(R14), AX, R9
     ADOXQ AX, SI
+    ADCXQ R9, DI
+    MULXQ 32(R14), AX, R9
+    ADOXQ AX, DI
+    ADCXQ R9, R8
+    MULXQ 40(R14), AX, R9
+    ADOXQ AX, R8
     // add the last carries to R9
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R9
     ADOXQ DX, R9
-    MOVQ R14, DX
+    MOVQ CX, DX
     MULXQ ·qElementInv0(SB), DX, AX                        // m := t[0]*q'[0] mod W
     XORQ AX, AX
     // C,_ := t[0] + m*q[0]
-    MULXQ ·qElement+0(SB), AX, R10
-    ADCXQ R14, AX
-    MOVQ R10, R14
+    MULXQ ·qElement+0(SB), AX, R13
+    ADCXQ CX, AX
+    MOVQ R13, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    ADCXQ R15, R14
-    MULXQ ·qElement+8(SB), AX, R15
-    ADOXQ AX, R14
-    ADCXQ CX, R15
-    MULXQ ·qElement+16(SB), AX, CX
-    ADOXQ AX, R15
     ADCXQ BX, CX
-    MULXQ ·qElement+24(SB), AX, BX
+    MULXQ ·qElement+8(SB), AX, BX
     ADOXQ AX, CX
     ADCXQ BP, BX
-    MULXQ ·qElement+32(SB), AX, BP
+    MULXQ ·qElement+16(SB), AX, BP
     ADOXQ AX, BX
     ADCXQ SI, BP
-    MULXQ ·qElement+40(SB), AX, SI
+    MULXQ ·qElement+24(SB), AX, SI
     ADOXQ AX, BP
+    ADCXQ DI, SI
+    MULXQ ·qElement+32(SB), AX, DI
+    ADOXQ AX, SI
+    ADCXQ R8, DI
+    MULXQ ·qElement+40(SB), AX, R8
+    ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
-    ADCXQ AX, SI
-    ADOXQ R9, SI
+    ADCXQ AX, R8
+    ADOXQ R9, R8
     XORQ DX, DX
-    MOVQ 32(R8), DX
-    MULXQ 0(DI), AX, R9
-    ADOXQ AX, R14
-    ADCXQ R9, R15
-    MULXQ 8(DI), AX, R9
-    ADOXQ AX, R15
-    ADCXQ R9, CX
-    MULXQ 16(DI), AX, R9
+    MOVQ 32(R15), DX
+    MULXQ 0(R14), AX, R9
     ADOXQ AX, CX
     ADCXQ R9, BX
-    MULXQ 24(DI), AX, R9
+    MULXQ 8(R14), AX, R9
     ADOXQ AX, BX
     ADCXQ R9, BP
-    MULXQ 32(DI), AX, R9
+    MULXQ 16(R14), AX, R9
     ADOXQ AX, BP
     ADCXQ R9, SI
-    MULXQ 40(DI), AX, R9
+    MULXQ 24(R14), AX, R9
     ADOXQ AX, SI
+    ADCXQ R9, DI
+    MULXQ 32(R14), AX, R9
+    ADOXQ AX, DI
+    ADCXQ R9, R8
+    MULXQ 40(R14), AX, R9
+    ADOXQ AX, R8
     // add the last carries to R9
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R9
     ADOXQ DX, R9
-    MOVQ R14, DX
+    MOVQ CX, DX
     MULXQ ·qElementInv0(SB), DX, AX                        // m := t[0]*q'[0] mod W
     XORQ AX, AX
     // C,_ := t[0] + m*q[0]
     MULXQ ·qElement+0(SB), AX, R10
-    ADCXQ R14, AX
-    MOVQ R10, R14
+    ADCXQ CX, AX
+    MOVQ R10, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    ADCXQ R15, R14
-    MULXQ ·qElement+8(SB), AX, R15
-    ADOXQ AX, R14
-    ADCXQ CX, R15
-    MULXQ ·qElement+16(SB), AX, CX
-    ADOXQ AX, R15
     ADCXQ BX, CX
-    MULXQ ·qElement+24(SB), AX, BX
+    MULXQ ·qElement+8(SB), AX, BX
     ADOXQ AX, CX
     ADCXQ BP, BX
-    MULXQ ·qElement+32(SB), AX, BP
+    MULXQ ·qElement+16(SB), AX, BP
     ADOXQ AX, BX
     ADCXQ SI, BP
-    MULXQ ·qElement+40(SB), AX, SI
+    MULXQ ·qElement+24(SB), AX, SI
     ADOXQ AX, BP
+    ADCXQ DI, SI
+    MULXQ ·qElement+32(SB), AX, DI
+    ADOXQ AX, SI
+    ADCXQ R8, DI
+    MULXQ ·qElement+40(SB), AX, R8
+    ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
-    ADCXQ AX, SI
-    ADOXQ R9, SI
+    ADCXQ AX, R8
+    ADOXQ R9, R8
     XORQ DX, DX
-    MOVQ 40(R8), DX
-    MULXQ 0(DI), AX, R9
-    ADOXQ AX, R14
-    ADCXQ R9, R15
-    MULXQ 8(DI), AX, R9
-    ADOXQ AX, R15
-    ADCXQ R9, CX
-    MULXQ 16(DI), AX, R9
+    MOVQ 40(R15), DX
+    MULXQ 0(R14), AX, R9
     ADOXQ AX, CX
     ADCXQ R9, BX
-    MULXQ 24(DI), AX, R9
+    MULXQ 8(R14), AX, R9
     ADOXQ AX, BX
     ADCXQ R9, BP
-    MULXQ 32(DI), AX, R9
+    MULXQ 16(R14), AX, R9
     ADOXQ AX, BP
     ADCXQ R9, SI
-    MULXQ 40(DI), AX, R9
+    MULXQ 24(R14), AX, R9
     ADOXQ AX, SI
+    ADCXQ R9, DI
+    MULXQ 32(R14), AX, R9
+    ADOXQ AX, DI
+    ADCXQ R9, R8
+    MULXQ 40(R14), AX, R9
+    ADOXQ AX, R8
     // add the last carries to R9
     MOVQ $0x0000000000000000, DX
     ADCXQ DX, R9
     ADOXQ DX, R9
-    MOVQ R14, DX
+    MOVQ CX, DX
     MULXQ ·qElementInv0(SB), DX, AX                        // m := t[0]*q'[0] mod W
     XORQ AX, AX
     // C,_ := t[0] + m*q[0]
-    MULXQ ·qElement+0(SB), AX, R10
-    ADCXQ R14, AX
-    MOVQ R10, R14
+    MULXQ ·qElement+0(SB), AX, R11
+    ADCXQ CX, AX
+    MOVQ R11, CX
     // for j=1 to N-1
     //     (C,t[j-1]) := t[j] + m*q[j] + C
-    ADCXQ R15, R14
-    MULXQ ·qElement+8(SB), AX, R15
-    ADOXQ AX, R14
-    ADCXQ CX, R15
-    MULXQ ·qElement+16(SB), AX, CX
-    ADOXQ AX, R15
     ADCXQ BX, CX
-    MULXQ ·qElement+24(SB), AX, BX
+    MULXQ ·qElement+8(SB), AX, BX
     ADOXQ AX, CX
     ADCXQ BP, BX
-    MULXQ ·qElement+32(SB), AX, BP
+    MULXQ ·qElement+16(SB), AX, BP
     ADOXQ AX, BX
     ADCXQ SI, BP
-    MULXQ ·qElement+40(SB), AX, SI
+    MULXQ ·qElement+24(SB), AX, SI
     ADOXQ AX, BP
+    ADCXQ DI, SI
+    MULXQ ·qElement+32(SB), AX, DI
+    ADOXQ AX, SI
+    ADCXQ R8, DI
+    MULXQ ·qElement+40(SB), AX, R8
+    ADOXQ AX, DI
     MOVQ $0x0000000000000000, AX
-    ADCXQ AX, SI
-    ADOXQ R9, SI
-    MOVQ res+0(FP), DI
-    MOVQ R14, R11
-    MOVQ R15, R12
+    ADCXQ AX, R8
+    ADOXQ R9, R8
+    MOVQ res+0(FP), R12
     MOVQ CX, R13
-    MOVQ BX, R8
-    MOVQ BP, R9
-    MOVQ SI, R10
-    SUBQ ·qElement+0(SB), R11
-    SBBQ ·qElement+8(SB), R12
-    SBBQ ·qElement+16(SB), R13
-    SBBQ ·qElement+24(SB), R8
-    SBBQ ·qElement+32(SB), R9
-    SBBQ ·qElement+40(SB), R10
-    CMOVQCC R11, R14
-    CMOVQCC R12, R15
+    MOVQ BX, R10
+    MOVQ BP, R11
+    MOVQ SI, R9
+    MOVQ DI, R14
+    MOVQ R8, R15
+    SUBQ ·qElement+0(SB), R13
+    SBBQ ·qElement+8(SB), R10
+    SBBQ ·qElement+16(SB), R11
+    SBBQ ·qElement+24(SB), R9
+    SBBQ ·qElement+32(SB), R14
+    SBBQ ·qElement+40(SB), R15
     CMOVQCC R13, CX
-    CMOVQCC R8, BX
-    CMOVQCC R9, BP
-    CMOVQCC R10, SI
-    MOVQ R14, 0(DI)
-    MOVQ R15, 8(DI)
-    MOVQ CX, 16(DI)
-    MOVQ BX, 24(DI)
-    MOVQ BP, 32(DI)
-    MOVQ SI, 40(DI)
+    CMOVQCC R10, BX
+    CMOVQCC R11, BP
+    CMOVQCC R9, SI
+    CMOVQCC R14, DI
+    CMOVQCC R15, R8
+    MOVQ CX, 0(R12)
+    MOVQ BX, 8(R12)
+    MOVQ BP, 16(R12)
+    MOVQ SI, 24(R12)
+    MOVQ DI, 32(R12)
+    MOVQ R8, 40(R12)
     RET
 l1:
     MOVQ x+8(FP), R15
@@ -2099,84 +2099,6 @@ TEXT ·Add(SB), NOSPLIT, $0-24
     MOVQ R9, 40(CX)
     RET
 
-TEXT ·Add2(SB), NOSPLIT, $0-24
-    MOVQ x+8(FP), AX
-    MOVQ 0(AX), BX
-    MOVQ 8(AX), BP
-    MOVQ 16(AX), SI
-    MOVQ 24(AX), DI
-    MOVQ 32(AX), R8
-    MOVQ 40(AX), R9
-    MOVQ y+16(FP), DX
-    ADDQ 0(DX), BX
-    ADCQ 8(DX), BP
-    ADCQ 16(DX), SI
-    ADCQ 24(DX), DI
-    ADCQ 32(DX), R8
-    ADCQ 40(DX), R9
-    MOVQ res+0(FP), CX
-    MOVQ BX, R10
-    MOVQ BP, R11
-    MOVQ SI, R12
-    MOVQ DI, R13
-    MOVQ R8, R14
-    MOVQ R9, R15
-    SUBQ ·qElement+0(SB), R10
-    SBBQ ·qElement+8(SB), R11
-    SBBQ ·qElement+16(SB), R12
-    SBBQ ·qElement+24(SB), R13
-    SBBQ ·qElement+32(SB), R14
-    SBBQ ·qElement+40(SB), R15
-    CMOVQCC R10, BX
-    CMOVQCC R11, BP
-    CMOVQCC R12, SI
-    CMOVQCC R13, DI
-    CMOVQCC R14, R8
-    CMOVQCC R15, R9
-    MOVQ BX, 0(CX)
-    MOVQ BP, 8(CX)
-    MOVQ SI, 16(CX)
-    MOVQ DI, 24(CX)
-    MOVQ R8, 32(CX)
-    MOVQ R9, 40(CX)
-    MOVQ 48(AX), BX
-    MOVQ 56(AX), BP
-    MOVQ 64(AX), SI
-    MOVQ 72(AX), DI
-    MOVQ 80(AX), R8
-    MOVQ 88(AX), R9
-    ADDQ 48(DX), BX
-    ADCQ 56(DX), BP
-    ADCQ 64(DX), SI
-    ADCQ 72(DX), DI
-    ADCQ 80(DX), R8
-    ADCQ 88(DX), R9
-    MOVQ BX, R10
-    MOVQ BP, R11
-    MOVQ SI, R12
-    MOVQ DI, R13
-    MOVQ R8, R14
-    MOVQ R9, R15
-    SUBQ ·qElement+0(SB), R10
-    SBBQ ·qElement+8(SB), R11
-    SBBQ ·qElement+16(SB), R12
-    SBBQ ·qElement+24(SB), R13
-    SBBQ ·qElement+32(SB), R14
-    SBBQ ·qElement+40(SB), R15
-    CMOVQCC R10, BX
-    CMOVQCC R11, BP
-    CMOVQCC R12, SI
-    CMOVQCC R13, DI
-    CMOVQCC R14, R8
-    CMOVQCC R15, R9
-    MOVQ BX, 48(CX)
-    MOVQ BP, 56(CX)
-    MOVQ SI, 64(CX)
-    MOVQ DI, 72(CX)
-    MOVQ R8, 80(CX)
-    MOVQ R9, 88(CX)
-    RET
-
 TEXT ·Sub(SB), NOSPLIT, $0-24
     MOVQ x+8(FP), DI
     MOVQ 0(DI), AX
@@ -2192,115 +2114,32 @@ TEXT ·Sub(SB), NOSPLIT, $0-24
     SBBQ 24(R8), BX
     SBBQ 32(R8), BP
     SBBQ 40(R8), SI
-    MOVQ $0x8508c00000000001, R10
-    MOVQ $0x170b5d4430000000, R11
-    MOVQ $0x1ef3622fba094800, R12
-    MOVQ $0x1a22d9f300f5138f, R13
-    MOVQ $0xc63b05c06ca1493b, R14
-    MOVQ $0x01ae3a4617c510ea, R15
-    MOVQ $0x0000000000000000, R9
-    CMOVQCC R9, R10
-    CMOVQCC R9, R11
-    CMOVQCC R9, R12
-    CMOVQCC R9, R13
-    CMOVQCC R9, R14
-    CMOVQCC R9, R15
-    ADDQ R10, AX
-    ADCQ R11, DX
-    ADCQ R12, CX
-    ADCQ R13, BX
-    ADCQ R14, BP
-    ADCQ R15, SI
-    MOVQ res+0(FP), R9
-    MOVQ AX, 0(R9)
-    MOVQ DX, 8(R9)
-    MOVQ CX, 16(R9)
-    MOVQ BX, 24(R9)
-    MOVQ BP, 32(R9)
-    MOVQ SI, 40(R9)
-    RET
-
-TEXT ·Sub2(SB), NOSPLIT, $0-24
-    MOVQ x+8(FP), DI
-    MOVQ y+16(FP), R8
-    MOVQ 0(DI), AX
-    MOVQ 8(DI), DX
-    MOVQ 16(DI), CX
-    MOVQ 24(DI), BX
-    MOVQ 32(DI), BP
-    MOVQ 40(DI), SI
-    XORQ R9, R9
-    SUBQ 0(R8), AX
-    SBBQ 8(R8), DX
-    SBBQ 16(R8), CX
-    SBBQ 24(R8), BX
-    SBBQ 32(R8), BP
-    SBBQ 40(R8), SI
-    MOVQ $0x8508c00000000001, R10
-    MOVQ $0x170b5d4430000000, R11
-    MOVQ $0x1ef3622fba094800, R12
-    MOVQ $0x1a22d9f300f5138f, R13
-    MOVQ $0xc63b05c06ca1493b, R14
-    MOVQ $0x01ae3a4617c510ea, R15
-    MOVQ $0x0000000000000000, R9
-    CMOVQCC R9, R10
-    CMOVQCC R9, R11
-    CMOVQCC R9, R12
-    CMOVQCC R9, R13
-    CMOVQCC R9, R14
-    CMOVQCC R9, R15
-    ADDQ R10, AX
-    ADCQ R11, DX
-    ADCQ R12, CX
-    ADCQ R13, BX
-    ADCQ R14, BP
-    ADCQ R15, SI
-    MOVQ res+0(FP), R9
-    MOVQ AX, 0(R9)
-    MOVQ DX, 8(R9)
-    MOVQ CX, 16(R9)
-    MOVQ BX, 24(R9)
-    MOVQ BP, 32(R9)
-    MOVQ SI, 40(R9)
-    MOVQ 48(DI), AX
-    MOVQ 56(DI), DX
-    MOVQ 64(DI), CX
-    MOVQ 72(DI), BX
-    MOVQ 80(DI), BP
-    MOVQ 88(DI), SI
-    XORQ R9, R9
-    SUBQ 48(R8), AX
-    SBBQ 56(R8), DX
-    SBBQ 64(R8), CX
-    SBBQ 72(R8), BX
-    SBBQ 80(R8), BP
-    SBBQ 88(R8), SI
-    MOVQ $0x8508c00000000001, R10
-    MOVQ $0x170b5d4430000000, R11
-    MOVQ $0x1ef3622fba094800, R12
-    MOVQ $0x1a22d9f300f5138f, R13
-    MOVQ $0xc63b05c06ca1493b, R14
-    MOVQ $0x01ae3a4617c510ea, R15
-    MOVQ $0x0000000000000000, R9
-    CMOVQCC R9, R10
-    CMOVQCC R9, R11
-    CMOVQCC R9, R12
-    CMOVQCC R9, R13
-    CMOVQCC R9, R14
-    CMOVQCC R9, R15
-    ADDQ R10, AX
-    ADCQ R11, DX
-    ADCQ R12, CX
-    ADCQ R13, BX
-    ADCQ R14, BP
-    ADCQ R15, SI
-    MOVQ res+0(FP), R9
-    MOVQ AX, 48(R9)
-    MOVQ DX, 56(R9)
-    MOVQ CX, 64(R9)
-    MOVQ BX, 72(R9)
-    MOVQ BP, 80(R9)
-    MOVQ SI, 88(R9)
+    MOVQ $0x8508c00000000001, R9
+    MOVQ $0x170b5d4430000000, R10
+    MOVQ $0x1ef3622fba094800, R11
+    MOVQ $0x1a22d9f300f5138f, R12
+    MOVQ $0xc63b05c06ca1493b, R13
+    MOVQ $0x01ae3a4617c510ea, R14
+    MOVQ $0x0000000000000000, R15
+    CMOVQCC R15, R9
+    CMOVQCC R15, R10
+    CMOVQCC R15, R11
+    CMOVQCC R15, R12
+    CMOVQCC R15, R13
+    CMOVQCC R15, R14
+    ADDQ R9, AX
+    ADCQ R10, DX
+    ADCQ R11, CX
+    ADCQ R12, BX
+    ADCQ R13, BP
+    ADCQ R14, SI
+    MOVQ res+0(FP), R15
+    MOVQ AX, 0(R15)
+    MOVQ DX, 8(R15)
+    MOVQ CX, 16(R15)
+    MOVQ BX, 24(R15)
+    MOVQ BP, 32(R15)
+    MOVQ SI, 40(R15)
     RET
 
 TEXT ·Double(SB), NOSPLIT, $0-16
@@ -2344,83 +2183,6 @@ TEXT ·Double(SB), NOSPLIT, $0-16
     MOVQ R8, 40(DX)
     RET
 
-TEXT ·Double2(SB), NOSPLIT, $0-16
-    MOVQ res+0(FP), DX
-    MOVQ x+8(FP), AX
-    MOVQ 0(AX), CX
-    MOVQ 8(AX), BX
-    MOVQ 16(AX), BP
-    MOVQ 24(AX), SI
-    MOVQ 32(AX), DI
-    MOVQ 40(AX), R8
-    ADDQ CX, CX
-    ADCQ BX, BX
-    ADCQ BP, BP
-    ADCQ SI, SI
-    ADCQ DI, DI
-    ADCQ R8, R8
-    MOVQ CX, R9
-    MOVQ BX, R10
-    MOVQ BP, R11
-    MOVQ SI, R12
-    MOVQ DI, R13
-    MOVQ R8, R14
-    SUBQ ·qElement+0(SB), R9
-    SBBQ ·qElement+8(SB), R10
-    SBBQ ·qElement+16(SB), R11
-    SBBQ ·qElement+24(SB), R12
-    SBBQ ·qElement+32(SB), R13
-    SBBQ ·qElement+40(SB), R14
-    CMOVQCC R9, CX
-    CMOVQCC R10, BX
-    CMOVQCC R11, BP
-    CMOVQCC R12, SI
-    CMOVQCC R13, DI
-    CMOVQCC R14, R8
-    MOVQ CX, 0(DX)
-    MOVQ BX, 8(DX)
-    MOVQ BP, 16(DX)
-    MOVQ SI, 24(DX)
-    MOVQ DI, 32(DX)
-    MOVQ R8, 40(DX)
-    MOVQ 48(AX), CX
-    MOVQ 56(AX), BX
-    MOVQ 64(AX), BP
-    MOVQ 72(AX), SI
-    MOVQ 80(AX), DI
-    MOVQ 88(AX), R8
-    ADDQ CX, CX
-    ADCQ BX, BX
-    ADCQ BP, BP
-    ADCQ SI, SI
-    ADCQ DI, DI
-    ADCQ R8, R8
-    MOVQ CX, R15
-    MOVQ BX, R9
-    MOVQ BP, R10
-    MOVQ SI, R11
-    MOVQ DI, R12
-    MOVQ R8, R13
-    SUBQ ·qElement+0(SB), R15
-    SBBQ ·qElement+8(SB), R9
-    SBBQ ·qElement+16(SB), R10
-    SBBQ ·qElement+24(SB), R11
-    SBBQ ·qElement+32(SB), R12
-    SBBQ ·qElement+40(SB), R13
-    CMOVQCC R15, CX
-    CMOVQCC R9, BX
-    CMOVQCC R10, BP
-    CMOVQCC R11, SI
-    CMOVQCC R12, DI
-    CMOVQCC R13, R8
-    MOVQ CX, 48(DX)
-    MOVQ BX, 56(DX)
-    MOVQ BP, 64(DX)
-    MOVQ SI, 72(DX)
-    MOVQ DI, 80(DX)
-    MOVQ R8, 88(DX)
-    RET
-
 TEXT ·Neg(SB), NOSPLIT, $0-16
     MOVQ res+0(FP), DX
     MOVQ x+8(FP), AX
@@ -2461,91 +2223,4 @@ l4:
     MOVQ $0x01ae3a4617c510ea, CX
     SBBQ R9, CX
     MOVQ CX, 40(DX)
-    RET
-
-TEXT ·Neg2(SB), NOSPLIT, $0-16
-    MOVQ res+0(FP), DX
-    MOVQ x+8(FP), AX
-    MOVQ 0(AX), BX
-    MOVQ 8(AX), BP
-    MOVQ 16(AX), SI
-    MOVQ 24(AX), DI
-    MOVQ 32(AX), R8
-    MOVQ 40(AX), R9
-    MOVQ BX, AX
-    ORQ BP, AX
-    ORQ SI, AX
-    ORQ DI, AX
-    ORQ R8, AX
-    ORQ R9, AX
-    TESTQ AX, AX
-    JNE l5
-    MOVQ AX, 48(DX)
-    MOVQ AX, 56(DX)
-    MOVQ AX, 64(DX)
-    MOVQ AX, 72(DX)
-    MOVQ AX, 80(DX)
-    MOVQ AX, 88(DX)
-    JMP l7
-l5:
-    MOVQ $0x8508c00000000001, CX
-    SUBQ BX, CX
-    MOVQ CX, 0(DX)
-    MOVQ $0x170b5d4430000000, CX
-    SBBQ BP, CX
-    MOVQ CX, 8(DX)
-    MOVQ $0x1ef3622fba094800, CX
-    SBBQ SI, CX
-    MOVQ CX, 16(DX)
-    MOVQ $0x1a22d9f300f5138f, CX
-    SBBQ DI, CX
-    MOVQ CX, 24(DX)
-    MOVQ $0xc63b05c06ca1493b, CX
-    SBBQ R8, CX
-    MOVQ CX, 32(DX)
-    MOVQ $0x01ae3a4617c510ea, CX
-    SBBQ R9, CX
-    MOVQ CX, 40(DX)
-l7:
-    MOVQ x+8(FP), AX
-    MOVQ 48(AX), BX
-    MOVQ 56(AX), BP
-    MOVQ 64(AX), SI
-    MOVQ 72(AX), DI
-    MOVQ 80(AX), R8
-    MOVQ 88(AX), R9
-    MOVQ BX, AX
-    ORQ BP, AX
-    ORQ SI, AX
-    ORQ DI, AX
-    ORQ R8, AX
-    ORQ R9, AX
-    TESTQ AX, AX
-    JNE l6
-    MOVQ AX, 48(DX)
-    MOVQ AX, 56(DX)
-    MOVQ AX, 64(DX)
-    MOVQ AX, 72(DX)
-    MOVQ AX, 80(DX)
-    MOVQ AX, 88(DX)
-    RET
-l6:
-    MOVQ $0x8508c00000000001, CX
-    SUBQ BX, CX
-    MOVQ CX, 48(DX)
-    MOVQ $0x170b5d4430000000, CX
-    SBBQ BP, CX
-    MOVQ CX, 56(DX)
-    MOVQ $0x1ef3622fba094800, CX
-    SBBQ SI, CX
-    MOVQ CX, 64(DX)
-    MOVQ $0x1a22d9f300f5138f, CX
-    SBBQ DI, CX
-    MOVQ CX, 72(DX)
-    MOVQ $0xc63b05c06ca1493b, CX
-    SBBQ R8, CX
-    MOVQ CX, 80(DX)
-    MOVQ $0x01ae3a4617c510ea, CX
-    SBBQ R9, CX
-    MOVQ CX, 88(DX)
     RET
