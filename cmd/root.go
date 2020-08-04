@@ -132,7 +132,7 @@ func GenerateFF2(packageName, elementName, modulus, outputDir string) error {
 		defer f.Close()
 		builder := asm.NewBuilder(f, F.ElementName, F.NbWords, F.Q, F.NoCarrySquare)
 
-		if err := builder.BuildE2(specialCurve); err != nil {
+		if err := builder.GenerateTowerAssembly(specialCurve); err != nil {
 			return err
 		}
 
@@ -214,7 +214,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 			}
 			defer f.Close()
 			builder := asm.NewBuilder(f, F.ElementName, F.NbWords, F.Q, F.NoCarrySquare)
-			if err := builder.Build(); err != nil {
+			if err := builder.GenerateAssembly(); err != nil {
 				return err
 			}
 

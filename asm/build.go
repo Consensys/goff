@@ -45,8 +45,9 @@ func qInv0() string {
 	return fmt.Sprintf("·q%sInv0(SB)", elementName)
 }
 
-// Build ...
-func (asm *assembly) Build() error {
+// GenerateAssembly generates assembly code for the base field provided to goff
+// see internal/templates/ops*
+func (asm *assembly) GenerateAssembly() error {
 
 	apache2 := `
 // Copyright %d %s
@@ -98,14 +99,17 @@ func (asm *assembly) Build() error {
 // SpecialCurve is likely temporary --> this should move into gurvy package in the future
 type SpecialCurve int
 
+// SpecialCurve enum to generate curve specific tower of extension functions.
+// note that this is likely going to move in gurvy at some point.
 const (
 	NONE SpecialCurve = iota
 	BN256
 	BLS381
 )
 
-// Build ...
-func (asm *assembly) BuildE2(specialCurve SpecialCurve) error {
+// GenerateTowerAssembly will generate assembly function for the tower of extension provided to goff
+// note that this is likely going to move in gurvy at some point
+func (asm *assembly) GenerateTowerAssembly(specialCurve SpecialCurve) error {
 
 	apache2 := `
 // Copyright %d %s

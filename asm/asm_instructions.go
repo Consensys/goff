@@ -140,7 +140,7 @@ func fnHeader(funcName string, stackSize, argSize int, reserved ...register) {
 
 }
 
-func (b *assembly) remove(r register) {
+func (builder *assembly) remove(r register) {
 	for j := 0; j < len(builder.registers); j++ {
 		if builder.registers[j] == r {
 			builder.registers[j] = builder.registers[len(builder.registers)-1]

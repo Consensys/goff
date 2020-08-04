@@ -1,7 +1,7 @@
 package asm
 
 func generateSub() {
-	fnHeader("Sub", 0, 24)
+	fnHeader("sub", 0, 24)
 
 	// registers
 	t := popRegisters(nbWords)

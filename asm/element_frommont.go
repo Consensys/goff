@@ -5,7 +5,7 @@ func generateFromMont() {
 	if nbWords > smallModulus {
 		stackSize = nbWords * 8
 	}
-	fnHeader("FromMont", stackSize, 8, dx, ax)
+	fnHeader("fromMont", stackSize, 8, dx, ax)
 	writeLn("NO_LOCAL_POINTERS")
 	writeLn(`
 	// the algorithm is described here

@@ -156,7 +156,7 @@ func generateMul() {
 	if nbWords > smallModulus {
 		stackSize = nbWords * 8
 	}
-	fnHeader("Mul", stackSize, 24, dx, ax)
+	fnHeader("mul", stackSize, 24, dx, ax)
 	writeLn(`
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication

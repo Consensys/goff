@@ -11,28 +11,28 @@ import "math/bits"
 
 
 //go:noescape
-func Add(res,x,y *{{.ElementName}})
+func add(res,x,y *{{.ElementName}})
 
 //go:noescape
-func Sub(res,x,y *{{.ElementName}})
+func sub(res,x,y *{{.ElementName}})
 
 //go:noescape
-func Neg(res,x *{{.ElementName}})
+func neg(res,x *{{.ElementName}})
 
 //go:noescape
-func Double(res,x *{{.ElementName}})
+func double(res,x *{{.ElementName}})
 
 //go:noescape
-func Mul(res,x,y *{{.ElementName}})
+func mul(res,x,y *{{.ElementName}})
 
 //go:noescape
-func Square(res,x *{{.ElementName}})
+func square(res,x *{{.ElementName}})
 
 //go:noescape
-func FromMont(res *{{.ElementName}})
+func fromMont(res *{{.ElementName}})
 
 //go:noescape
-func Reduce(res *{{.ElementName}})
+func reduce(res *{{.ElementName}})
 
 
 // E2

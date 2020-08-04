@@ -349,7 +349,7 @@ func Test{{toUpper .ElementName}}reduce(t *testing.T) {
 
 	for _, s := range testData {
 		expected := s
-		Reduce(&s)
+		reduce(&s)
 		expected.testReduce()
 		if !s.Equal(&expected) {
 			t.Fatal("reduce failed")

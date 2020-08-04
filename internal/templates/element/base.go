@@ -36,7 +36,7 @@ const Bits = {{.NbBits}}
 var _modulus big.Int 
 var onceModulus sync.Once
 
-// {{.ElementName}}Modulus returns q as a big.Int
+// Modulus returns q as a big.Int
 // q = 
 // 
 // {{.Modulus}}
@@ -210,46 +210,46 @@ func (z *{{.ElementName}}) SubAssign(x *{{.ElementName}}) *{{.ElementName}} {
 // Mul z = x * y mod q 
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
-	Mul(z, x, y)
+	mul(z, x, y)
 	return z
 }
 
 // Square z = x * x mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) Square(x *{{.ElementName}}) *{{.ElementName}} {
-	Square(z,x)
+	square(z,x)
 	return z
 }
 
 // FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
 // sets and returns z = z * 1
 func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
-	FromMont(z)
+	fromMont(z)
 	return z
 }
 
 // Add z = x + y mod q
 func (z *{{.ElementName}}) Add( x, y *{{.ElementName}}) *{{.ElementName}} {
-	Add(z, x, y)
+	add(z, x, y)
 	return z 
 }
 
 // Double z = x + x mod q, aka Lsh 1
 func (z *{{.ElementName}}) Double( x *{{.ElementName}}) *{{.ElementName}} {
-	Double(z, x)
+	double(z, x)
 	return z 
 }
 
 
 // Sub  z = x - y mod q
 func (z *{{.ElementName}}) Sub( x, y *{{.ElementName}}) *{{.ElementName}} {
-	Sub(z, x, y)
+	sub(z, x, y)
 	return z
 }
 
 // Neg z = q - x 
 func (z *{{.ElementName}}) Neg( x *{{.ElementName}}) *{{.ElementName}} {
-	Neg(z, x)
+	neg(z, x)
 	return z
 }
 

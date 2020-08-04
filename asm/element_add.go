@@ -5,7 +5,7 @@ func generateAdd() {
 	if nbWords > smallModulus {
 		stackSize = nbWords * 8
 	}
-	fnHeader("Add", stackSize, 24)
+	fnHeader("add", stackSize, 24)
 
 	// registers
 	x := popRegister()

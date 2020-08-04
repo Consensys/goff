@@ -6,7 +6,7 @@ func generateDouble() {
 	if nbWords > smallModulus {
 		stackSize = nbWords * 8
 	}
-	fnHeader("Double", stackSize, 16)
+	fnHeader("double", stackSize, 16)
 
 	// registers
 	x := popRegister()

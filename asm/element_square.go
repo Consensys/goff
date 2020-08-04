@@ -5,7 +5,7 @@ func generateSquare() {
 	if nbWords > smallModulus {
 		stackSize = nbWords * 8
 	}
-	fnHeader("Square", stackSize, 16, dx, ax)
+	fnHeader("square", stackSize, 16, dx, ax)
 	writeLn(`
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
