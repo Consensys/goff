@@ -37,6 +37,14 @@ func squareAdx{{.ElementName}}(res,x *{{.ElementName}})
 //go:noescape
 func mulAdx{{.ElementName}}(res,x,y *{{.ElementName}})
 
+
+// MulByNonResidue multiplies a E2 by (9,1)
+func (z *E2) MulByNonResidue(x *E2) *E2 {
+	mulNonResE2(z, x)
+	return z
+}
+
+
 {{end}}
 
 `
