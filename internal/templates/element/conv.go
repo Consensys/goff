@@ -5,7 +5,7 @@ const Conv = `
 // ToMont converts z to Montgomery form
 // sets and returns z = z * r^2
 func (z *{{.ElementName}}) ToMont() *{{.ElementName}} {
-	return z.Mul(z, &rSquare{{.ElementName}})
+	return z.Mul(z, &rSquare)
 }
 
 // ToRegular returns z in regular form (doesn't mutate z)
@@ -37,7 +37,7 @@ func (z *{{.ElementName}}) SetBigInt(v *big.Int) *{{.ElementName}} {
 	z.SetZero()
 
 	zero := big.NewInt(0)
-	q := {{.ElementName}}Modulus()
+	q := Modulus()
 
 	// fast path
 	c := v.Cmp(q)

@@ -8,11 +8,13 @@ import (
 	"math/bits"
 	"testing"
 	"fmt"
-    mrand "math/rand"
+	mrand "math/rand"
+	"github.com/leanovate/gopter"
+	"github.com/leanovate/gopter/prop"
 )
 
 func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
-    modulus, _ := new(big.Int).SetString("{{.Modulus}}", 10)
+    modulus := Modulus()
 	cmpEandB := func(e *{{.ElementName}}, b *big.Int, name string) {
 		var _e big.Int
 		if e.FromMont().ToBigInt(&_e).Cmp(b) != 0 {
@@ -37,17 +39,17 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 		if i == n/2 && sAdx {
 			supportAdx = false // testing without adx instruction
 		}
-        // sample 2 random big int
+        // sample 3 random big int
         b1, _ := rand.Int(rand.Reader, modulus)
-        b2, _ := rand.Int(rand.Reader, modulus)
-        rExp := mrand.Uint64()
+		b2, _ := rand.Int(rand.Reader, modulus)
+		b3, _ := rand.Int(rand.Reader, modulus) // exponent
         
 
         // adding edge cases
         // TODO need more edge cases
         switch i {
         case 0:
-            rExp = 0
+			b3.SetUint64(0)
             b1.SetUint64(0)
         case 1:
             b2.SetUint64(0)
@@ -55,13 +57,13 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
             b1.SetUint64(0)
             b2.SetUint64(0)
         case 3:
-            rExp = 0
+            b3.SetUint64(0)
         case 4:
-            rExp = 1
-        case 5:
-			rExp = ^uint64(0) // max uint
+            b3.SetUint64(1)
+		case 5:
+			b3.SetUint64(^uint64(0))
 		case 6:
-			rExp = 2
+			b3.SetUint64(2)
 			b1.Set(&modulusMinusOne)
 		case 7:
 			b2.Set(&modulusMinusOne)
@@ -70,9 +72,8 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 			b2.Set(&modulusMinusOne)
         }
 
-        rbExp := new(big.Int).SetUint64(rExp)
 
-        var bMul, bAdd, bSub, bDiv, bNeg, bLsh, bInv, bExp, bExp2,  bSquare big.Int
+        var bMul, bAdd, bSub, bDiv, bNeg, bLsh, bInv, bExp, bSquare big.Int
 
         // e1 = mont(b1), e2 = mont(b2)
         var e1, e2, eMul,  eAdd, eSub, eDiv, eNeg, eLsh, eInv, eExp, eSquare {{.ElementName}}
@@ -87,7 +88,7 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
         eDiv.Div(&e1, &e2)
         eNeg.Neg(&e1)
         eInv.Inverse(&e1)
-		eExp.Exp(e1, rExp)
+		eExp.Exp(e1, b3)
         eLsh.Double(&e1)
 
         // same operations with big int
@@ -101,7 +102,7 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
         bNeg.Neg(b1).Mod(&bNeg, modulus)
 
         bInv.ModInverse(b1, modulus)
-		bExp.Exp(b1, rbExp, modulus)
+		bExp.Exp(b1, b3, modulus)
         bLsh.Lsh(b1, 1).Mod(&bLsh, modulus)
 
         cmpEandB(&eSquare, &bSquare, "Square")
@@ -124,22 +125,13 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 		}
 
 		// these are slow, killing circle ci
-		if n <= 5 {
+		if n <= 10 {
 			// sqrt 
-			var eSqrt, eExp2 {{.ElementName}}
+			var eSqrt {{.ElementName}}
 			var bSqrt big.Int
 			bSqrt.ModSqrt(b1, modulus)
 			eSqrt.Sqrt(&e1)
 			cmpEandB(&eSqrt, &bSqrt, "Sqrt")
-	
-			bits := b2.Bits()
-			exponent := make([]uint64, len(bits))
-			for k := 0; k < len(bits); k++ {
-				exponent[k] = uint64(bits[k])
-			}
-			eExp2.Exp(e1, exponent...)
-			bExp2.Exp(b1, b2, modulus)
-			cmpEandB(&eExp2, &bExp2, "Exp multi words")
 		}
 	}
 	supportAdx = sAdx
@@ -161,9 +153,9 @@ func Test{{toUpper .ElementName}}IsRandom(t *testing.T) {
 	}
 }
 
-func TestByte{{.ElementName}}(t *testing.T) {
+func TestByte(t *testing.T) {
 
-	modulus := {{.ElementName}}Modulus()
+	modulus := Modulus()
 
 	// test values
 	var bs [3][]byte
@@ -220,9 +212,10 @@ func BenchmarkExp{{toUpper .ElementName}}(b *testing.B) {
 	var x {{.ElementName}}
 	x.SetRandom()
 	benchRes{{.ElementName}}.SetRandom()
+	b1, _ := rand.Int(rand.Reader, Modulus())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		benchRes{{.ElementName}}.Exp(x, mrand.Uint64())
+		benchRes{{.ElementName}}.Exp(x, b1)
 	}
 }
 
@@ -356,7 +349,7 @@ func Test{{toUpper .ElementName}}reduce(t *testing.T) {
 
 	for _, s := range testData {
 		expected := s
-		reduce{{.ElementName}}(&s)
+		reduce(&s)
 		expected.testReduce()
 		if !s.Equal(&expected) {
 			t.Fatal("reduce failed")
@@ -373,6 +366,167 @@ func (z *{{.ElementName}}) testReduce() *{{.ElementName}} {
 
 {{end}}
 
+
+// -------------------------------------------------------------------------------------------------
+// Gopter tests
+
+func Test{{toUpper .ElementName}}Mul(t *testing.T) {
+
+	parameters := gopter.DefaultTestParameters()
+	parameters.MinSuccessfulTests = 10000
+
+	properties := gopter.NewProperties(parameters)
+
+	genA := gen()
+	genB := gen()
+
+	properties.Property("Having the receiver as operand should output the same result", prop.ForAll(
+		func(a, b testPair{{.ElementName}}) bool {
+			var c, d {{.ElementName}}
+			d.Set(&a.element)
+			c.Mul(&a.element, &b.element)
+			a.element.Mul(&a.element, &b.element)
+			b.element.Mul(&d, &b.element)
+			return a.element.Equal(&b.element) && a.element.Equal(&c) && b.element.Equal(&c)
+		},
+		genA,
+		genB,
+	))
+
+	properties.Property("Operation result must match big.Int result", prop.ForAll(
+		func(a, b testPair{{.ElementName}}) bool {
+			var c {{.ElementName}}
+			c.Mul(&a.element, &b.element)
+
+			var d, e big.Int 
+			d.Mul(&a.bigint, &b.bigint).Mod(&d, Modulus())
+
+			return c.FromMont().ToBigInt(&e).Cmp(&d) == 0 
+		},
+		genA,
+		genB,
+	))
+
+	properties.Property("Operation result must be smaller than modulus", prop.ForAll(
+		func(a, b testPair{{.ElementName}}) bool {
+			var c {{.ElementName}}
+			c.Mul(&a.element, &b.element)
+			return !c.biggerOrEqualModulus()
+		},
+		genA,
+		genB,
+	))
+
+
+	properties.TestingRun(t, gopter.ConsoleReporter(false))
+}
+
+
+
+func Test{{toUpper .ElementName}}Square(t *testing.T) {
+
+	parameters := gopter.DefaultTestParameters()
+	parameters.MinSuccessfulTests = 10000
+
+	properties := gopter.NewProperties(parameters)
+
+	genA := gen()
+
+	properties.Property("Having the receiver as operand should output the same result", prop.ForAll(
+		func(a testPair{{.ElementName}}) bool {
+			var b {{.ElementName}}
+			b.Square(&a.element)
+			a.element.Square(&a.element)
+			return a.element.Equal(&b) 
+		},
+		genA,
+	))
+
+	properties.Property("Operation result must match big.Int result", prop.ForAll(
+		func(a testPair{{.ElementName}}) bool {
+			var b {{.ElementName}}
+			b.Square(&a.element)
+
+			var d, e big.Int 
+			d.Mul(&a.bigint, &a.bigint).Mod(&d, Modulus())
+
+			return b.FromMont().ToBigInt(&e).Cmp(&d) == 0 
+		},
+		genA,
+	))
+
+	properties.Property("Operation result must be smaller than modulus", prop.ForAll(
+		func(a testPair{{.ElementName}}) bool {
+			var b {{.ElementName}}
+			b.Square(&a.element)
+			return !b.biggerOrEqualModulus()
+		},
+		genA,
+	))
+
+	properties.Property("Square(x) == Mul(x,x)", prop.ForAll(
+		func(a testPair{{.ElementName}}) bool {
+			var b,c  {{.ElementName}}
+			b.Square(&a.element)
+			c.Mul(&a.element, &a.element)
+			return c.Equal(&b)
+		},
+		genA,
+	))
+
+
+	properties.TestingRun(t, gopter.ConsoleReporter(false))
+}
+
+
+
+
+type testPair{{.ElementName}} struct {
+	element {{.ElementName}}
+	bigint       big.Int
+}
+
+func (z *{{.ElementName}}) biggerOrEqualModulus() bool {
+	{{- range $i :=  reverse .NbWordsIndexesNoZero}}
+	if z[{{$i}}] > q{{$.ElementName}}[{{$i}}] {
+		return true
+	}
+	if z[{{$i}}] < q{{$.ElementName}}[{{$i}}] {
+		return false
+	}
+	{{end}}
+	
+	return z[0] >= q{{.ElementName}}[0]
+}
+
+func gen() gopter.Gen {
+	return func(genParams *gopter.GenParameters) *gopter.GenResult {
+		var g testPair{{.ElementName}}
+
+		g.element = {{.ElementName}}{
+			{{- range $i := .NbWordsIndexesFull}}
+			genParams.NextUint64(),{{end}}
+		}
+		if q{{.ElementName}}[{{.NbWordsLastIndex}}] != ^uint64(0) {
+			g.element[{{.NbWordsLastIndex}}] %= (q{{.ElementName}}[{{.NbWordsLastIndex}}] +1 )
+		}
+		
+
+		for g.element.biggerOrEqualModulus() {
+			g.element = {{.ElementName}}{
+				{{- range $i := .NbWordsIndexesFull}}
+				genParams.NextUint64(),{{end}}
+			}
+			if q{{.ElementName}}[{{.NbWordsLastIndex}}] != ^uint64(0) {
+				g.element[{{.NbWordsLastIndex}}] %= (q{{.ElementName}}[{{.NbWordsLastIndex}}] +1 )
+			}
+		}
+
+		g.element.ToBigIntRegular(&g.bigint)
+		genResult := gopter.NewGenResult(g, gopter.NoShrinker)
+		return genResult
+	}
+}
 
 
 `

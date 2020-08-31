@@ -20,6 +20,7 @@ import (
 	"math/big"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 )
 
@@ -69,14 +70,15 @@ func TestIntegration(t *testing.T) {
 
 	for elementName, modulus := range moduli {
 		// generate field
-		if err := GenerateFF("integration", elementName, modulus, parentDir, true); err != nil {
+		childDir := filepath.Join(parentDir, elementName)
+		if err := GenerateFF("integration", elementName, modulus, childDir, true); err != nil {
 			t.Fatal(elementName, err)
 		}
 	}
 
 	// run go test
-	cmd := exec.Command("go", "test", "./"+parentDir)
-	out, err := cmd.Output()
+	cmd := exec.Command("go", "test", "./"+parentDir+"/...")
+	out, err := cmd.CombinedOutput()
 	fmt.Println(string(out))
 	if err != nil {
 		t.Fatal(err)

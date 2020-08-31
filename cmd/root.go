@@ -23,6 +23,7 @@ import (
 
 	"github.com/consensys/bavard"
 	"github.com/consensys/goff/asm"
+	"github.com/consensys/goff/internal/templates/e2"
 	"github.com/consensys/goff/internal/templates/element"
 	"github.com/spf13/cobra"
 )
@@ -73,6 +74,74 @@ func cmdGenerate(cmd *cobra.Command, args []string) {
 	}
 }
 
+// GenerateFF2 will generate go (and .s) files in outputDir for E2 (field extension)
+// modulus (in base 10)
+func GenerateFF2(packageName, elementName, modulus, outputDir string) error {
+
+	// compute field constants
+	_F, err := newField(packageName, elementName, modulus, false)
+	if err != nil {
+		return err
+	}
+
+	type tData struct {
+		*field
+		BN256  bool
+		BLS381 bool
+	}
+	F := &tData{field: _F}
+
+	// TODO make this special curve business go away in gurvy.
+	specialCurve := asm.NONE
+	if modulus == "21888242871839275222246405745257275088696311157297823662689037894645226208583" {
+		specialCurve = asm.BN256
+		F.BN256 = true
+	} else if modulus == "4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787" {
+		specialCurve = asm.BLS381
+		F.BLS381 = true
+	}
+
+	// output files
+	eName := strings.ToLower(elementName)
+
+	pathSrc := filepath.Join(outputDir, eName+"_amd64.go")
+
+	// source file templates
+	src := []string{
+		e2.Base,
+	}
+
+	bavardOpts := []func(*bavard.Bavard) error{
+		bavard.Apache2("ConsenSys AG", 2020),
+		bavard.Package(F.PackageName),
+		bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
+	}
+
+	// generate source file
+	if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
+		return err
+	}
+
+	// generate assembly
+	{
+		pathAsm := filepath.Join(outputDir, eName+"_amd64.s")
+		f, err := os.Create(pathAsm)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		builder := asm.NewBuilder(f, F.ElementName, F.NbWords, F.Q, F.NoCarrySquare)
+
+		if err := builder.GenerateTowerAssembly(specialCurve); err != nil {
+			return err
+		}
+
+	}
+
+	return nil
+}
+
+// GenerateFF will generate go (and .s) files in outputDir for modulus (in base 10)
 func GenerateFF(packageName, elementName, modulus, outputDir string, noCollidingNames bool) error {
 	// compute field constants
 	F, err := newField(packageName, elementName, modulus, noCollidingNames)
@@ -90,7 +159,6 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 		element.MulNoCarry,
 		element.Sqrt,
 		element.Inverse,
-		element.Ops,
 	}
 
 	// test file templates
@@ -110,7 +178,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 
 	// remove old format generated files
 	oldFiles := []string{"_mul.go", "_mul_amd64.go", "_mul_amd64.s",
-		"_square.go", "_square_amd64.go", "_square_amd64.s"}
+		"_square.go", "_square_amd64.go", "_square_amd64.s", "_ops_amd64.go"}
 	for _, of := range oldFiles {
 		os.Remove(filepath.Join(outputDir, eName+of))
 	}
@@ -140,24 +208,32 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 		// generate ops.s
 		{
 			pathMulAsm := filepath.Join(outputDir, eName+"_ops_amd64.s")
-			builder := asm.NewBuilder(pathMulAsm, F.ElementName, F.NbWords, F.Q)
-			if err := builder.Build(F.NoCarrySquare); err != nil {
+			f, err := os.Create(pathMulAsm)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			builder := asm.NewBuilder(f, F.ElementName, F.NbWords, F.Q, F.NoCarrySquare)
+			if err := builder.GenerateAssembly(); err != nil {
 				return err
 			}
 
-			// generate ops_amd64.go
-			src := []string{
-				element.OpsAMD64,
-				element.Reduce,
-				element.MulCIOS,
-				element.MulNoCarry,
-			}
-			pathSrc := filepath.Join(outputDir, eName+"_ops_amd64.go")
-			if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
-				return err
-			}
 		}
 
+	}
+
+	{
+		// generate ops_decl.go
+		src := []string{
+			element.Ops,
+			element.Reduce,
+			element.MulCIOS,
+			element.MulNoCarry,
+		}
+		pathSrc := filepath.Join(outputDir, eName+"_ops_decl.go")
+		if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
+			return err
+		}
 	}
 
 	{

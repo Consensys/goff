@@ -26,25 +26,25 @@ import (
 // {{.Modulus}}
 type {{.ElementName}} [{{.NbWords}}]uint64
 
-// {{.ElementName}}Limbs number of 64 bits words needed to represent {{.ElementName}}
-const {{.ElementName}}Limbs = {{.NbWords}}
+// Limbs number of 64 bits words needed to represent {{.ElementName}}
+const Limbs = {{.NbWords}}
 
-// {{.ElementName}}Bits number bits needed to represent {{.ElementName}}
-const {{.ElementName}}Bits = {{.NbBits}}
+// Bits number bits needed to represent {{.ElementName}}
+const Bits = {{.NbBits}}
 
 // field modulus stored as big.Int 
-var _{{.ElementName}}Modulus big.Int 
-var once{{.ElementName}}Modulus sync.Once
+var _modulus big.Int 
+var onceModulus sync.Once
 
-// {{.ElementName}}Modulus returns q as a big.Int
+// Modulus returns q as a big.Int
 // q = 
 // 
 // {{.Modulus}}
-func {{.ElementName}}Modulus() *big.Int {
-	once{{.ElementName}}Modulus.Do(func() {
-		_{{.ElementName}}Modulus.SetString("{{.Modulus}}", 10)
+func Modulus() *big.Int {
+	onceModulus.Do(func() {
+		_modulus.SetString("{{.Modulus}}", 10)
 	})
-	return &_{{.ElementName}}Modulus
+	return &_modulus
 }
 
 // q (modulus)
@@ -57,7 +57,7 @@ var q{{.ElementName}} = {{.ElementName}}{
 var q{{.ElementName}}Inv0 uint64 = {{index $.QInverse 0}}
 
 // rSquare
-var rSquare{{.ElementName}} = {{.ElementName}}{
+var rSquare = {{.ElementName}}{
 	{{- range $i := .RSquare}}
 	{{$i}},{{end}}
 }
@@ -68,10 +68,10 @@ var rSquare{{.ElementName}} = {{.ElementName}}{
 func (z *{{.ElementName}}) Bytes() []byte {
 	var _z {{.ElementName}}
 	_z.Set(z).FromMont()
-	res := make([]byte, {{.ElementName}}Limbs*8)
-	binary.BigEndian.PutUint64(res[({{.ElementName}}Limbs-1)*8:], _z[0])
-	for i := {{.ElementName}}Limbs - 2; i >= 0; i-- {
-		binary.BigEndian.PutUint64(res[i*8:(i+1)*8], _z[{{.ElementName}}Limbs-1-i])
+	res := make([]byte, Limbs*8)
+	binary.BigEndian.PutUint64(res[(Limbs-1)*8:], _z[0])
+	for i := Limbs - 2; i >= 0; i-- {
+		binary.BigEndian.PutUint64(res[i*8:(i+1)*8], _z[Limbs-1-i])
 	}
 	return res
 }
@@ -144,24 +144,6 @@ func (z *{{.ElementName}}) SetOne() *{{.ElementName}} {
 }
 
 
-// Neg z = q - x 
-func (z *{{.ElementName}}) Neg( x *{{.ElementName}}) *{{.ElementName}} {
-	if x.IsZero() {
-		return z.SetZero()
-	}
-	var borrow uint64
-	z[0], borrow = bits.Sub64({{index $.Q 0}}, x[0], 0)
-	{{- range $i := .NbWordsIndexesNoZero}}
-		{{- if eq $i $.NbWordsLastIndex}}
-			z[{{$i}}], _ = bits.Sub64({{index $.Q $i}}, x[{{$i}}], borrow)
-		{{- else}}
-			z[{{$i}}], borrow = bits.Sub64({{index $.Q $i}}, x[{{$i}}], borrow)
-		{{- end}}
-	{{- end}}
-	return z
-}
-
-
 // Div z = x*y^-1 mod q 
 func (z *{{.ElementName}}) Div( x, y *{{.ElementName}}) *{{.ElementName}} {
 	var yInv {{.ElementName}}
@@ -196,9 +178,6 @@ func (z *{{.ElementName}}) SetRandom() *{{.ElementName}} {
 	return z
 }
 
-{{ if .NoCollidingNames}}
-{{ else}}
-
 // One returns 1 (in montgommery form)
 func One() {{.ElementName}} {
 	var one {{.ElementName}}
@@ -206,22 +185,74 @@ func One() {{.ElementName}} {
 	return one
 }
 
-{{end}}
 
-// MulAssign is deprecated, use Mul instead
+// MulAssign is deprecated
+// Deprecated: use Mul instead
 func (z *{{.ElementName}}) MulAssign(x *{{.ElementName}}) *{{.ElementName}} {
 	return z.Mul(z, x)
 }
 
-// AddAssign is deprecated, use Add instead
+// AddAssign is deprecated
+// Deprecated: use Add instead
 func (z *{{.ElementName}}) AddAssign(x *{{.ElementName}}) *{{.ElementName}} {
 	return z.Add(z, x)
 }
 
-// SubAssign is deprecated, use Sub instead
+// SubAssign is deprecated
+// Deprecated: use Sub instead
 func (z *{{.ElementName}}) SubAssign(x *{{.ElementName}}) *{{.ElementName}} {
 	return z.Sub(z, x)
 }
+
+
+// API with assembly impl
+
+// Mul z = x * y mod q 
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
+	mul(z, x, y)
+	return z
+}
+
+// Square z = x * x mod q
+// see https://hackmd.io/@zkteam/modular_multiplication
+func (z *{{.ElementName}}) Square(x *{{.ElementName}}) *{{.ElementName}} {
+	square(z,x)
+	return z
+}
+
+// FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
+// sets and returns z = z * 1
+func (z *{{.ElementName}}) FromMont() *{{.ElementName}} {
+	fromMont(z)
+	return z
+}
+
+// Add z = x + y mod q
+func (z *{{.ElementName}}) Add( x, y *{{.ElementName}}) *{{.ElementName}} {
+	add(z, x, y)
+	return z 
+}
+
+// Double z = x + x mod q, aka Lsh 1
+func (z *{{.ElementName}}) Double( x *{{.ElementName}}) *{{.ElementName}} {
+	double(z, x)
+	return z 
+}
+
+
+// Sub  z = x - y mod q
+func (z *{{.ElementName}}) Sub( x, y *{{.ElementName}}) *{{.ElementName}} {
+	sub(z, x, y)
+	return z
+}
+
+// Neg z = q - x 
+func (z *{{.ElementName}}) Neg( x *{{.ElementName}}) *{{.ElementName}} {
+	neg(z, x)
+	return z
+}
+
 
 
 
