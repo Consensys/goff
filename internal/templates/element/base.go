@@ -75,7 +75,7 @@ func (z *{{.ElementName}}) Bytes() []byte {
 		{{- $jj := add $j 8}}
 		binary.BigEndian.PutUint64(res[{{$j}}:{{$jj}}], _z[{{$k}}])
 	{{- end}}
-	
+
 	return res[:]
 }
 
@@ -90,11 +90,8 @@ func (z *{{.ElementName}}) SetBytes(e []byte) *{{.ElementName}} {
 
 // SetUint64 z = v, sets z LSB to v (non-Montgomery form) and convert z to Montgomery form
 func (z *{{.ElementName}}) SetUint64(v uint64) *{{.ElementName}} {
-	z[0] = v
-	{{- range $i := .NbWordsIndexesNoZero}}
-		z[{{$i}}] = 0
-	{{- end}}
-	return z.ToMont()
+	*z = {{.ElementName}}{v}
+	return z.Mul(z, &rSquare) // z.ToMont()
 }
 
 // Set z = x
