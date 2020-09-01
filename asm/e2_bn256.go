@@ -60,7 +60,12 @@ func generateSquareE2BN256() {
 	// b.Mul(&x.A0, &x.A1).Double(&b)
 	// z.A0.Set(&a)
 	// z.A1.Set(&b)
-	fnHeader("squareAdx"+elementName, 0, 16, dx, ax)
+	fnHeader("squareAdx"+elementName, 16, 16, dx, ax)
+
+	noAdx := newLabel()
+	// check ADX instruction support
+	cmpb("·supportAdx(SB)", 1)
+	jne(noAdx)
 
 	a := popRegisters(nbWords)
 	b := popRegisters(nbWords)
@@ -127,6 +132,15 @@ func generateSquareE2BN256() {
 	_mov(a, r)
 
 	ret()
+
+	// No adx
+	label(noAdx)
+	movq("res+0(FP)", ax)
+	movq(ax, "(SP)")
+	movq("x+8(FP)", ax)
+	movq(ax, "8(SP)")
+	writeLn("CALL ·squareGenericE2(SB)")
+	ret()
 }
 
 func generateMulE2BN256() {
@@ -138,7 +152,12 @@ func generateMulE2BN256() {
 	// c.Mul(&x.A1, &y.A1)
 	// z.A1.Sub(&a, &b).Sub(&z.A1, &c)
 	// z.A0.Sub(&b, &c)
-	fnHeader("mulAdx"+elementName, 0, 24, dx, ax)
+	fnHeader("mulAdx"+elementName, 24, 24, dx, ax)
+
+	noAdx := newLabel()
+	// check ADX instruction support
+	cmpb("·supportAdx(SB)", 1)
+	jne(noAdx)
 
 	a := popRegisters(nbWords)
 	b := popRegisters(nbWords)
@@ -245,5 +264,16 @@ func generateMulE2BN256() {
 	// z.A1 = a
 	_mov(a, r, 0, nbWords)
 
+	ret()
+
+	// No adx
+	label(noAdx)
+	movq("res+0(FP)", ax)
+	movq(ax, "(SP)")
+	movq("x+8(FP)", ax)
+	movq(ax, "8(SP)")
+	movq("y+16(FP)", ax)
+	movq(ax, "16(SP)")
+	writeLn("CALL ·mulGenericE2(SB)")
 	ret()
 }
