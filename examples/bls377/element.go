@@ -59,7 +59,7 @@ func Modulus() *big.Int {
 	onceModulus.Do(func() {
 		_modulus.SetString("258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177", 10)
 	})
-	return &_modulus
+	return new(big.Int).Set(&_modulus)
 }
 
 // q (modulus)

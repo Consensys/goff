@@ -44,7 +44,7 @@ func Modulus() *big.Int {
 	onceModulus.Do(func() {
 		_modulus.SetString("{{.Modulus}}", 10)
 	})
-	return &_modulus
+	return new(big.Int).Set(&_modulus)
 }
 
 // q (modulus)
