@@ -111,13 +111,8 @@ func (z *Element) SetBytes(e []byte) *Element {
 
 // SetUint64 z = v, sets z LSB to v (non-Montgomery form) and convert z to Montgomery form
 func (z *Element) SetUint64(v uint64) *Element {
-	z[0] = v
-	z[1] = 0
-	z[2] = 0
-	z[3] = 0
-	z[4] = 0
-	z[5] = 0
-	return z.ToMont()
+	*z = Element{v}
+	return z.Mul(z, &rSquare) // z.ToMont()
 }
 
 // Set z = x
