@@ -49,7 +49,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&fModulus, "modulus", "m", "", "field modulus (base 10)")
 	rootCmd.PersistentFlags().StringVarP(&fOutputDir, "output", "o", "", "destination path to create output files")
 	rootCmd.PersistentFlags().StringVarP(&fPackageName, "package", "p", "", "package name in generated files")
-
 	if bits.UintSize != 64 {
 		panic("goff only supports 64bits architectures")
 	}
@@ -178,7 +177,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 
 	// remove old format generated files
 	oldFiles := []string{"_mul.go", "_mul_amd64.go", "_mul_amd64.s",
-		"_square.go", "_square_amd64.go", "_square_amd64.s", "_ops_amd64.go"}
+		"_square.go", "_square_amd64.go", "_ops_decl.go", "_square_amd64.s", "_ops_amd64.go"}
 	for _, of := range oldFiles {
 		os.Remove(filepath.Join(outputDir, eName+of))
 	}
@@ -223,14 +222,11 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 	}
 
 	{
-		// generate ops_decl.go
+		// generate ops_amd64.go
 		src := []string{
-			element.Ops,
-			element.Reduce,
-			element.MulCIOS,
-			element.MulNoCarry,
+			element.OpsAMD64,
 		}
-		pathSrc := filepath.Join(outputDir, eName+"_ops_decl.go")
+		pathSrc := filepath.Join(outputDir, eName+"_ops_amd64.go")
 		if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
 			return err
 		}
