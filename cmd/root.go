@@ -225,7 +225,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 	{
 		// generate ops_decl.go
 		src := []string{
-			element.Ops,
+			element.OpsAMD64,
 			element.Reduce,
 			element.MulCIOS,
 			element.MulNoCarry,

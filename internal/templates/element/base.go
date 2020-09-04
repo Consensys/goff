@@ -52,9 +52,6 @@ var q{{.ElementName}} = {{.ElementName}}{
 	{{index $.Q $i}},{{end}}
 }
 
-// q'[0], see montgommery multiplication algorithm
-var q{{.ElementName}}Inv0 uint64 = {{index $.QInverse 0}}
-
 // rSquare
 var rSquare = {{.ElementName}}{
 	{{- range $i := .RSquare}}
@@ -253,6 +250,46 @@ func (z *{{.ElementName}}) Neg( x *{{.ElementName}}) *{{.ElementName}} {
 }
 
 
+
+
+// Generic (no ADX instructions, no AMD64) versions of multiplication and squaring algorithms
+
+func _mulGeneric(z,x,y *{{.ElementName}}) {
+	{{ if .NoCarry}}
+		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "y"}}
+	{{ else }}
+		{{ template "mul_cios" dict "all" . "V1" "x" "V2" "y" "NoReturn" true}}
+	{{ end }}
+	{{ template "reduce" . }}
+}
+
+
+func _squareGeneric(z,x *{{.ElementName}}) {
+	{{ if .NoCarry}}
+		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "x"}}
+	{{ else }}
+		{{ template "mul_cios" dict "all" . "V1" "x" "V2" "x" "NoReturn" true}}
+	{{ end }}
+	{{ template "reduce" . }}
+}
+
+func _fromMontGeneric(z *{{.ElementName}}) {
+	// the following lines implement z = z * 1
+	// with a modified CIOS montgomery multiplication
+	{{- range $j := .NbWordsIndexesFull}}
+	{
+		// m = z[0]n'[0] mod W
+		m := z[0] * {{index $.QInverse 0}}
+		C := madd0(m, {{index $.Q 0}}, z[0])
+		{{- range $i := $.NbWordsIndexesNoZero}}
+			C, z[{{sub $i 1}}] = madd2(m, {{index $.Q $i}}, z[{{$i}}], C)
+		{{- end}}
+		z[{{sub $.NbWords 1}}] = C
+	}
+	{{- end}}
+
+	{{ template "reduce" .}}
+}
 
 
 `

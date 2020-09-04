@@ -417,6 +417,17 @@ func Test{{toUpper .ElementName}}Mul(t *testing.T) {
 		genB,
 	))
 
+	properties.Property("Assembly implementation must be consistent with generic one", prop.ForAll(
+		func(a, b testPair{{.ElementName}}) bool {
+			var c,d {{.ElementName}}
+			c.Mul(&a.element, &b.element)
+			_mulGeneric(&d, &a.element, &b.element)
+			return c.Equal(&d)
+		},
+		genA,
+		genB,
+	))
+
 
 	properties.TestingRun(t, gopter.ConsoleReporter(false))
 }
@@ -474,9 +485,46 @@ func Test{{toUpper .ElementName}}Square(t *testing.T) {
 		genA,
 	))
 
+	properties.Property("Assembly implementation must be consistent with generic one", prop.ForAll(
+		func(a testPair{{.ElementName}}) bool {
+			var c,d {{.ElementName}}
+			c.Square(&a.element)
+			_squareGeneric(&d, &a.element)
+			return c.Equal(&d)
+		},
+		genA,
+	))
+
 
 	properties.TestingRun(t, gopter.ConsoleReporter(false))
 }
+
+
+
+func Test{{toUpper .ElementName}}FromMont(t *testing.T) {
+
+	parameters := gopter.DefaultTestParameters()
+	parameters.MinSuccessfulTests = 10000
+
+	properties := gopter.NewProperties(parameters)
+
+	genA := gen()
+
+	properties.Property("Assembly implementation must be consistent with generic one", prop.ForAll(
+		func(a testPair{{.ElementName}}) bool {
+			c := a.element
+			d := a.element
+			c.FromMont()
+			_fromMontGeneric(&d)
+			return c.Equal(&d)
+		},
+		genA,
+	))
+
+
+	properties.TestingRun(t, gopter.ConsoleReporter(false))
+}
+
 
 
 
