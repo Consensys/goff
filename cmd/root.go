@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"math/bits"
 	"os"
 	"path/filepath"
 	"strings"
@@ -49,6 +50,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&fOutputDir, "output", "o", "", "destination path to create output files")
 	rootCmd.PersistentFlags().StringVarP(&fPackageName, "package", "p", "", "package name in generated files")
 
+	if bits.UintSize != 64 {
+		panic("goff only supports 64bits architectures")
+	}
 }
 
 func cmdGenerate(cmd *cobra.Command, args []string) {
@@ -174,7 +178,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 
 	// remove old format generated files
 	oldFiles := []string{"_mul.go", "_mul_amd64.go", "_mul_amd64.s",
-		"_square.go", "_square_amd64.go", "_ops_decl.go", "_square_amd64.s", "_ops_amd64.go"}
+		"_square.go", "_square_amd64.go", "_square_amd64.s", "_ops_amd64.go"}
 	for _, of := range oldFiles {
 		os.Remove(filepath.Join(outputDir, eName+of))
 	}
@@ -219,11 +223,14 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 	}
 
 	{
-		// generate ops_amd64.go
+		// generate ops_decl.go
 		src := []string{
-			element.OpsAMD64,
+			element.Ops,
+			element.Reduce,
+			element.MulCIOS,
+			element.MulNoCarry,
 		}
-		pathSrc := filepath.Join(outputDir, eName+"_ops_amd64.go")
+		pathSrc := filepath.Join(outputDir, eName+"_ops_decl.go")
 		if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
 			return err
 		}

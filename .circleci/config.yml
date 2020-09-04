@@ -16,7 +16,7 @@ jobs:
       - run: go generate ./...
       - run: go vet -v ./...
       - run: gotestsum --junitfile  /tmp/test-results/results.xml -- ./... -short -count=1
-      - run: GOARCH=386 go test ./... -short -count=1
+      - run: GOARCH=386 go test ./examples/... -short -count=1
       - store_test_results:
           path: /tmp/test-results
       - save_cache:
