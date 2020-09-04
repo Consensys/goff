@@ -677,31 +677,44 @@ func (z *Element) ToBigIntRegular(res *big.Int) *big.Int {
 func (z *Element) SetBigInt(v *big.Int) *Element {
 	z.SetZero()
 
-	zero := big.NewInt(0)
+	var zero big.Int
 	q := Modulus()
 
 	// fast path
 	c := v.Cmp(q)
 	if c == 0 {
+		// v == 0
 		return z
-	} else if c != 1 && v.Cmp(zero) != -1 {
-		// v should
-		vBits := v.Bits()
-		for i := 0; i < len(vBits); i++ {
-			z[i] = uint64(vBits[i])
-		}
-		return z.ToMont()
+	} else if c != 1 && v.Cmp(&zero) != -1 {
+		// 0 < v < q
+		return z.setBigInt(v)
 	}
 
-	// copy input
+	// copy input + modular reduction
 	vv := new(big.Int).Set(v)
 	vv.Mod(v, q)
 
-	// v should
-	vBits := vv.Bits()
-	for i := 0; i < len(vBits); i++ {
-		z[i] = uint64(vBits[i])
+	return z.setBigInt(vv)
+}
+
+// setBigInt assumes 0 <= v < q
+func (z *Element) setBigInt(v *big.Int) *Element {
+	vBits := v.Bits()
+
+	if bits.UintSize == 64 {
+		for i := 0; i < len(vBits); i++ {
+			z[i] = uint64(vBits[i])
+		}
+	} else {
+		for i := 0; i < len(vBits); i++ {
+			if i%2 == 0 {
+				z[i/2] = uint64(vBits[i])
+			} else {
+				z[i/2] |= uint64(vBits[i]) << 32
+			}
+		}
 	}
+
 	return z.ToMont()
 }
 
