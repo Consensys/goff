@@ -118,13 +118,9 @@ func neg(z,  x *{{.ElementName}}) {
 }
 
 
-{{- if eq .ASM false }}
-
-// for test purposes
 func reduce(z *{{.ElementName}})  {
 	{{ template "reduce" . }}
 }
-{{- end}}
 
 
 `
