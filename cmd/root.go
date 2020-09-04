@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"fmt"
-	"math/bits"
 	"os"
 	"path/filepath"
 	"strings"
@@ -50,9 +49,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&fOutputDir, "output", "o", "", "destination path to create output files")
 	rootCmd.PersistentFlags().StringVarP(&fPackageName, "package", "p", "", "package name in generated files")
 
-	if bits.UintSize != 64 {
-		panic("goff only supports 64bits architectures")
-	}
 }
 
 func cmdGenerate(cmd *cobra.Command, args []string) {
