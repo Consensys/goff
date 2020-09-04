@@ -15,7 +15,6 @@ import (
 	"encoding/binary"
 	"io"
 	"sync"
-	"unsafe"
 	{{if eq .NoCollidingNames false}}"strconv"{{- end}}
 )
 

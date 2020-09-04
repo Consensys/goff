@@ -31,7 +31,6 @@ import (
 	"math/bits"
 	"strconv"
 	"sync"
-	"unsafe"
 )
 
 // Element represents a field element stored on 4 words (uint64)
@@ -312,15 +311,24 @@ func (z *Element) String() string {
 
 // ToBigInt returns z as a big.Int in Montgomery form
 func (z *Element) ToBigInt(res *big.Int) *big.Int {
-	bits := (*[4]big.Word)(unsafe.Pointer(z))
-	return res.SetBits(bits[:])
+	var b [Limbs * 8]byte
+	binary.BigEndian.PutUint64(b[24:32], z[0])
+	binary.BigEndian.PutUint64(b[16:24], z[1])
+	binary.BigEndian.PutUint64(b[8:16], z[2])
+	binary.BigEndian.PutUint64(b[0:8], z[3])
+
+	return res.SetBytes(b[:])
 }
 
 // ToBigIntRegular returns z as a big.Int in regular form
-func (z Element) ToBigIntRegular(res *big.Int) *big.Int {
-	z.FromMont()
-	bits := (*[4]big.Word)(unsafe.Pointer(&z))
-	return res.SetBits(bits[:])
+func (z *Element) ToBigIntRegular(res *big.Int) *big.Int {
+	zRegular := z.ToRegular()
+	var b [Limbs * 8]byte
+	binary.BigEndian.PutUint64(b[24:32], zRegular[0])
+	binary.BigEndian.PutUint64(b[16:24], zRegular[1])
+	binary.BigEndian.PutUint64(b[8:16], zRegular[2])
+	binary.BigEndian.PutUint64(b[0:8], zRegular[3])
+	return res.SetBytes(b[:])
 }
 
 // SetBigInt sets z to v (regular form) and returns z in Montgomery form
