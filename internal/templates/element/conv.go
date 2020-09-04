@@ -34,17 +34,9 @@ func (z *{{.ElementName}}) ToBigInt(res *big.Int) *big.Int {
 }
 
 // ToBigIntRegular returns z as a big.Int in regular form 
-func (z *{{.ElementName}}) ToBigIntRegular(res *big.Int) *big.Int {
-	zRegular := z.ToRegular()
-	var b [Limbs*8]byte
-	{{- range $i := reverse .NbWordsIndexesFull}}
-		{{- $j := mul $i 8}}
-		{{- $k := sub $.NbWords 1}}
-		{{- $k := sub $k $i}}
-		{{- $jj := add $j 8}}
-		binary.BigEndian.PutUint64(b[{{$j}}:{{$jj}}], zRegular[{{$k}}])
-	{{- end}}
-	return res.SetBytes(b[:])
+func (z {{.ElementName}}) ToBigIntRegular(res *big.Int) *big.Int {
+	z.FromMont()
+	return z.ToBigInt(res)
 }
 
 // SetBigInt sets z to v (regular form) and returns z in Montgomery form
