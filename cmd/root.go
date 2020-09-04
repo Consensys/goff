@@ -178,7 +178,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 
 	// remove old format generated files
 	oldFiles := []string{"_mul.go", "_mul_amd64.go", "_mul_amd64.s",
-		"_square.go", "_square_amd64.go", "_square_amd64.s", "_ops_amd64.go"}
+		"_square.go", "_square_amd64.go", "_ops_decl.go", "_square_amd64.s", "_ops_amd64.go"}
 	for _, of := range oldFiles {
 		os.Remove(filepath.Join(outputDir, eName+of))
 	}
@@ -223,14 +223,11 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 	}
 
 	{
-		// generate ops_decl.go
+		// generate ops_amd64.go
 		src := []string{
 			element.OpsAMD64,
-			element.Reduce,
-			element.MulCIOS,
-			element.MulNoCarry,
 		}
-		pathSrc := filepath.Join(outputDir, eName+"_ops_decl.go")
+		pathSrc := filepath.Join(outputDir, eName+"_ops_amd64.go")
 		if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
 			return err
 		}
