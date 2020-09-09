@@ -1,4 +1,4 @@
-// Copyright 2019 ConsenSys AG
+// Copyright 2020 ConsenSys AG
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package goff (go finite field) is a unix-like tool that generates fast field arithmetic in Go.
+// Package goff (go finite field) is a library that generates fast field arithmetic code for a given modulus
+// see github.com/consensys/goff/cmd for CLI usage
 package main
 
 import "github.com/consensys/goff/cmd"
