@@ -14,13 +14,15 @@
 
 package asm
 
+import "strings"
+
 func generateMulByNonResidueE2BN256() {
 	// 	var a, b fp.Element
 	// 	a.Double(&x.A0).Double(&a).Double(&a).Add(&a, &x.A0).Sub(&a, &x.A1)
 	// 	b.Double(&x.A1).Double(&b).Double(&b).Add(&b, &x.A1).Add(&b, &x.A0)
 	// 	z.A0.Set(&a)
 	// 	z.A1.Set(&b)
-	fnHeader("mulNonRes"+elementName, 0, 16)
+	fnHeader("mulNonRes"+strings.ToUpper(elementName), 0, 16)
 
 	a := popRegisters(nbWords)
 	b := popRegisters(nbWords)
@@ -74,7 +76,7 @@ func generateSquareE2BN256() {
 	// b.Mul(&x.A0, &x.A1).Double(&b)
 	// z.A0.Set(&a)
 	// z.A1.Set(&b)
-	fnHeader("squareAdx"+elementName, 16, 16, dx, ax)
+	fnHeader("squareAdx"+strings.ToUpper(elementName), 16, 16, dx, ax)
 
 	noAdx := newLabel()
 	// check ADX instruction support
@@ -166,7 +168,7 @@ func generateMulE2BN256() {
 	// c.Mul(&x.A1, &y.A1)
 	// z.A1.Sub(&a, &b).Sub(&z.A1, &c)
 	// z.A0.Sub(&b, &c)
-	fnHeader("mulAdx"+elementName, 24, 24, dx, ax)
+	fnHeader("mulAdx"+strings.ToUpper(elementName), 24, 24, dx, ax)
 
 	noAdx := newLabel()
 	// check ADX instruction support

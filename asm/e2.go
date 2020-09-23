@@ -14,12 +14,14 @@
 
 package asm
 
+import "strings"
+
 func generateAddE2() {
 	stackSize := 0
 	if nbWords > smallModulus {
 		stackSize = nbWords * 8
 	}
-	fnHeader("add"+elementName, stackSize, 24)
+	fnHeader("add"+strings.ToUpper(elementName), stackSize, 24)
 
 	// registers
 	x := popRegister()
@@ -60,7 +62,7 @@ func generateDoubleE2() {
 	if nbWords > smallModulus {
 		stackSize = nbWords * 8
 	}
-	fnHeader("double"+elementName, stackSize, 16)
+	fnHeader("double"+strings.ToUpper(elementName), stackSize, 16)
 
 	// registers
 	x := popRegister()
@@ -81,7 +83,7 @@ func generateDoubleE2() {
 }
 
 func generateNegE2() {
-	fnHeader("neg"+elementName, 0, 16)
+	fnHeader("neg"+strings.ToUpper(elementName), 0, 16)
 
 	nonZeroA := newLabel()
 	nonZeroB := newLabel()
@@ -168,7 +170,7 @@ func generateNegE2() {
 }
 
 func generateSubE2() {
-	fnHeader("sub"+elementName, 0, 24)
+	fnHeader("sub"+strings.ToUpper(elementName), 0, 24)
 
 	// registers
 	t := popRegisters(nbWords)

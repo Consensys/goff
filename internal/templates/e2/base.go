@@ -10,13 +10,13 @@ import (
 var supportAdx = cpu.X86.HasADX && cpu.X86.HasBMI2
 
 // q (modulus)
-var q{{toUpper .ElementName}} = [{{.NbWords}}]uint64{
+var q{{.ElementName}} = [{{.NbWords}}]uint64{
 	{{- range $i := .NbWordsIndexesFull}}
 	{{index $.Q $i}},{{end}}
 }
 
 // q'[0], see montgommery multiplication algorithm
-var q{{toUpper .ElementName}}Inv0 uint64 = {{index $.QInverse 0}}
+var q{{.ElementName}}Inv0 uint64 = {{index $.QInverse 0}}
 
 
 //go:noescape
@@ -45,19 +45,19 @@ func mulAdx{{toUpper .ElementName}}(res,x,y *{{.ElementName}})
 
 // MulByNonResidue multiplies a {{.ElementName}} by (9,1)
 func (z *{{.ElementName}}) MulByNonResidue(x *{{.ElementName}}) *{{.ElementName}} {
-	mulNonRes{{.ElementName}}(z, x)
+	mulNonRes{{toUpper .ElementName}}(z, x)
 	return z
 }
 
 // Mul sets z to the {{.ElementName}}-product of x,y, returns z
 func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
-	mulAdx{{.ElementName}}(z, x, y)
+	mulAdx{{toUpper .ElementName}}(z, x, y)
 	return z
 }
 
 // Square sets z to the {{.ElementName}}-product of x,x, returns z
 func (z *{{.ElementName}}) Square(x *{{.ElementName}}) *{{.ElementName}} {
-	squareAdx{{.ElementName}}(z, x)
+	squareAdx{{toUpper .ElementName}}(z, x)
 	return z
 }
 
