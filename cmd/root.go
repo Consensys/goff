@@ -1,4 +1,4 @@
-// Copyright 2019 ConsenSys AG
+// Copyright 2020 ConsenSys AG
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package cmd is the CLI interface for goff
+// 		goff -m 21888242871...94645226208583 -o ./bn256/ -p bn256 -e Element
+// will generate field arithmetic code for given modulus
 package cmd
 
 import (
@@ -184,12 +187,13 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 
 	bavardOpts := []func(*bavard.Bavard) error{
 		bavard.Apache2("ConsenSys AG", 2020),
-		bavard.Package(F.PackageName, "contains field arithmetic operations"),
+		bavard.Package(F.PackageName),
 		bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
 	}
+	optsWithPackageDoc := append(bavardOpts, bavard.Package(F.PackageName, "contains field arithmetic operations for modulus "+F.Modulus))
 
 	// generate source file
-	if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
+	if err := bavard.Generate(pathSrc, src, F, optsWithPackageDoc...); err != nil {
 		return err
 	}
 	// generate arithmetics source file
