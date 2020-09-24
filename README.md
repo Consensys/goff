@@ -1,13 +1,16 @@
 # Fast finite field arithmetic in Golang
 [![Gitter](https://badges.gitter.im/consensys-gnark/community.svg)](https://gitter.im/consensys-gnark/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) [![License](https://img.shields.io/badge/license-Apache%202-blue)](LICENSE)  [![Go Report Card](https://goreportcard.com/badge/github.com/consensys/goff)](https://goreportcard.com/badge/github.com/consensys/goff)
 
-`goff` (go **f**inite **f**ield) is a unix-like tool that generates fast field arithmetic in Go.
+`goff` (go **f**inite **f**ield) is a fast field arithmetic library in Go.
 
 We introduced `goff` [in this article](https://hackmd.io/@zkteam/goff): the project came from the need to have performant field operations in Go.
 For most moduli, `goff` outperforms `math/big` and optimized libraries written in C++ or Rust.
 
-In particular, `goff` modular multiplication is blazingly fast. ["Faster big-integer modular multiplication for most moduli"](https://hackmd.io/@zkteam/modular_multiplication) explains the algorithmic optimization we discovered and implemented, and presents some [benchmarks](https://hackmd.io/@zkteam/modular_multiplication#Benchmarks).
+In particular, `goff` modular multiplication is blazingly fast. ["Faster big-integer modular multiplication for most moduli"](https://hackmd.io/@zkteam/modular_multiplication) explains the algorithmic optimization we discovered and implemented, and presents some [benchmarks](https://github.com/ConsenSys/gurvy#benchmarks).
 
+Actively developed and maintained by the team (zkteam@consensys.net) behind:
+* [`gnark`: a framework to execute (and verify) algorithms in zero-knowledge](https://github.com/consensys/gnark) 
+* [`gurvy`: elliptic curve cryptography (+pairing) library](https://github.com/consensys/gurvy)
 
 ## Warning
 **`goff` has not been audited and is provided as-is, use at your own risk. In particular, `goff` makes no security guarantees such as constant time implementation or side-channel attack resistance.**
@@ -26,16 +29,36 @@ src="banner_goff.png">
 go get golang.org/x/tools/cmd/goimports
 
 # goff
-go install github.com/consensys/goff
+go get github.com/consensys/goff
+```
+
+## Usage
+
+### Generated API
+
+Example [API doc](https://pkg.go.dev/github.com/consensys/goff/examples/bn256)
+
+### API -- go.mod (recommended)
+
+At the root of your repo:
+```bash
+# goff
+go get github.com/consensys/goff
+``` 
+
+then in a `main.go`  (that can be called using a `go:generate` workflow):
+
+```
+goff.GenerateFF(packageName, structName, modulus, destinationPath, false)
 ```
 
 
-### Usage
+### Command line interface
 
 ```bash
-$ goff
+goff
 
-running goff version 0.1.0-alpha
+running goff version v0.3.4
 
 Usage:
   goff [flags]
@@ -46,7 +69,7 @@ Flags:
   -m, --modulus string   field modulus (base 10)
   -o, --output string    destination path to create output files
   -p, --package string   package name in generated files
-      --version          version for goff
+  -v, --version          version for goff
 ```
 
 ### `goff` -- a short example
