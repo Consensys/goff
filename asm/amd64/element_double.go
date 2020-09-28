@@ -1,4 +1,4 @@
-// Copyright 2020 ConsenSys AG
+// Copyright 2020 ConsenSys Software Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,27 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package asm
+package amd64
 
-func generateDouble() {
+import . "github.com/consensys/bavard/amd64"
+
+func (f *FFAmd64) generateDouble() {
 	// func header
 	stackSize := 0
-	if nbWords > smallModulus {
-		stackSize = nbWords * 8
+	if f.NbWords > SmallModulus {
+		stackSize = f.NbWords * 8
 	}
-	fnHeader("double", stackSize, 16)
+	registers := FnHeader("double", stackSize, 16)
 
 	// registers
-	x := popRegister()
-	r := popRegister()
-	t := popRegisters(nbWords)
+	x := registers.Pop()
+	r := registers.Pop()
+	t := registers.PopN(f.NbWords)
 
-	movq("res+0(FP)", r)
-	movq("x+8(FP)", x)
+	MOVQ("res+0(FP)", r)
+	MOVQ("x+8(FP)", x)
 
-	_mov(x, t)
-	_add(t, t)
-	_reduce(t, r)
+	f.Mov(x, t)
+	f.Add(t, t)
+	f.Reduce(&registers, t, r)
 
-	ret()
+	RET()
 }

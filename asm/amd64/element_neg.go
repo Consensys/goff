@@ -1,4 +1,4 @@
-// Copyright 2020 ConsenSys AG
+// Copyright 2020 ConsenSys Software Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,55 +12,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package asm
+package amd64
 
-func generateNeg() {
-	fnHeader("neg", 0, 16)
+import . "github.com/consensys/bavard/amd64"
+
+func (f *FFAmd64) generateNeg() {
+	registers := FnHeader("neg", 0, 16)
 
 	// labels
-	nonZero := newLabel()
+	nonZero := NewLabel()
 
 	// registers
-	x := popRegister()
-	r := popRegister()
-	q := popRegister()
-	t := popRegisters(nbWords)
+	x := registers.Pop()
+	r := registers.Pop()
+	q := registers.Pop()
+	t := registers.PopN(f.NbWords)
 
-	movq("res+0(FP)", r)
-	movq("x+8(FP)", x)
+	MOVQ("res+0(FP)", r)
+	MOVQ("x+8(FP)", x)
 
 	// t = x
-	_mov(x, t)
+	f.Mov(x, t)
 
 	// x = t[0] | ... | t[n]
-	movq(t[0], x)
-	for i := 1; i < nbWords; i++ {
-		orq(t[i], x)
+	MOVQ(t[0], x)
+	for i := 1; i < f.NbWords; i++ {
+		ORQ(t[i], x)
 	}
 
-	testq(x, x)
+	TESTQ(x, x)
 
 	// if x != 0, we jump to nonzero label
-	jne(nonZero)
+	JNE(nonZero)
 	// if x == 0, we set the result to zero and return
-	for i := 0; i < nbWords/2; i++ {
-		movq(x, r.at(i))
+	for i := 0; i < f.NbWords/2; i++ {
+		MOVQ(x, r.At(i))
 	}
-	ret()
+	RET()
 
-	label(nonZero)
+	LABEL(nonZero)
 
 	// z = x - q
-	for i := 0; i < nbWords; i++ {
-		movq(modulus[i], q)
+	for i := 0; i < f.NbWords; i++ {
+		MOVQ(f.Q[i], q)
 		if i == 0 {
-			subq(t[i], q)
+			SUBQ(t[i], q)
 		} else {
-			sbbq(t[i], q)
+			SBBQ(t[i], q)
 		}
-		movq(q, r.at(i))
+		MOVQ(q, r.At(i))
 	}
 
-	ret()
+	RET()
 
 }

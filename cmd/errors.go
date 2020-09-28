@@ -1,4 +1,4 @@
-// Copyright 2020 ConsenSys AG
+// Copyright 2020 ConsenSys Software Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,5 @@ import "errors"
 
 var (
 	errMissingArgument    = errors.New("missing argument")
-	errParseModulus       = errors.New("can't parse modulus")
 	errUnsupportedModulus = errors.New("unsupported modulus. goff only works for prime modulus w/ size > 64bits")
 )

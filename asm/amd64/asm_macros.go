@@ -1,4 +1,4 @@
-// Copyright 2020 ConsenSys AG
+// Copyright 2020 ConsenSys Software Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package asm
+package amd64
 
-func _mov(i1, i2 interface{}, offsets ...int) {
+import (
+	. "github.com/consensys/bavard/amd64"
+)
+
+func (f *FFAmd64) Mov(i1, i2 interface{}, offsets ...int) {
 	var o1, o2 int
 	if len(offsets) >= 1 {
 		o1 = offsets[0]
@@ -27,33 +31,33 @@ func _mov(i1, i2 interface{}, offsets ...int) {
 		switch c2 := i2.(type) {
 		default:
 			panic("unsupported")
-		case []register:
-			for i := 0; i < nbWords; i++ {
-				movq(c1[i+o1], c2[i+o2])
+		case []Register:
+			for i := 0; i < f.NbWords; i++ {
+				MOVQ(c1[i+o1], c2[i+o2])
 			}
 		}
-	case register:
+	case Register:
 		switch c2 := i2.(type) {
-		case register:
-			for i := 0; i < nbWords; i++ {
-				movq(c1.at(i+o1), c2.at(i+o2))
+		case Register:
+			for i := 0; i < f.NbWords; i++ {
+				MOVQ(c1.At(i+o1), c2.At(i+o2))
 			}
-		case []register:
-			for i := 0; i < nbWords; i++ {
-				movq(c1.at(i+o1), c2[i+o2])
+		case []Register:
+			for i := 0; i < f.NbWords; i++ {
+				MOVQ(c1.At(i+o1), c2[i+o2])
 			}
 		default:
 			panic("unsupported")
 		}
-	case []register:
+	case []Register:
 		switch c2 := i2.(type) {
-		case register:
-			for i := 0; i < nbWords; i++ {
-				movq(c1[i+o1], c2.at(i+o2))
+		case Register:
+			for i := 0; i < f.NbWords; i++ {
+				MOVQ(c1[i+o1], c2.At(i+o2))
 			}
-		case []register:
-			for i := 0; i < nbWords; i++ {
-				movq(c1[i+o1], c2[i+o2])
+		case []Register:
+			for i := 0; i < f.NbWords; i++ {
+				MOVQ(c1[i+o1], c2[i+o2])
 			}
 		default:
 			panic("unsupported")
@@ -64,7 +68,7 @@ func _mov(i1, i2 interface{}, offsets ...int) {
 
 }
 
-func _add(i1, i2 interface{}, offsets ...int) {
+func (f *FFAmd64) Add(i1, i2 interface{}, offsets ...int) {
 	var o1, o2 int
 	if len(offsets) >= 1 {
 		o1 = offsets[0]
@@ -74,29 +78,29 @@ func _add(i1, i2 interface{}, offsets ...int) {
 	}
 	switch c1 := i1.(type) {
 
-	case register:
+	case Register:
 		switch c2 := i2.(type) {
 		default:
 			panic("unsupported")
-		case []register:
-			for i := 0; i < nbWords; i++ {
+		case []Register:
+			for i := 0; i < f.NbWords; i++ {
 				if i == 0 {
-					addq(c1.at(i+o1), c2[i+o2])
+					ADDQ(c1.At(i+o1), c2[i+o2])
 				} else {
-					adcq(c1.at(i+o1), c2[i+o2])
+					ADCQ(c1.At(i+o1), c2[i+o2])
 				}
 			}
 		}
-	case []register:
+	case []Register:
 		switch c2 := i2.(type) {
 		default:
 			panic("unsupported")
-		case []register:
-			for i := 0; i < nbWords; i++ {
+		case []Register:
+			for i := 0; i < f.NbWords; i++ {
 				if i == 0 {
-					addq(c1[i+o1], c2[i+o2])
+					ADDQ(c1[i+o1], c2[i+o2])
 				} else {
-					adcq(c1[i+o1], c2[i+o2])
+					ADCQ(c1[i+o1], c2[i+o2])
 				}
 			}
 		}
@@ -105,7 +109,7 @@ func _add(i1, i2 interface{}, offsets ...int) {
 	}
 }
 
-func _sub(i1, i2 interface{}, offsets ...int) {
+func (f *FFAmd64) Sub(i1, i2 interface{}, offsets ...int) {
 	var o1, o2 int
 	if len(offsets) >= 1 {
 		o1 = offsets[0]
@@ -115,29 +119,29 @@ func _sub(i1, i2 interface{}, offsets ...int) {
 	}
 	switch c1 := i1.(type) {
 
-	case register:
+	case Register:
 		switch c2 := i2.(type) {
 		default:
 			panic("unsupported")
-		case []register:
-			for i := 0; i < nbWords; i++ {
+		case []Register:
+			for i := 0; i < f.NbWords; i++ {
 				if i == 0 {
-					subq(c1.at(i+o1), c2[i+o2])
+					SUBQ(c1.At(i+o1), c2[i+o2])
 				} else {
-					sbbq(c1.at(i+o1), c2[i+o2])
+					SBBQ(c1.At(i+o1), c2[i+o2])
 				}
 			}
 		}
-	case []register:
+	case []Register:
 		switch c2 := i2.(type) {
 		default:
 			panic("unsupported")
-		case []register:
-			for i := 0; i < nbWords; i++ {
+		case []Register:
+			for i := 0; i < f.NbWords; i++ {
 				if i == 0 {
-					subq(c1[i+o1], c2[i+o2])
+					SUBQ(c1[i+o1], c2[i+o2])
 				} else {
-					sbbq(c1[i+o1], c2[i+o2])
+					SBBQ(c1[i+o1], c2[i+o2])
 				}
 			}
 		}

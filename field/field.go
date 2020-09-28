@@ -1,4 +1,4 @@
-// Copyright 2020 ConsenSys AG
+// Copyright 2020 ConsenSys Software Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package field
 
 import (
+	"errors"
 	"math/big"
 )
 
-type field struct {
+var (
+	errUnsupportedModulus = errors.New("unsupported modulus. goff only works for prime modulus w/ size > 64bits")
+	errParseModulus       = errors.New("can't parse modulus")
+)
+
+type Field struct {
 	PackageName          string
 	ElementName          string
 	Modulus              string
@@ -52,7 +58,7 @@ type field struct {
 
 // -------------------------------------------------------------------------------------------------
 // Field data precompute functions
-func newField(packageName, elementName, modulus string, noCollidingNames bool) (*field, error) {
+func NewField(packageName, elementName, modulus string, noCollidingNames bool, version string) (*Field, error) {
 	// parse modulus
 	var bModulus big.Int
 	if _, ok := bModulus.SetString(modulus, 10); !ok {
@@ -60,13 +66,13 @@ func newField(packageName, elementName, modulus string, noCollidingNames bool) (
 	}
 
 	// field info
-	F := &field{
+	F := &Field{
 		PackageName:      packageName,
 		ElementName:      elementName,
 		Modulus:          modulus,
 		NoCollidingNames: noCollidingNames,
 	}
-	F.Version = Version
+	F.Version = version
 	// pre compute field constants
 	F.NbBits = bModulus.BitLen()
 	F.NbWords = len(bModulus.Bits())

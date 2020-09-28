@@ -22,6 +22,10 @@ src="banner_goff.png">
 
 ## Getting started
 
+### Go version
+
+`goff` is tested with the last 2 major releases of Go (1.14 and 1.15).
+
 ### Install `goff`
 
 ```bash

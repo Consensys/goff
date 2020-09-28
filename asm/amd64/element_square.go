@@ -1,4 +1,4 @@
-// Copyright 2020 ConsenSys AG
+// Copyright 2020 ConsenSys Software Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package asm
+package amd64
 
-func generateSquare() {
+import . "github.com/consensys/bavard/amd64"
+
+func (f *FFAmd64) generateSquare() {
 	stackSize := 0
-	if nbWords > smallModulus {
-		stackSize = nbWords * 8
+	if f.NbWords > SmallModulus {
+		stackSize = f.NbWords * 8
 	}
-	fnHeader("square", stackSize, 16, dx, ax)
-	writeLn(`
+	registers := FnHeader("square", stackSize, 16, DX, AX)
+	WriteLn(`
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
 	// for i=0 to N-1
@@ -35,31 +37,31 @@ func generateSquare() {
 	// t[N-1] = C + A
 
 	`)
-	if nbWords > 6 {
-		generateInnerMulLarge(true)
+	if f.NbWords > 6 {
+		f.generateInnerMulLarge(&registers, true)
 		return
 	}
-	if !noCarrySquare {
-		generateInnerMul(true)
+	if !f.NoCarrySquare {
+		f.generateInnerMul(&registers, true)
 		return
 	}
 
-	noAdx := newLabel()
+	noAdx := NewLabel()
 	// check ADX instruction support
-	cmpb("·supportAdx(SB)", 1)
-	jne(noAdx)
+	CMPB("·supportAdx(SB)", 1)
+	JNE(noAdx)
 
 	// registers
-	t := popRegisters(nbWords)
-	x := popRegister()
-	A := popRegister()
+	t := registers.PopN(f.NbWords)
+	x := registers.Pop()
+	A := registers.Pop()
 
-	movq("x+8(FP)", x)
-	for i := 0; i < nbWords; i++ {
+	MOVQ("x+8(FP)", x)
+	for i := 0; i < f.NbWords; i++ {
 
-		xorq(ax, ax)
+		XORQ(AX, AX)
 
-		movq(x.at(i), dx)
+		MOVQ(x.At(i), DX)
 
 		// instead of
 		// for j=i+1 to N-1
@@ -68,41 +70,41 @@ func generateSquare() {
 		// set double it, before doing
 		// for j=i+1 to N-1
 		//     A,t[j] = u[j] + t[j] + A
-		if i != nbWordsLastIndex {
-			u := make([]register, (nbWords - i - 1))
+		if i != f.NbWordsLastIndex {
+			u := make([]Register, (f.NbWords - i - 1))
 			for i := 0; i < len(u); i++ {
-				u[i] = popRegister()
+				u[i] = registers.Pop()
 			}
 			offset := i + 1
 
 			// 1- compute u = x[j] * x[i]
 			// for j=i+1 to N-1
 			//     A,u[j] = x[j]*x[i] + A
-			if (i + 1) == nbWordsLastIndex {
-				mulxq(x.at(i+1), u[0], A)
+			if (i + 1) == f.NbWordsLastIndex {
+				MULXQ(x.At(i+1), u[0], A)
 			} else {
-				for j := i + 1; j < nbWords; j++ {
-					yj := x.at(j)
+				for j := i + 1; j < f.NbWords; j++ {
+					yj := x.At(j)
 					if j == i+1 {
 						// first iteration
-						mulxq(yj, u[j-offset], u[j+1-offset])
+						MULXQ(yj, u[j-offset], u[j+1-offset])
 					} else {
-						if j == nbWordsLastIndex {
-							mulxq(yj, ax, A)
+						if j == f.NbWordsLastIndex {
+							MULXQ(yj, AX, A)
 						} else {
-							mulxq(yj, ax, u[j+1-offset])
+							MULXQ(yj, AX, u[j+1-offset])
 						}
-						adcxq(ax, u[j-offset])
+						ADCXQ(AX, u[j-offset])
 					}
 				}
-				movq(0, ax)
-				adcxq(ax, A)
-				xorq(ax, ax)
+				MOVQ(0, AX)
+				ADCXQ(AX, A)
+				XORQ(AX, AX)
 			}
 
 			if i == 0 {
 				// C, t[i] = x[i] * x[i] + t[i]
-				mulxq(dx, t[i], dx)
+				MULXQ(DX, t[i], DX)
 
 				// when i == 0, T is not set yet
 				// so  we can use ADOXQ carry chain to propagate C from x[i] * x[i] + t[i] (dx)
@@ -110,109 +112,109 @@ func generateSquare() {
 				// for j=i+1 to N-1
 				// 		C, t[j] = u[j] + u[j] + t[j] + C
 				for j := 0; j < len(u); j++ {
-					adcxq(u[j], u[j])
-					movq(u[j], t[j+offset])
+					ADCXQ(u[j], u[j])
+					MOVQ(u[j], t[j+offset])
 					if j == 0 {
-						adoxq(dx, t[j+offset])
+						ADOXQ(DX, t[j+offset])
 					} else {
-						adoxq(ax, t[j+offset])
+						ADOXQ(AX, t[j+offset])
 					}
 				}
 
-				adcxq(A, A)
-				adoxq(ax, A)
+				ADCXQ(A, A)
+				ADOXQ(AX, A)
 
 			} else {
 				// i != 0 so T is set.
 				// we first use ADOXQ carry chain to perform t = u + u + t
 				for j := 0; j < len(u); j++ {
-					adcxq(u[j], u[j])
-					adoxq(u[j], t[j+offset])
+					ADCXQ(u[j], u[j])
+					ADOXQ(u[j], t[j+offset])
 				}
 
-				adcxq(A, A)
-				adoxq(ax, A)
+				ADCXQ(A, A)
+				ADOXQ(AX, A)
 
 				// reset flags
-				xorq(ax, ax)
+				XORQ(AX, AX)
 
 				// C, t[i] = x[i] * x[i] + t[i]
-				mulxq(dx, ax, dx)
-				adoxq(ax, t[i])
-				movq(0, ax)
+				MULXQ(DX, AX, DX)
+				ADOXQ(AX, t[i])
+				MOVQ(0, AX)
 
 				// propagate C
-				for j := i + 1; j < nbWords; j++ {
+				for j := i + 1; j < f.NbWords; j++ {
 					if j == i+1 {
-						adoxq(dx, t[j])
+						ADOXQ(DX, t[j])
 					} else {
-						adoxq(ax, t[j])
+						ADOXQ(AX, t[j])
 					}
 				}
 
-				adoxq(ax, A)
+				ADOXQ(AX, A)
 			}
 
-			pushRegister(u...)
+			registers.Push(u...)
 
 		} else {
 			// i == last index
-			mulxq(dx, ax, A)
-			adcxq(ax, t[i])
-			movq(0, ax)
-			adcxq(ax, A)
+			MULXQ(DX, AX, A)
+			ADCXQ(AX, t[i])
+			MOVQ(0, AX)
+			ADCXQ(AX, A)
 		}
 
-		tmp := popRegister()
+		tmp := registers.Pop()
 		// m := t[0]*q'[0] mod W
-		regM := dx
-		movq(t[0], dx)
-		mulxq(qInv0(), regM, ax, "m := t[0]*q'[0] mod W")
+		regM := DX
+		MOVQ(t[0], DX)
+		MULXQ(f.qInv0(), regM, AX, "m := t[0]*q'[0] mod W")
 
 		// clear the carry flags
-		xorq(ax, ax)
+		XORQ(AX, AX)
 
 		// C,_ := t[0] + m*q[0]
-		mulxq(qAt(0), ax, tmp)
-		adcxq(t[0], ax)
-		movq(tmp, t[0])
+		MULXQ(f.qAt(0), AX, tmp)
+		ADCXQ(t[0], AX)
+		MOVQ(tmp, t[0])
 
 		// for j=1 to N-1
 		//    (C,t[j-1]) := t[j] + m*q[j] + C
-		for j := 1; j < nbWords; j++ {
-			adcxq(t[j], t[j-1])
-			mulxq(qAt(j), ax, t[j])
-			adoxq(ax, t[j-1])
+		for j := 1; j < f.NbWords; j++ {
+			ADCXQ(t[j], t[j-1])
+			MULXQ(f.qAt(j), AX, t[j])
+			ADOXQ(AX, t[j-1])
 		}
-		movq(0, ax)
-		adcxq(ax, t[nbWordsLastIndex])
-		adoxq(A, t[nbWordsLastIndex])
+		MOVQ(0, AX)
+		ADCXQ(AX, t[f.NbWordsLastIndex])
+		ADOXQ(A, t[f.NbWordsLastIndex])
 
-		pushRegister(tmp)
+		registers.Push(tmp)
 	}
 
 	// free registers
-	pushRegister(x, A)
+	registers.Push(x, A)
 
 	// ---------------------------------------------------------------------------------------------
 	// reduce
-	r := popRegister()
-	movq("res+0(FP)", r)
-	_reduce(t, r)
-	ret()
+	r := registers.Pop()
+	MOVQ("res+0(FP)", r)
+	f.Reduce(&registers, t, r)
+	RET()
 
 	// ---------------------------------------------------------------------------------------------
 	// no MULX, ADX instructions
 	{
-		label(noAdx)
-		builder.reset()
-		builder.remove(ax)
-		builder.remove(dx)
-		x := popRegister()
-		y := popRegister()
-		movq("x+8(FP)", x)
-		movq("x+8(FP)", y)
-		mulNoAdx(x, y)
+		LABEL(noAdx)
+		registers = NewRegisters()
+		registers.Remove(AX)
+		registers.Remove(DX)
+		x := registers.Pop()
+		y := registers.Pop()
+		MOVQ("x+8(FP)", x)
+		MOVQ("x+8(FP)", y)
+		f.mulNoAdx(&registers, x, y)
 	}
 
 }

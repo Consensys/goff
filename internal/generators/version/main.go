@@ -22,7 +22,7 @@ func main() {
 
 	if err := bavard.Generate("../../../cmd/version.go", src,
 		struct{ Version string }{version},
-		bavard.Apache2("ConsenSys AG", 2020),
+		bavard.Apache2("ConsenSys Software Inc.", 2020),
 		bavard.Package("cmd"),
 		bavard.GeneratedBy("internal/generators/version")); err != nil {
 		fmt.Println("error", err)

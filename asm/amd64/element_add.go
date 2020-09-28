@@ -1,4 +1,4 @@
-// Copyright 2020 ConsenSys AG
+// Copyright 2020 ConsenSys Software Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,37 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package asm
+package amd64
 
-func generateAdd() {
+import . "github.com/consensys/bavard/amd64"
+
+func (f *FFAmd64) generateAdd() {
 	stackSize := 0
-	if nbWords > smallModulus {
-		stackSize = nbWords * 8
+	if f.NbWords > SmallModulus {
+		stackSize = f.NbWords * 8
 	}
-	fnHeader("add", stackSize, 24)
+	registers := FnHeader("add", stackSize, 24)
 
 	// registers
-	x := popRegister()
-	y := popRegister()
-	r := popRegister()
-	t := popRegisters(nbWords)
+	x := registers.Pop()
+	y := registers.Pop()
+	r := registers.Pop()
+	t := registers.PopN(f.NbWords)
 
-	movq("x+8(FP)", x)
+	MOVQ("x+8(FP)", x)
 
 	// t = x
-	_mov(x, t)
+	f.Mov(x, t)
 
-	movq("y+16(FP)", y)
+	MOVQ("y+16(FP)", y)
 
 	// t = t + y = x + y
-	_add(y, t)
+	f.Add(y, t)
 
 	// dereference res
-	movq("res+0(FP)", r)
+	MOVQ("res+0(FP)", r)
 
 	// reduce t into res
-	_reduce(t, r)
+	f.Reduce(&registers, t, r)
 
-	ret()
+	RET()
 
 }

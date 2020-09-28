@@ -1,4 +1,4 @@
-// Copyright 2020 ConsenSys AG
+// Copyright 2020 ConsenSys Software Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package asm
+package amd64
 
-func generateFromMont() {
+import . "github.com/consensys/bavard/amd64"
+
+func (f *FFAmd64) generateFromMont() {
 	stackSize := 8
-	if nbWords > smallModulus {
-		stackSize = nbWords * 8
+	if f.NbWords > SmallModulus {
+		stackSize = f.NbWords * 8
 	}
-	fnHeader("fromMont", stackSize, 8, dx, ax)
-	writeLn("NO_LOCAL_POINTERS")
-	writeLn(`
+	registers := FnHeader("fromMont", stackSize, 8, DX, AX)
+	WriteLn("NO_LOCAL_POINTERS")
+	WriteLn(`
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
 	// when y = 1 we have: 
@@ -34,78 +36,78 @@ func generateFromMont() {
 	// 		    (C,t[j-1]) := t[j] + m*q[j] + C
 	// 		t[N-1] = C`)
 
-	noAdx := newLabel()
+	noAdx := NewLabel()
 	// check ADX instruction support
-	cmpb("·supportAdx(SB)", 1)
-	jne(noAdx)
+	CMPB("·supportAdx(SB)", 1)
+	JNE(noAdx)
 
 	// registers
-	t := popRegisters(nbWords)
-	r := popRegister()
+	t := registers.PopN(f.NbWords)
+	r := registers.Pop()
 
-	movq("res+0(FP)", r)
+	MOVQ("res+0(FP)", r)
 
 	// 	for i=0 to N-1
 	//     t[i] = a[i]
-	_mov(r, t)
+	f.Mov(r, t)
 
-	var tmp register
-	hasRegisters := availableRegisters() > 0
+	var tmp Register
+	hasRegisters := registers.Available() > 0
 	if !hasRegisters {
 		tmp = r
 	} else {
-		tmp = popRegister()
+		tmp = registers.Pop()
 	}
-	for i := 0; i < nbWords; i++ {
+	for i := 0; i < f.NbWords; i++ {
 
-		xorq(dx, dx)
+		XORQ(DX, DX)
 
 		// m := t[0]*q'[0] mod W
-		regM := dx
-		movq(t[0], dx)
-		mulxq(qInv0(), regM, ax, "m := t[0]*q'[0] mod W")
+		regM := DX
+		MOVQ(t[0], DX)
+		MULXQ(f.qInv0(), regM, AX, "m := t[0]*q'[0] mod W")
 
 		// clear the carry flags
-		xorq(ax, ax)
+		XORQ(AX, AX)
 
 		// C,_ := t[0] + m*q[0]
-		comment("C,_ := t[0] + m*q[0]")
+		Comment("C,_ := t[0] + m*q[0]")
 
-		mulxq(qAt(0), ax, tmp)
-		adcxq(t[0], ax)
-		movq(tmp, t[0])
+		MULXQ(f.qAt(0), AX, tmp)
+		ADCXQ(t[0], AX)
+		MOVQ(tmp, t[0])
 
-		comment("for j=1 to N-1")
-		comment("    (C,t[j-1]) := t[j] + m*q[j] + C")
+		Comment("for j=1 to N-1")
+		Comment("    (C,t[j-1]) := t[j] + m*q[j] + C")
 
 		// for j=1 to N-1
 		//    (C,t[j-1]) := t[j] + m*q[j] + C
-		for j := 1; j < nbWords; j++ {
-			adcxq(t[j], t[j-1])
-			mulxq(qAt(j), ax, t[j])
-			adoxq(ax, t[j-1])
+		for j := 1; j < f.NbWords; j++ {
+			ADCXQ(t[j], t[j-1])
+			MULXQ(f.qAt(j), AX, t[j])
+			ADOXQ(AX, t[j-1])
 		}
-		movq(0, ax)
-		adcxq(ax, t[nbWordsLastIndex])
-		adoxq(ax, t[nbWordsLastIndex])
+		MOVQ(0, AX)
+		ADCXQ(AX, t[f.NbWordsLastIndex])
+		ADOXQ(AX, t[f.NbWordsLastIndex])
 
 	}
 
 	if !hasRegisters {
-		movq("res+0(FP)", r)
+		MOVQ("res+0(FP)", r)
 	} else {
-		pushRegister(tmp)
+		registers.Push(tmp)
 	}
 	// ---------------------------------------------------------------------------------------------
 	// reduce
-	_reduce(t, r)
-	ret()
+	f.Reduce(&registers, t, r)
+	RET()
 
 	// No adx
-	label(noAdx)
-	movq("res+0(FP)", ax)
-	movq(ax, "(SP)")
-	writeLn("CALL ·_fromMontGeneric(SB)")
-	ret()
+	LABEL(noAdx)
+	MOVQ("res+0(FP)", AX)
+	MOVQ(AX, "(SP)")
+	WriteLn("CALL ·_fromMontGeneric(SB)")
+	RET()
 
 }

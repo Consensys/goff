@@ -1,4 +1,4 @@
-// Copyright 2020 ConsenSys AG
+// Copyright 2020 ConsenSys Software Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ import (
 	"strings"
 
 	"github.com/consensys/bavard"
-	"github.com/consensys/goff/asm"
-	"github.com/consensys/goff/internal/templates/e2"
+	"github.com/consensys/goff/asm/amd64"
+	"github.com/consensys/goff/field"
 	"github.com/consensys/goff/internal/templates/element"
 	"github.com/spf13/cobra"
 )
@@ -76,77 +76,10 @@ func cmdGenerate(cmd *cobra.Command, args []string) {
 	}
 }
 
-// GenerateFF2 will generate go (and .s) files in outputDir for E2 (field extension)
-// modulus (in base 10)
-func GenerateFF2(packageName, elementName, modulus, outputDir string) error {
-
-	// compute field constants
-	_F, err := newField(packageName, elementName, modulus, false)
-	if err != nil {
-		return err
-	}
-
-	type tData struct {
-		*field
-		BN256  bool
-		BLS381 bool
-	}
-	F := &tData{field: _F}
-
-	// TODO make this special curve business go away in gurvy.
-	specialCurve := asm.NONE
-	if modulus == "21888242871839275222246405745257275088696311157297823662689037894645226208583" {
-		specialCurve = asm.BN256
-		F.BN256 = true
-	} else if modulus == "4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787" {
-		specialCurve = asm.BLS381
-		F.BLS381 = true
-	}
-
-	// output files
-	eName := strings.ToLower(elementName)
-
-	pathSrc := filepath.Join(outputDir, eName+"_amd64.go")
-
-	// source file templates
-	src := []string{
-		e2.Base,
-	}
-
-	bavardOpts := []func(*bavard.Bavard) error{
-		bavard.Apache2("ConsenSys AG", 2020),
-		bavard.Package(F.PackageName),
-		bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
-	}
-
-	// generate source file
-	if err := bavard.Generate(pathSrc, src, F, bavardOpts...); err != nil {
-		return err
-	}
-
-	// generate assembly
-	{
-		pathAsm := filepath.Join(outputDir, eName+"_amd64.s")
-		f, err := os.Create(pathAsm)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		builder := asm.NewBuilder(f, F.ElementName, F.NbWords, F.Q, F.NoCarrySquare)
-
-		if err := builder.GenerateTowerAssembly(specialCurve); err != nil {
-			return err
-		}
-
-	}
-
-	return nil
-}
-
 // GenerateFF will generate go (and .s) files in outputDir for modulus (in base 10)
 func GenerateFF(packageName, elementName, modulus, outputDir string, noCollidingNames bool) error {
 	// compute field constants
-	F, err := newField(packageName, elementName, modulus, noCollidingNames)
+	F, err := field.NewField(packageName, elementName, modulus, noCollidingNames, Version)
 	if err != nil {
 		return err
 	}
@@ -186,7 +119,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 	}
 
 	bavardOpts := []func(*bavard.Bavard) error{
-		bavard.Apache2("ConsenSys AG", 2020),
+		bavard.Apache2("ConsenSys Software Inc.", 2020),
 		bavard.Package(F.PackageName),
 		bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
 	}
@@ -210,14 +143,14 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 	if F.ASM {
 		// generate ops.s
 		{
-			pathMulAsm := filepath.Join(outputDir, eName+"_ops_amd64.s")
-			f, err := os.Create(pathMulAsm)
+			pathSrc := filepath.Join(outputDir, eName+"_ops_amd64.s")
+			f, err := os.Create(pathSrc)
 			if err != nil {
 				return err
 			}
 			defer f.Close()
-			builder := asm.NewBuilder(f, F.ElementName, F.NbWords, F.Q, F.NoCarrySquare)
-			if err := builder.GenerateAssembly(); err != nil {
+			ffamd64 := amd64.NewFFAmd64(f, F)
+			if err := ffamd64.Generate(); err != nil {
 				return err
 			}
 
