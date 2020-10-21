@@ -547,7 +547,7 @@ func Test{{toTitle .all.ElementName}}{{.Op}}(t *testing.T) {
 			{{if eq .Op "Sqrt"}}
 			b := a.element
 			{{else}}
-			var b Element
+			var b {{.all.ElementName}}
 			{{end}}
 			b.{{.Op}}(&a.element)
 			a.element.{{.Op}}(&a.element)

@@ -1581,17 +1581,11 @@ func genFull() gopter.Gen {
 		a := genRandomFq()
 
 		var carry uint64
-
 		a[0], carry = bits.Add64(a[0], qElement[0], carry)
-
 		a[1], carry = bits.Add64(a[1], qElement[1], carry)
-
 		a[2], carry = bits.Add64(a[2], qElement[2], carry)
-
 		a[3], carry = bits.Add64(a[3], qElement[3], carry)
-
 		a[4], carry = bits.Add64(a[4], qElement[4], carry)
-
 		a[5], _ = bits.Add64(a[5], qElement[5], carry)
 
 		genResult := gopter.NewGenResult(a, gopter.NoShrinker)
