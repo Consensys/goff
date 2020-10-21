@@ -23,6 +23,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/consensys/bavard"
 	"github.com/consensys/goff/asm/amd64"
@@ -122,6 +123,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 		bavard.Apache2("ConsenSys Software Inc.", 2020),
 		bavard.Package(F.PackageName),
 		bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
+		bavard.Funcs(template.FuncMap{"toTitle": strings.Title}),
 	}
 	optsWithPackageDoc := append(bavardOpts, bavard.Package(F.PackageName, "contains field arithmetic operations for modulus "+F.Modulus))
 
