@@ -171,18 +171,13 @@ func Test{{toTitle .ElementName}}Cmp(t *testing.T) {
 		t.Fatal("x == y")
 	}
 
-	x,y = {{.ElementName}}{}, {{.ElementName}}{}
-
-	x[0] = 42
-	y[1] = 42
-
+	x.Sub(&x, &one)
 	if x.Cmp(&y) != -1 {
 		t.Fatal("x < y")
 	}
 	if y.Cmp(&x) != 1 {
 		t.Fatal("x < y")
 	}
-
 }
 
 func Test{{toTitle .ElementName}}SetInterface(t *testing.T) {
@@ -351,6 +346,48 @@ func Test{{toTitle .ElementName}}Legendre(t *testing.T) {
 	properties.Property("legendre should output same result than big.Int.Jacobi", prop.ForAll(
 		func(a testPair{{.ElementName}}) bool {
 			return a.element.Legendre() == big.Jacobi(&a.bigint, Modulus()) 
+		},
+		genA,
+	))
+
+	properties.TestingRun(t, gopter.ConsoleReporter(false))
+	// if we have ADX instruction enabled, test both path in assembly
+	if supportAdx {
+		t.Log("disabling ADX")
+		supportAdx = false
+		properties.TestingRun(t, gopter.ConsoleReporter(false))
+		supportAdx = true 
+	}
+	
+}
+
+func Test{{toTitle .ElementName}}LexicographicallyLargest(t *testing.T) {
+	parameters := gopter.DefaultTestParameters()
+	if testing.Short() {
+		parameters.MinSuccessfulTests = nbFuzzShort
+	} else {
+		parameters.MinSuccessfulTests = nbFuzz
+	}
+
+	properties := gopter.NewProperties(parameters)
+
+	genA := gen()
+
+	properties.Property("element.Cmp should match LexicographicallyLargest output", prop.ForAll(
+		func(a testPair{{.ElementName}}) bool {
+			var negA {{.ElementName}}
+			negA.Neg(&a.element)
+
+			cmpResult := a.element.Cmp(&negA)
+			lResult := a.element.LexicographicallyLargest()
+
+			if lResult && cmpResult == 1 {
+				return true 
+			}
+			if !lResult && cmpResult !=1 {
+				return true
+			}
+			return false
 		},
 		genA,
 	))

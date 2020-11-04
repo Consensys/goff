@@ -35,6 +35,7 @@ type Field struct {
 	NbWordsIndexesFull   []int
 	Q                    []uint64
 	QInverse             []uint64
+	QMinusOneHalvedP     []uint64 // ((q-1) / 2 ) + 1
 	ASM                  bool
 	RSquare              []uint64
 	One                  []uint64
@@ -84,6 +85,10 @@ func NewField(packageName, elementName, modulus string, noCollidingNames bool, v
 
 	// set q from big int repr
 	F.Q = toUint64Slice(&bModulus)
+	_qHalved := big.NewInt(0)
+	bOne := new(big.Int).SetUint64(1)
+	_qHalved.Sub(&bModulus, bOne).Rsh(_qHalved, 1).Add(_qHalved, bOne)
+	F.QMinusOneHalvedP = toUint64Slice(_qHalved)
 
 	//  setting qInverse
 	_r := big.NewInt(1)

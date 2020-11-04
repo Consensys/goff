@@ -165,20 +165,39 @@ func (z *{{.ElementName}}) IsZero() bool {
 //   +1 if z >  x
 // 
 func (z *{{.ElementName}}) Cmp(x *{{.ElementName}}) int {
-	{{- range $i := reverse $.NbWordsIndexesNoZero}}
-	if z[{{$i}}] > x[{{$i}}] {
+	_z := *z 
+	_x := *x
+	_z.FromMont()
+	_x.FromMont()
+	{{- range $i := reverse $.NbWordsIndexesFull}}
+	if _z[{{$i}}] > _x[{{$i}}] {
 		return 1
-	} else if z[{{$i}}] < x[{{$i}}] {
+	} else if _z[{{$i}}] < _x[{{$i}}] {
 		return -1
 	}
 	{{- end}}
-	if z[0] > x[0] {
-		return 1
-	} else if z[0] < x[0] {
-		return -1
-	} 
 	return 0
 }
+
+// LexicographicallyLargest returns true if this element is strictly lexicographically
+// larger than its negation, false otherwise
+func (z *{{.ElementName}}) LexicographicallyLargest() bool {
+	// adapted from github.com/zkcrypto/bls12_381
+	// we check if the element is larger than (q-1) / 2 
+	// if z - (((q -1) / 2) + 1) have no underflow, then z > (q-1) / 2
+	
+	_z := *z
+	_z.FromMont()
+
+	var b uint64
+	_, b = bits.Sub64(_z[0], {{index .QMinusOneHalvedP 0}}, 0)
+	{{- range $i := .NbWordsIndexesNoZero}}
+		_, b = bits.Sub64(_z[{{$i}}], {{index $.QMinusOneHalvedP $i}}, b)
+	{{- end}}
+
+	return b == 0
+}
+
 
 
 
