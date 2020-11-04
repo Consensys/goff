@@ -158,6 +158,29 @@ func (z *{{.ElementName}}) IsZero() bool {
 	return ( {{- range $i :=  reverse .NbWordsIndexesNoZero}} z[{{$i}}] | {{end}}z[0]) == 0
 }
 
+// Cmp compares (lexicographic order) z and x and returns:
+//
+//   -1 if z <  x
+//    0 if z == x
+//   +1 if z >  x
+// 
+func (z *{{.ElementName}}) Cmp(x *{{.ElementName}}) int {
+	{{- range $i := reverse $.NbWordsIndexesNoZero}}
+	if z[{{$i}}] > x[{{$i}}] {
+		return 1
+	} else if z[{{$i}}] < x[{{$i}}] {
+		return -1
+	}
+	{{- end}}
+	if z[0] > x[0] {
+		return 1
+	} else if z[0] < x[0] {
+		return -1
+	} 
+	return 0
+}
+
+
 
 // SetRandom sets z to a random element < q
 func (z *{{.ElementName}}) SetRandom() *{{.ElementName}} {

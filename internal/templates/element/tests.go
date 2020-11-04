@@ -135,8 +135,55 @@ func Benchmark{{toTitle .ElementName}}Mul(b *testing.B) {
 	}
 }
 
+func Benchmark{{toTitle .ElementName}}Cmp(b *testing.B) {
+	x := {{.ElementName}}{
+		{{- range $i := .RSquare}}
+		{{$i}},{{end}}
+	}
+	benchRes{{.ElementName}} = x 
+	benchRes{{.ElementName}}[0] = 0
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchRes{{.ElementName}}.Cmp(&x)
+	}
+}
 
 
+func Test{{toTitle .ElementName}}Cmp(t *testing.T) {
+	var x, y {{.ElementName}}
+	
+	if x.Cmp(&y) != 0 {
+		t.Fatal("x == y")
+	}
+
+	one := One()
+	y.Sub(&y, &one)
+
+	if x.Cmp(&y) != -1 {
+		t.Fatal("x < y")
+	}
+	if y.Cmp(&x) != 1 {
+		t.Fatal("x < y")
+	}
+
+	x = y 
+	if x.Cmp(&y) != 0 {
+		t.Fatal("x == y")
+	}
+
+	x,y = {{.ElementName}}{}, {{.ElementName}}{}
+
+	x[0] = 42
+	y[1] = 42
+
+	if x.Cmp(&y) != -1 {
+		t.Fatal("x < y")
+	}
+	if y.Cmp(&x) != 1 {
+		t.Fatal("x < y")
+	}
+
+}
 
 func Test{{toTitle .ElementName}}SetInterface(t *testing.T) {
 	// TODO 

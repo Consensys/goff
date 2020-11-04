@@ -223,6 +223,76 @@ func (z *Element) IsZero() bool {
 	return (z[11] | z[10] | z[9] | z[8] | z[7] | z[6] | z[5] | z[4] | z[3] | z[2] | z[1] | z[0]) == 0
 }
 
+// Cmp compares (lexicographic order) z and x and returns:
+//
+//   -1 if z <  x
+//    0 if z == x
+//   +1 if z >  x
+//
+func (z *Element) Cmp(x *Element) int {
+	if z[11] > x[11] {
+		return 1
+	} else if z[11] < x[11] {
+		return -1
+	}
+	if z[10] > x[10] {
+		return 1
+	} else if z[10] < x[10] {
+		return -1
+	}
+	if z[9] > x[9] {
+		return 1
+	} else if z[9] < x[9] {
+		return -1
+	}
+	if z[8] > x[8] {
+		return 1
+	} else if z[8] < x[8] {
+		return -1
+	}
+	if z[7] > x[7] {
+		return 1
+	} else if z[7] < x[7] {
+		return -1
+	}
+	if z[6] > x[6] {
+		return 1
+	} else if z[6] < x[6] {
+		return -1
+	}
+	if z[5] > x[5] {
+		return 1
+	} else if z[5] < x[5] {
+		return -1
+	}
+	if z[4] > x[4] {
+		return 1
+	} else if z[4] < x[4] {
+		return -1
+	}
+	if z[3] > x[3] {
+		return 1
+	} else if z[3] < x[3] {
+		return -1
+	}
+	if z[2] > x[2] {
+		return 1
+	} else if z[2] < x[2] {
+		return -1
+	}
+	if z[1] > x[1] {
+		return 1
+	} else if z[1] < x[1] {
+		return -1
+	}
+	if z[0] > x[0] {
+		return 1
+	} else if z[0] < x[0] {
+		return -1
+	}
+	return 0
+}
+
 // SetRandom sets z to a random element < q
 func (z *Element) SetRandom() *Element {
 	bytes := make([]byte, 96)

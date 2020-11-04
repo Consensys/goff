@@ -155,6 +155,65 @@ func BenchmarkElementMul(b *testing.B) {
 	}
 }
 
+func BenchmarkElementCmp(b *testing.B) {
+	x := Element{
+		14305184132582319705,
+		8868935336694416555,
+		9196887162930508889,
+		15486798265448570248,
+		5402985275949444416,
+		10893197322525159598,
+		3204916688966998390,
+		12417238192559061753,
+		12426306557607898622,
+		1305582522441154384,
+		10311846026977660324,
+		48736111365249031,
+	}
+	benchResElement = x
+	benchResElement[0] = 0
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchResElement.Cmp(&x)
+	}
+}
+
+func TestElementCmp(t *testing.T) {
+	var x, y Element
+
+	if x.Cmp(&y) != 0 {
+		t.Fatal("x == y")
+	}
+
+	one := One()
+	y.Sub(&y, &one)
+
+	if x.Cmp(&y) != -1 {
+		t.Fatal("x < y")
+	}
+	if y.Cmp(&x) != 1 {
+		t.Fatal("x < y")
+	}
+
+	x = y
+	if x.Cmp(&y) != 0 {
+		t.Fatal("x == y")
+	}
+
+	x, y = Element{}, Element{}
+
+	x[0] = 42
+	y[1] = 42
+
+	if x.Cmp(&y) != -1 {
+		t.Fatal("x < y")
+	}
+	if y.Cmp(&x) != 1 {
+		t.Fatal("x < y")
+	}
+
+}
+
 func TestElementSetInterface(t *testing.T) {
 	// TODO
 	t.Skip("not implemented")
