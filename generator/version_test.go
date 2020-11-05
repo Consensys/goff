@@ -1,4 +1,4 @@
-package cmd
+package generator
 
 import (
 	"os/exec"

@@ -22,6 +22,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/consensys/goff/generator"
 )
 
 // integration test will create modulus for various field sizes and run tests
@@ -71,7 +73,7 @@ func TestIntegration(t *testing.T) {
 	for elementName, modulus := range moduli {
 		// generate field
 		childDir := filepath.Join(parentDir, elementName)
-		if err := GenerateFF("integration", elementName, modulus, childDir, true); err != nil {
+		if err := generator.GenerateFF("integration", elementName, modulus, childDir, true); err != nil {
 			t.Fatal(elementName, err)
 		}
 	}
