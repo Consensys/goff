@@ -135,6 +135,8 @@ func Benchmark{{toTitle .ElementName}}Mul(b *testing.B) {
 	}
 }
 
+
+
 func Benchmark{{toTitle .ElementName}}Cmp(b *testing.B) {
 	x := {{.ElementName}}{
 		{{- range $i := .RSquare}}
@@ -196,42 +198,6 @@ func Test{{toTitle .ElementName}}IsRandom(t *testing.T) {
 	}
 }
 
-func Test{{toTitle .ElementName}}Bytes(t *testing.T) {
-
-	modulus := Modulus()
-
-	// test values
-	var bs [3][]byte
-	r1, _ := rand.Int(rand.Reader, modulus)
-	bs[0] = r1.Bytes() // should be r1 as {{.ElementName}}
-	r2, _ := rand.Int(rand.Reader, modulus)
-	r2.Add(modulus, r2)
-	bs[1] = r2.Bytes() // should be r2 as {{.ElementName}}
-	var tmp big.Int
-	tmp.SetUint64(0)
-	bs[2] = tmp.Bytes() // should be 0 as {{.ElementName}}
-
-	// witness values as {{.ElementName}}
-	var el [3]{{.ElementName}}
-	el[0].SetBigInt(r1)
-	el[1].SetBigInt(r2)
-	el[2].SetUint64(0)
-
-	// check conversions
-	for i := 0; i < 3; i++ {
-		var z {{.ElementName}}
-		z.SetBytes(bs[i])
-		if !z.Equal(&el[i]) {
-			t.Fatal("SetBytes fails")
-		}
-		// check conversion {{.ElementName}} to Bytes
-		b := z.Bytes()
-		z.SetBytes(b)
-		if !z.Equal(&el[i]) {
-			t.Fatal("Bytes fails")
-		}
-	}
-}
 
 // -------------------------------------------------------------------------------------------------
 // Gopter tests
@@ -328,6 +294,31 @@ func Test{{toTitle .ElementName}}Reduce(t *testing.T) {
 		supportAdx = true 
 	}
 	
+}
+
+func Test{{toTitle .ElementName}}Bytes(t *testing.T) {
+	parameters := gopter.DefaultTestParameters()
+	if testing.Short() {
+		parameters.MinSuccessfulTests = nbFuzzShort
+	} else {
+		parameters.MinSuccessfulTests = nbFuzz
+	}
+
+	properties := gopter.NewProperties(parameters)
+
+	genA := gen()
+
+	properties.Property("SetBytes(Bytes()) should stayt constant", prop.ForAll(
+		func(a testPair{{.ElementName}}) bool {
+			var b {{.ElementName}}
+			bytes := a.element.Bytes()
+			b.SetBytes(bytes[:])
+			return a.element.Equal(&b)
+		},
+		genA,
+	))
+
+	properties.TestingRun(t, gopter.ConsoleReporter(false))
 }
 
 

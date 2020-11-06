@@ -59,11 +59,11 @@ var rSquare = {{.ElementName}}{
 }
 
 
+
 // Bytes returns the regular (non montgomery) value 
-// of z as a big-endian byte slice.
-func (z *{{.ElementName}}) Bytes() []byte {
+// of z as a big-endian byte array.
+func (z *{{.ElementName}}) Bytes() (res [Limbs*8]byte) {
 	_z := z.ToRegular()
-	var res [Limbs*8]byte
 	{{- range $i := reverse .NbWordsIndexesFull}}
 		{{- $j := mul $i 8}}
 		{{- $k := sub $.NbWords 1}}
@@ -72,8 +72,9 @@ func (z *{{.ElementName}}) Bytes() []byte {
 		binary.BigEndian.PutUint64(res[{{$j}}:{{$jj}}], _z[{{$k}}])
 	{{- end}}
 
-	return res[:]
+	return 
 }
+
 
 // SetBytes interprets e as the bytes of a big-endian unsigned integer, 
 // sets z to that value (in Montgomery form), and returns z.
