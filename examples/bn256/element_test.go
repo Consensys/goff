@@ -92,7 +92,7 @@ func BenchmarkElementSub(b *testing.B) {
 	benchResElement.SetRandom()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		benchResElement.SetRandom()
+		benchResElement.Sub(&x, &benchResElement)
 	}
 }
 

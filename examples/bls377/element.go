@@ -90,7 +90,7 @@ var bigIntPool = sync.Pool{
 func init() {
 	_modulus.SetString("258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177", 10)
 	for i := 0; i < len(bigIntDefault); i++ {
-		bigIntDefault[i] = big.Word(^uint64(0))
+		bigIntDefault[i] = big.Word(0x1)
 	}
 
 }
