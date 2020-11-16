@@ -15,8 +15,9 @@ func (z {{.ElementName}}) ToRegular() {{.ElementName}} {
 
 // String returns the string form of an {{.ElementName}} in Montgomery form
 func (z *{{.ElementName}}) String() string {
-	var _z big.Int
-	return z.ToBigIntRegular(&_z).String()
+	vv := bigIntPool.Get().(*big.Int)
+	defer bigIntPool.Put(vv)
+	return z.ToBigIntRegular(vv).String()
 }
 
 // ToBigInt returns z as a big.Int in Montgomery form 
