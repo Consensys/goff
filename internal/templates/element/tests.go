@@ -20,6 +20,18 @@ import (
 
 var benchRes{{.ElementName}} {{.ElementName}}
 
+func Benchmark{{toTitle .ElementName}}SetBytes(b *testing.B) {
+	var x {{.ElementName}}
+	x.SetRandom()
+	bb := x.Bytes()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		benchRes{{.ElementName}}.SetBytes(bb[:])
+	}
+
+}
+
 func Benchmark{{toTitle .ElementName}}Inverse(b *testing.B) {
 	var x {{.ElementName}}
 	x.SetRandom()
@@ -31,6 +43,8 @@ func Benchmark{{toTitle .ElementName}}Inverse(b *testing.B) {
 	}
 
 }
+
+
 func Benchmark{{toTitle .ElementName}}Exp(b *testing.B) {
 	var x {{.ElementName}}
 	x.SetRandom()

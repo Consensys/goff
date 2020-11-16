@@ -39,15 +39,48 @@ func (z {{.ElementName}}) ToBigIntRegular(res *big.Int) *big.Int {
 	return z.ToBigInt(res)
 }
 
+
+// Bytes returns the regular (non montgomery) value 
+// of z as a big-endian byte array.
+func (z *{{.ElementName}}) Bytes() (res [Limbs*8]byte) {
+	_z := z.ToRegular()
+	{{- range $i := reverse .NbWordsIndexesFull}}
+		{{- $j := mul $i 8}}
+		{{- $k := sub $.NbWords 1}}
+		{{- $k := sub $k $i}}
+		{{- $jj := add $j 8}}
+		binary.BigEndian.PutUint64(res[{{$j}}:{{$jj}}], _z[{{$k}}])
+	{{- end}}
+
+	return 
+}
+
+
+// SetBytes interprets e as the bytes of a big-endian unsigned integer, 
+// sets z to that value (in Montgomery form), and returns z.
+func (z *{{.ElementName}}) SetBytes(e []byte) *{{.ElementName}} {
+	// get a big int from our pool
+	vv := bigIntPool.Get().(*big.Int)
+	vv.SetBytes(e)
+
+	// set big int
+	z.SetBigInt(vv)
+
+	// put temporary object back in pool 
+	bigIntPool.Put(vv)
+
+	return z
+}
+
+
 // SetBigInt sets z to v (regular form) and returns z in Montgomery form
 func (z *{{.ElementName}}) SetBigInt(v *big.Int) *{{.ElementName}} {
 	z.SetZero()
 
 	var zero big.Int 
-	q := Modulus()
 
 	// fast path
-	c := v.Cmp(q)
+	c := v.Cmp(&_modulus)
 	if c == 0 {
 		// v == 0
 		return z
@@ -56,11 +89,19 @@ func (z *{{.ElementName}}) SetBigInt(v *big.Int) *{{.ElementName}} {
 		return z.setBigInt(v)
 	}
 	
+	// get temporary big int from the pool
+	vv := bigIntPool.Get().(*big.Int)
+
 	// copy input + modular reduction
-	vv := new(big.Int).Set(v)
-	vv.Mod(v, q)
+	vv.Set(v)
+	vv.Mod(v, &_modulus)
 	
-	return z.setBigInt(vv)
+	// set big int byte value
+	z.setBigInt(vv)
+
+	// release object into pool
+	bigIntPool.Put(vv)
+	return z
 }
 
 // setBigInt assumes 0 <= v < q 
@@ -86,11 +127,19 @@ func (z *{{.ElementName}}) setBigInt(v *big.Int) *{{.ElementName}} {
 
 // SetString creates a big.Int with s (in base 10) and calls SetBigInt on z
 func (z *{{.ElementName}}) SetString( s string) *{{.ElementName}} {
-	x, ok := new(big.Int).SetString(s, 10)
-	if !ok {
+	// get temporary big int from the pool
+	vv := bigIntPool.Get().(*big.Int)
+	
+	if _, ok := vv.SetString(s, 10); !ok {
 		panic("{{.ElementName}}.SetString failed -> can't parse number in base10 into a big.Int")
 	}
-	return z.SetBigInt(x)
+	z.SetBigInt(vv)
+
+	// release object into pool
+	bigIntPool.Put(vv)
+
+
+	return z
 }
 
 `

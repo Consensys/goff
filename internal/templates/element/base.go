@@ -31,18 +31,17 @@ const Limbs = {{.NbWords}}
 // Bits number bits needed to represent {{.ElementName}}
 const Bits = {{.NbBits}}
 
+// Bytes number bytes needed to represent {{.ElementName}}
+const Bytes = Limbs * 8
+
 // field modulus stored as big.Int 
 var _modulus big.Int 
-var onceModulus sync.Once
 
 // Modulus returns q as a big.Int
 // q = 
 // 
 // {{.Modulus}}
 func Modulus() *big.Int {
-	onceModulus.Do(func() {
-		_modulus.SetString("{{.Modulus}}", 10)
-	})
 	return new(big.Int).Set(&_modulus)
 }
 
@@ -58,32 +57,21 @@ var rSquare = {{.ElementName}}{
 	{{$i}},{{end}}
 }
 
-
-
-// Bytes returns the regular (non montgomery) value 
-// of z as a big-endian byte array.
-func (z *{{.ElementName}}) Bytes() (res [Limbs*8]byte) {
-	_z := z.ToRegular()
-	{{- range $i := reverse .NbWordsIndexesFull}}
-		{{- $j := mul $i 8}}
-		{{- $k := sub $.NbWords 1}}
-		{{- $k := sub $k $i}}
-		{{- $jj := add $j 8}}
-		binary.BigEndian.PutUint64(res[{{$j}}:{{$jj}}], _z[{{$k}}])
-	{{- end}}
-
-	return 
+var bigIntDefault [Limbs]big.Word
+var bigIntPool = sync.Pool{
+	New: func() interface{} {
+		return new(big.Int).SetBits(bigIntDefault[:])
+	},
 }
 
-
-// SetBytes interprets e as the bytes of a big-endian unsigned integer, 
-// sets z to that value (in Montgomery form), and returns z.
-func (z *{{.ElementName}}) SetBytes(e []byte) *{{.ElementName}} {
-	var tmp big.Int
-	tmp.SetBytes(e)
-	z.SetBigInt(&tmp)
-	return z
+func init() {
+	_modulus.SetString("{{.Modulus}}", 10)
+	for i:=0; i < len(bigIntDefault); i++ {
+		bigIntDefault[i] = big.Word(^uint64(0))
+	}
+	
 }
+
 
 // SetUint64 z = v, sets z LSB to v (non-Montgomery form) and convert z to Montgomery form
 func (z *{{.ElementName}}) SetUint64(v uint64) *{{.ElementName}} {
@@ -204,8 +192,8 @@ func (z *{{.ElementName}}) LexicographicallyLargest() bool {
 
 // SetRandom sets z to a random element < q
 func (z *{{.ElementName}}) SetRandom() *{{.ElementName}} {
-	bytes := make([]byte, {{mul 8 .NbWords}})
-	io.ReadFull(rand.Reader, bytes)
+	var bytes [{{mul 8 .NbWords}}]byte
+	io.ReadFull(rand.Reader, bytes[:])
 	{{- range $i :=  .NbWordsIndexesFull}}
 		{{- $k := add $i 1}}
 		z[{{$i}}] = binary.BigEndian.Uint64(bytes[{{mul $i 8}}:{{mul $k 8}}]) 
