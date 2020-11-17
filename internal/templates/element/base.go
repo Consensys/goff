@@ -191,9 +191,11 @@ func (z *{{.ElementName}}) LexicographicallyLargest() bool {
 
 
 // SetRandom sets z to a random element < q
-func (z *{{.ElementName}}) SetRandom() *{{.ElementName}} {
+func (z *{{.ElementName}}) SetRandom() (*{{.ElementName}}, error) {
 	var bytes [{{mul 8 .NbWords}}]byte
-	io.ReadFull(rand.Reader, bytes[:])
+	if _, err := io.ReadFull(rand.Reader, bytes[:]); err != nil {
+		return nil, err 
+	}
 	{{- range $i :=  .NbWordsIndexesFull}}
 		{{- $k := add $i 1}}
 		z[{{$i}}] = binary.BigEndian.Uint64(bytes[{{mul $i 8}}:{{mul $k 8}}]) 
@@ -202,7 +204,7 @@ func (z *{{.ElementName}}) SetRandom() *{{.ElementName}} {
 
 	{{ template "reduce" . }}
 
-	return z
+	return z, nil 
 }
 
 // One returns 1 (in montgommery form)
