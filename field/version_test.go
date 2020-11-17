@@ -1,4 +1,4 @@
-package generator
+package field
 
 import (
 	"os/exec"

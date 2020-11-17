@@ -20,10 +20,10 @@ func main() {
 		versionTemplate,
 	}
 
-	if err := bavard.Generate("../../../generator/version.go", src,
+	if err := bavard.Generate("../../../field/version.go", src,
 		struct{ Version string }{version},
 		bavard.Apache2("ConsenSys Software Inc.", 2020),
-		bavard.Package("generator"),
+		bavard.Package("field"),
 		bavard.GeneratedBy("internal/generators/version")); err != nil {
 		fmt.Println("error", err)
 		os.Exit(-1)

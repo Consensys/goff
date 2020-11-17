@@ -52,14 +52,13 @@ type Field struct {
 	SqrtQ3Mod4Exponent   string   // big.Int to base16 string
 	SqrtG                []uint64 // NonResidue ^  SqrtR (montgomery form)
 
-	NonResidue       []uint64 // (montgomery form)
-	Version          string
-	NoCollidingNames bool // if multiple elements are generated in the same package, triggers name collisions
+	NonResidue []uint64 // (montgomery form)
+	Version    string
 }
 
 // -------------------------------------------------------------------------------------------------
 // Field data precompute functions
-func NewField(packageName, elementName, modulus string, noCollidingNames bool, version string) (*Field, error) {
+func NewField(packageName, elementName, modulus string) (*Field, error) {
 	// parse modulus
 	var bModulus big.Int
 	if _, ok := bModulus.SetString(modulus, 10); !ok {
@@ -68,12 +67,11 @@ func NewField(packageName, elementName, modulus string, noCollidingNames bool, v
 
 	// field info
 	F := &Field{
-		PackageName:      packageName,
-		ElementName:      elementName,
-		Modulus:          modulus,
-		NoCollidingNames: noCollidingNames,
+		PackageName: packageName,
+		ElementName: elementName,
+		Modulus:     modulus,
+		Version:     Version,
 	}
-	F.Version = version
 	// pre compute field constants
 	F.NbBits = bModulus.BitLen()
 	F.NbWords = len(bModulus.Bits())

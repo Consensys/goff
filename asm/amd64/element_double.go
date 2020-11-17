@@ -16,7 +16,7 @@ package amd64
 
 import . "github.com/consensys/bavard/amd64"
 
-func (f *FFAmd64) generateDouble() {
+func (f *ffAmd64) generateDouble() {
 	// func header
 	stackSize := 0
 	if f.NbWords > SmallModulus {

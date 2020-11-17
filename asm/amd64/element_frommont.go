@@ -16,7 +16,7 @@ package amd64
 
 import . "github.com/consensys/bavard/amd64"
 
-func (f *FFAmd64) generateFromMont() {
+func (f *ffAmd64) generateFromMont() {
 	stackSize := 8
 	if f.NbWords > SmallModulus {
 		stackSize = f.NbWords * 8

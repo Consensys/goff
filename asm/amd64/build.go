@@ -27,26 +27,28 @@ import (
 
 const SmallModulus = 6
 
-func NewFFAmd64(w io.Writer, F *field.Field) *FFAmd64 {
-	SetWriter(w)
-	return &FFAmd64{F}
+func newFFAmd64(w io.Writer, F *field.Field) *ffAmd64 {
+	Lock(w)
+	return &ffAmd64{F}
 }
 
-type FFAmd64 struct {
+type ffAmd64 struct {
 	*field.Field
 }
 
-func (f *FFAmd64) qAt(index int) string {
+func (f *ffAmd64) qAt(index int) string {
 	return fmt.Sprintf("·q%s+%d(SB)", f.ElementName, index*8)
 }
 
-func (f *FFAmd64) qInv0() string {
+func (f *ffAmd64) qInv0() string {
 	return fmt.Sprintf("·q%sInv0(SB)", f.ElementName)
 }
 
 // Generate generates assembly code for the base field provided to goff
 // see internal/templates/ops*
-func (f *FFAmd64) Generate() error {
+func Generate(w io.Writer, F *field.Field) error {
+	f := newFFAmd64(w, F)
+	defer Unlock()
 	WriteLn(bavard.Apache2Header("ConsenSys Software Inc.", 2020))
 
 	WriteLn("#include \"textflag.h\"")

@@ -15,7 +15,7 @@ import (
 	"encoding/binary"
 	"io"
 	"sync"
-	{{if eq .NoCollidingNames false}}"strconv"{{- end}}
+	"strconv"
 )
 
 // {{.ElementName}} represents a field element stored on {{.NbWords}} words (uint64)

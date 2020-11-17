@@ -20,7 +20,7 @@ import (
 	. "github.com/consensys/bavard/amd64"
 )
 
-func (f *FFAmd64) generateReduce() {
+func (f *ffAmd64) generateReduce() {
 	stackSize := 0
 	if f.NbWords > SmallModulus {
 		stackSize = f.NbWords * 8
@@ -38,7 +38,7 @@ func (f *FFAmd64) generateReduce() {
 	RET()
 }
 
-func (f *FFAmd64) Reduce(registers *Registers, t []Register, result interface{}, rOffset ...int) {
+func (f *ffAmd64) Reduce(registers *Registers, t []Register, result interface{}, rOffset ...int) {
 	if f.NbWords > SmallModulus {
 		f.reduceLarge(t, result, rOffset...)
 		return
@@ -70,7 +70,7 @@ func (f *FFAmd64) Reduce(registers *Registers, t []Register, result interface{},
 	registers.Push(u...)
 }
 
-func (f *FFAmd64) reduceLarge(t []Register, result interface{}, rOffset ...int) {
+func (f *ffAmd64) reduceLarge(t []Register, result interface{}, rOffset ...int) {
 	// u = t - q
 	u := make([]string, f.NbWords)
 

@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/consensys/goff/field"
 	"github.com/consensys/goff/generator"
 )
 
@@ -73,7 +74,11 @@ func TestIntegration(t *testing.T) {
 	for elementName, modulus := range moduli {
 		// generate field
 		childDir := filepath.Join(parentDir, elementName)
-		if err := generator.GenerateFF("integration", elementName, modulus, childDir, true); err != nil {
+		fIntegration, err := field.NewField("integration", elementName, modulus)
+		if err != nil {
+			t.Fatal(elementName, err)
+		}
+		if err := generator.GenerateFF(fIntegration, childDir); err != nil {
 			t.Fatal(elementName, err)
 		}
 	}

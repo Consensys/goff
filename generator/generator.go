@@ -3,6 +3,7 @@ package generator
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -14,13 +15,7 @@ import (
 )
 
 // GenerateFF will generate go (and .s) files in outputDir for modulus (in base 10)
-func GenerateFF(packageName, elementName, modulus, outputDir string, noCollidingNames bool) error {
-	// compute field constants
-	F, err := field.NewField(packageName, elementName, modulus, noCollidingNames, Version)
-	if err != nil {
-		return err
-	}
-
+func GenerateFF(F *field.Field, outputDir string) error {
 	// source file templates
 	src := []string{
 		element.Base,
@@ -42,7 +37,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 	}
 
 	// output files
-	eName := strings.ToLower(elementName)
+	eName := strings.ToLower(F.ElementName)
 
 	pathSrc := filepath.Join(outputDir, eName+".go")
 	pathSrcArith := filepath.Join(outputDir, "arith.go")
@@ -58,7 +53,7 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 	bavardOpts := []func(*bavard.Bavard) error{
 		bavard.Apache2("ConsenSys Software Inc.", 2020),
 		bavard.Package(F.PackageName),
-		bavard.GeneratedBy(fmt.Sprintf("goff (%s)", Version)),
+		bavard.GeneratedBy(fmt.Sprintf("goff (%s)", F.Version)),
 		bavard.Funcs(template.FuncMap{"toTitle": strings.Title}),
 	}
 	optsWithPackageDoc := append(bavardOpts, bavard.Package(F.PackageName, "contains field arithmetic operations for modulus "+F.Modulus))
@@ -82,13 +77,13 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 		// generate ops.s
 		{
 			pathSrc := filepath.Join(outputDir, eName+"_ops_amd64.s")
+			fmt.Println("generating", pathSrc)
 			f, err := os.Create(pathSrc)
 			if err != nil {
 				return err
 			}
 			defer f.Close()
-			ffamd64 := amd64.NewFFAmd64(f, F)
-			if err := ffamd64.Generate(); err != nil {
+			if err := amd64.Generate(f, F); err != nil {
 				return err
 			}
 
@@ -124,6 +119,14 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, noColliding
 		if err := bavard.Generate(pathSrc, src, F, bavardOptsCpy...); err != nil {
 			return err
 		}
+	}
+
+	// run go fmt on whole directory
+	cmd := exec.Command("gofmt", "-s", "-w", outputDir)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return err
 	}
 
 	return nil
