@@ -14,14 +14,12 @@
 
 package amd64
 
-import . "github.com/consensys/bavard/amd64"
-
 func (f *FFAmd64) generateAdd() {
 	stackSize := 0
 	if f.NbWords > SmallModulus {
 		stackSize = f.NbWords * 8
 	}
-	registers := FnHeader("add", stackSize, 24)
+	registers := f.FnHeader("add", stackSize, 24)
 
 	// registers
 	x := registers.Pop()
@@ -29,22 +27,22 @@ func (f *FFAmd64) generateAdd() {
 	r := registers.Pop()
 	t := registers.PopN(f.NbWords)
 
-	MOVQ("x+8(FP)", x)
+	f.MOVQ("x+8(FP)", x)
 
 	// t = x
 	f.Mov(x, t)
 
-	MOVQ("y+16(FP)", y)
+	f.MOVQ("y+16(FP)", y)
 
 	// t = t + y = x + y
 	f.Add(y, t)
 
 	// dereference res
-	MOVQ("res+0(FP)", r)
+	f.MOVQ("res+0(FP)", r)
 
 	// reduce t into res
 	f.Reduce(&registers, t, r)
 
-	RET()
+	f.RET()
 
 }

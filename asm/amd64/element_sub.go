@@ -14,21 +14,21 @@
 
 package amd64
 
-import . "github.com/consensys/bavard/amd64"
+import "github.com/consensys/bavard/amd64"
 
 func (f *FFAmd64) generateSub() {
-	registers := FnHeader("sub", 0, 24)
+	registers := f.FnHeader("sub", 0, 24)
 
 	// registers
 	t := registers.PopN(f.NbWords)
 	x := registers.Pop()
 	y := registers.Pop()
 
-	MOVQ("x+8(FP)", x)
+	f.MOVQ("x+8(FP)", x)
 	f.Mov(x, t)
 
 	// z = x - y mod q
-	MOVQ("y+16(FP)", y)
+	f.MOVQ("y+16(FP)", y)
 	f.Sub(y, t)
 
 	if f.NbWords > 6 {
@@ -38,22 +38,22 @@ func (f *FFAmd64) generateSub() {
 	}
 
 	r := registers.Pop()
-	MOVQ("res+0(FP)", r)
+	f.MOVQ("res+0(FP)", r)
 	f.Mov(t, r)
 
-	RET()
+	f.RET()
 
 }
 
-func (f *FFAmd64) ReduceAfterSub(registers *Registers, t []Register, noJump bool) {
+func (f *FFAmd64) ReduceAfterSub(registers *amd64.Registers, t []amd64.Register, noJump bool) {
 	if noJump {
 		q := registers.PopN(f.NbWords)
 		r := registers.Pop()
 		f.Mov(f.Q, q)
-		MOVQ(0, r)
+		f.MOVQ(0, r)
 		// overwrite with 0 if borrow is set
 		for i := 0; i < f.NbWords; i++ {
-			CMOVQCC(r, q[i])
+			f.CMOVQCC(r, q[i])
 		}
 
 		// add registers (q or 0) to t, and set to result
@@ -62,17 +62,17 @@ func (f *FFAmd64) ReduceAfterSub(registers *Registers, t []Register, noJump bool
 		registers.Push(r)
 		registers.Push(q...)
 	} else {
-		noReduce := NewLabel()
+		noReduce := f.NewLabel()
 
-		JCC(noReduce)
+		f.JCC(noReduce)
 		for i := 0; i < f.NbWords; i++ {
 			if i == 0 {
-				ADDQ(f.qAt(i), t[i])
+				f.ADDQ(f.qAt(i), t[i])
 			} else {
-				ADCQ(f.qAt(i), t[i])
+				f.ADCQ(f.qAt(i), t[i])
 			}
 		}
-		LABEL(noReduce)
+		f.LABEL(noReduce)
 
 	}
 }

@@ -14,27 +14,25 @@
 
 package amd64
 
-import . "github.com/consensys/bavard/amd64"
-
 func (f *FFAmd64) generateDouble() {
 	// func header
 	stackSize := 0
 	if f.NbWords > SmallModulus {
 		stackSize = f.NbWords * 8
 	}
-	registers := FnHeader("double", stackSize, 16)
+	registers := f.FnHeader("double", stackSize, 16)
 
 	// registers
 	x := registers.Pop()
 	r := registers.Pop()
 	t := registers.PopN(f.NbWords)
 
-	MOVQ("res+0(FP)", r)
-	MOVQ("x+8(FP)", x)
+	f.MOVQ("res+0(FP)", r)
+	f.MOVQ("x+8(FP)", x)
 
 	f.Mov(x, t)
 	f.Add(t, t)
 	f.Reduce(&registers, t, r)
 
-	RET()
+	f.RET()
 }

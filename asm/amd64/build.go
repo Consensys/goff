@@ -21,23 +21,19 @@ import (
 
 	"github.com/consensys/bavard"
 
-	. "github.com/consensys/bavard/amd64"
+	"github.com/consensys/bavard/amd64"
 	"github.com/consensys/goff/field"
 )
 
 const SmallModulus = 6
 
 func NewFFAmd64(w io.Writer, F *field.Field) *FFAmd64 {
-	Lock(w)
-	return &FFAmd64{F}
-}
-
-func Release() {
-	Unlock()
+	return &FFAmd64{F, amd64.NewAmd64(w)}
 }
 
 type FFAmd64 struct {
 	*field.Field
+	*amd64.Amd64
 }
 
 func (f *FFAmd64) qAt(index int) string {
@@ -52,11 +48,10 @@ func (f *FFAmd64) qInv0() string {
 // see internal/templates/ops*
 func Generate(w io.Writer, F *field.Field) error {
 	f := NewFFAmd64(w, F)
-	defer Release()
-	WriteLn(bavard.Apache2Header("ConsenSys Software Inc.", 2020))
+	f.WriteLn(bavard.Apache2Header("ConsenSys Software Inc.", 2020))
 
-	WriteLn("#include \"textflag.h\"")
-	WriteLn("#include \"funcdata.h\"")
+	f.WriteLn("#include \"textflag.h\"")
+	f.WriteLn("#include \"funcdata.h\"")
 
 	// mul
 	f.generateMul()

@@ -14,13 +14,11 @@
 
 package amd64
 
-import . "github.com/consensys/bavard/amd64"
-
 func (f *FFAmd64) generateNeg() {
-	registers := FnHeader("neg", 0, 16)
+	registers := f.FnHeader("neg", 0, 16)
 
 	// labels
-	nonZero := NewLabel()
+	nonZero := f.NewLabel()
 
 	// registers
 	x := registers.Pop()
@@ -28,41 +26,41 @@ func (f *FFAmd64) generateNeg() {
 	q := registers.Pop()
 	t := registers.PopN(f.NbWords)
 
-	MOVQ("res+0(FP)", r)
-	MOVQ("x+8(FP)", x)
+	f.MOVQ("res+0(FP)", r)
+	f.MOVQ("x+8(FP)", x)
 
 	// t = x
 	f.Mov(x, t)
 
 	// x = t[0] | ... | t[n]
-	MOVQ(t[0], x)
+	f.MOVQ(t[0], x)
 	for i := 1; i < f.NbWords; i++ {
-		ORQ(t[i], x)
+		f.ORQ(t[i], x)
 	}
 
-	TESTQ(x, x)
+	f.TESTQ(x, x)
 
 	// if x != 0, we jump to nonzero label
-	JNE(nonZero)
+	f.JNE(nonZero)
 	// if x == 0, we set the result to zero and return
 	for i := 0; i < f.NbWords/2; i++ {
-		MOVQ(x, r.At(i))
+		f.MOVQ(x, r.At(i))
 	}
-	RET()
+	f.RET()
 
-	LABEL(nonZero)
+	f.LABEL(nonZero)
 
 	// z = x - q
 	for i := 0; i < f.NbWords; i++ {
-		MOVQ(f.Q[i], q)
+		f.MOVQ(f.Q[i], q)
 		if i == 0 {
-			SUBQ(t[i], q)
+			f.SUBQ(t[i], q)
 		} else {
-			SBBQ(t[i], q)
+			f.SBBQ(t[i], q)
 		}
-		MOVQ(q, r.At(i))
+		f.MOVQ(q, r.At(i))
 	}
 
-	RET()
+	f.RET()
 
 }

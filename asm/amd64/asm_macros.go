@@ -14,9 +14,7 @@
 
 package amd64
 
-import (
-	. "github.com/consensys/bavard/amd64"
-)
+import "github.com/consensys/bavard/amd64"
 
 func (f *FFAmd64) Mov(i1, i2 interface{}, offsets ...int) {
 	var o1, o2 int
@@ -31,33 +29,33 @@ func (f *FFAmd64) Mov(i1, i2 interface{}, offsets ...int) {
 		switch c2 := i2.(type) {
 		default:
 			panic("unsupported")
-		case []Register:
+		case []amd64.Register:
 			for i := 0; i < f.NbWords; i++ {
-				MOVQ(c1[i+o1], c2[i+o2])
+				f.MOVQ(c1[i+o1], c2[i+o2])
 			}
 		}
-	case Register:
+	case amd64.Register:
 		switch c2 := i2.(type) {
-		case Register:
+		case amd64.Register:
 			for i := 0; i < f.NbWords; i++ {
-				MOVQ(c1.At(i+o1), c2.At(i+o2))
+				f.MOVQ(c1.At(i+o1), c2.At(i+o2))
 			}
-		case []Register:
+		case []amd64.Register:
 			for i := 0; i < f.NbWords; i++ {
-				MOVQ(c1.At(i+o1), c2[i+o2])
+				f.MOVQ(c1.At(i+o1), c2[i+o2])
 			}
 		default:
 			panic("unsupported")
 		}
-	case []Register:
+	case []amd64.Register:
 		switch c2 := i2.(type) {
-		case Register:
+		case amd64.Register:
 			for i := 0; i < f.NbWords; i++ {
-				MOVQ(c1[i+o1], c2.At(i+o2))
+				f.MOVQ(c1[i+o1], c2.At(i+o2))
 			}
-		case []Register:
+		case []amd64.Register:
 			for i := 0; i < f.NbWords; i++ {
-				MOVQ(c1[i+o1], c2[i+o2])
+				f.MOVQ(c1[i+o1], c2[i+o2])
 			}
 		default:
 			panic("unsupported")
@@ -78,29 +76,29 @@ func (f *FFAmd64) Add(i1, i2 interface{}, offsets ...int) {
 	}
 	switch c1 := i1.(type) {
 
-	case Register:
+	case amd64.Register:
 		switch c2 := i2.(type) {
 		default:
 			panic("unsupported")
-		case []Register:
+		case []amd64.Register:
 			for i := 0; i < f.NbWords; i++ {
 				if i == 0 {
-					ADDQ(c1.At(i+o1), c2[i+o2])
+					f.ADDQ(c1.At(i+o1), c2[i+o2])
 				} else {
-					ADCQ(c1.At(i+o1), c2[i+o2])
+					f.ADCQ(c1.At(i+o1), c2[i+o2])
 				}
 			}
 		}
-	case []Register:
+	case []amd64.Register:
 		switch c2 := i2.(type) {
 		default:
 			panic("unsupported")
-		case []Register:
+		case []amd64.Register:
 			for i := 0; i < f.NbWords; i++ {
 				if i == 0 {
-					ADDQ(c1[i+o1], c2[i+o2])
+					f.ADDQ(c1[i+o1], c2[i+o2])
 				} else {
-					ADCQ(c1[i+o1], c2[i+o2])
+					f.ADCQ(c1[i+o1], c2[i+o2])
 				}
 			}
 		}
@@ -119,29 +117,29 @@ func (f *FFAmd64) Sub(i1, i2 interface{}, offsets ...int) {
 	}
 	switch c1 := i1.(type) {
 
-	case Register:
+	case amd64.Register:
 		switch c2 := i2.(type) {
 		default:
 			panic("unsupported")
-		case []Register:
+		case []amd64.Register:
 			for i := 0; i < f.NbWords; i++ {
 				if i == 0 {
-					SUBQ(c1.At(i+o1), c2[i+o2])
+					f.SUBQ(c1.At(i+o1), c2[i+o2])
 				} else {
-					SBBQ(c1.At(i+o1), c2[i+o2])
+					f.SBBQ(c1.At(i+o1), c2[i+o2])
 				}
 			}
 		}
-	case []Register:
+	case []amd64.Register:
 		switch c2 := i2.(type) {
 		default:
 			panic("unsupported")
-		case []Register:
+		case []amd64.Register:
 			for i := 0; i < f.NbWords; i++ {
 				if i == 0 {
-					SUBQ(c1[i+o1], c2[i+o2])
+					f.SUBQ(c1[i+o1], c2[i+o2])
 				} else {
-					SBBQ(c1[i+o1], c2[i+o2])
+					f.SBBQ(c1[i+o1], c2[i+o2])
 				}
 			}
 		}

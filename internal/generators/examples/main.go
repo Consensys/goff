@@ -22,14 +22,14 @@ func main() {
 		{label: "bw761", modulus: "6891450384315732539396789682275657542479668912536150109513790160209623422243491736087683183289411687640864567753786613451161759120554247759349511699125301598951605099378508850372543631423596795951899700429969112842764913119068299"},
 	} {
 		wg.Add(1)
-		go func() {
+		go func(label, modulus string) {
 			defer wg.Done()
-			dir := filepath.Join("../../../examples/", fData.label)
-			F, _ := field.NewField("fp", "Element", fData.modulus)
+			dir := filepath.Join("../../../examples/", label)
+			F, _ := field.NewField("fp", "Element", modulus)
 			if err := generator.GenerateFF(F, dir); err != nil {
 				panic(err)
 			}
-		}()
+		}(fData.label, fData.modulus)
 	}
 	wg.Wait()
 }

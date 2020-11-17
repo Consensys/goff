@@ -14,16 +14,16 @@
 
 package amd64
 
-import . "github.com/consensys/bavard/amd64"
+import "github.com/consensys/bavard/amd64"
 
 func (f *FFAmd64) generateFromMont() {
 	stackSize := 8
 	if f.NbWords > SmallModulus {
 		stackSize = f.NbWords * 8
 	}
-	registers := FnHeader("fromMont", stackSize, 8, DX, AX)
-	WriteLn("NO_LOCAL_POINTERS")
-	WriteLn(`
+	registers := f.FnHeader("fromMont", stackSize, 8, amd64.DX, amd64.AX)
+	f.WriteLn("NO_LOCAL_POINTERS")
+	f.WriteLn(`
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
 	// when y = 1 we have: 
@@ -36,22 +36,22 @@ func (f *FFAmd64) generateFromMont() {
 	// 		    (C,t[j-1]) := t[j] + m*q[j] + C
 	// 		t[N-1] = C`)
 
-	noAdx := NewLabel()
+	noAdx := f.NewLabel()
 	// check ADX instruction support
-	CMPB("·supportAdx(SB)", 1)
-	JNE(noAdx)
+	f.CMPB("·supportAdx(SB)", 1)
+	f.JNE(noAdx)
 
 	// registers
 	t := registers.PopN(f.NbWords)
 	r := registers.Pop()
 
-	MOVQ("res+0(FP)", r)
+	f.MOVQ("res+0(FP)", r)
 
 	// 	for i=0 to N-1
 	//     t[i] = a[i]
 	f.Mov(r, t)
 
-	var tmp Register
+	var tmp amd64.Register
 	hasRegisters := registers.Available() > 0
 	if !hasRegisters {
 		tmp = r
@@ -60,54 +60,54 @@ func (f *FFAmd64) generateFromMont() {
 	}
 	for i := 0; i < f.NbWords; i++ {
 
-		XORQ(DX, DX)
+		f.XORQ(amd64.DX, amd64.DX)
 
 		// m := t[0]*q'[0] mod W
-		regM := DX
-		MOVQ(t[0], DX)
-		MULXQ(f.qInv0(), regM, AX, "m := t[0]*q'[0] mod W")
+		regM := amd64.DX
+		f.MOVQ(t[0], amd64.DX)
+		f.MULXQ(f.qInv0(), regM, amd64.AX, "m := t[0]*q'[0] mod W")
 
 		// clear the carry flags
-		XORQ(AX, AX)
+		f.XORQ(amd64.AX, amd64.AX)
 
 		// C,_ := t[0] + m*q[0]
-		Comment("C,_ := t[0] + m*q[0]")
+		f.Comment("C,_ := t[0] + m*q[0]")
 
-		MULXQ(f.qAt(0), AX, tmp)
-		ADCXQ(t[0], AX)
-		MOVQ(tmp, t[0])
+		f.MULXQ(f.qAt(0), amd64.AX, tmp)
+		f.ADCXQ(t[0], amd64.AX)
+		f.MOVQ(tmp, t[0])
 
-		Comment("for j=1 to N-1")
-		Comment("    (C,t[j-1]) := t[j] + m*q[j] + C")
+		f.Comment("for j=1 to N-1")
+		f.Comment("    (C,t[j-1]) := t[j] + m*q[j] + C")
 
 		// for j=1 to N-1
 		//    (C,t[j-1]) := t[j] + m*q[j] + C
 		for j := 1; j < f.NbWords; j++ {
-			ADCXQ(t[j], t[j-1])
-			MULXQ(f.qAt(j), AX, t[j])
-			ADOXQ(AX, t[j-1])
+			f.ADCXQ(t[j], t[j-1])
+			f.MULXQ(f.qAt(j), amd64.AX, t[j])
+			f.ADOXQ(amd64.AX, t[j-1])
 		}
-		MOVQ(0, AX)
-		ADCXQ(AX, t[f.NbWordsLastIndex])
-		ADOXQ(AX, t[f.NbWordsLastIndex])
+		f.MOVQ(0, amd64.AX)
+		f.ADCXQ(amd64.AX, t[f.NbWordsLastIndex])
+		f.ADOXQ(amd64.AX, t[f.NbWordsLastIndex])
 
 	}
 
 	if !hasRegisters {
-		MOVQ("res+0(FP)", r)
+		f.MOVQ("res+0(FP)", r)
 	} else {
 		registers.Push(tmp)
 	}
 	// ---------------------------------------------------------------------------------------------
 	// reduce
 	f.Reduce(&registers, t, r)
-	RET()
+	f.RET()
 
 	// No adx
-	LABEL(noAdx)
-	MOVQ("res+0(FP)", AX)
-	MOVQ(AX, "(SP)")
-	WriteLn("CALL ·_fromMontGeneric(SB)")
-	RET()
+	f.LABEL(noAdx)
+	f.MOVQ("res+0(FP)", amd64.AX)
+	f.MOVQ(amd64.AX, "(SP)")
+	f.WriteLn("CALL ·_fromMontGeneric(SB)")
+	f.RET()
 
 }
