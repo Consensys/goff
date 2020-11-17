@@ -7,7 +7,6 @@ const OpsNoAsm = `
 // or side-channel attack resistance
 // /!\ WARNING /!\
 
-import "math/bits"
 
 func mul(z, x, y *{{.ElementName}}) {
 	_mulGeneric(z, x, y)
