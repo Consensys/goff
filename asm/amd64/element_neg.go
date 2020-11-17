@@ -16,7 +16,7 @@ package amd64
 
 import . "github.com/consensys/bavard/amd64"
 
-func (f *ffAmd64) generateNeg() {
+func (f *FFAmd64) generateNeg() {
 	registers := FnHeader("neg", 0, 16)
 
 	// labels

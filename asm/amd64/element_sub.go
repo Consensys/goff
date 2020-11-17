@@ -16,7 +16,7 @@ package amd64
 
 import . "github.com/consensys/bavard/amd64"
 
-func (f *ffAmd64) generateSub() {
+func (f *FFAmd64) generateSub() {
 	registers := FnHeader("sub", 0, 24)
 
 	// registers
@@ -45,7 +45,7 @@ func (f *ffAmd64) generateSub() {
 
 }
 
-func (f *ffAmd64) ReduceAfterSub(registers *Registers, t []Register, noJump bool) {
+func (f *FFAmd64) ReduceAfterSub(registers *Registers, t []Register, noJump bool) {
 	if noJump {
 		q := registers.PopN(f.NbWords)
 		r := registers.Pop()

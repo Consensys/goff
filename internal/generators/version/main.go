@@ -24,6 +24,7 @@ func main() {
 		struct{ Version string }{version},
 		bavard.Apache2("ConsenSys Software Inc.", 2020),
 		bavard.Package("field"),
+		bavard.Format(true),
 		bavard.GeneratedBy("internal/generators/version")); err != nil {
 		fmt.Println("error", err)
 		os.Exit(-1)

@@ -18,7 +18,7 @@ import (
 	. "github.com/consensys/bavard/amd64"
 )
 
-func (f *ffAmd64) Mov(i1, i2 interface{}, offsets ...int) {
+func (f *FFAmd64) Mov(i1, i2 interface{}, offsets ...int) {
 	var o1, o2 int
 	if len(offsets) >= 1 {
 		o1 = offsets[0]
@@ -68,7 +68,7 @@ func (f *ffAmd64) Mov(i1, i2 interface{}, offsets ...int) {
 
 }
 
-func (f *ffAmd64) Add(i1, i2 interface{}, offsets ...int) {
+func (f *FFAmd64) Add(i1, i2 interface{}, offsets ...int) {
 	var o1, o2 int
 	if len(offsets) >= 1 {
 		o1 = offsets[0]
@@ -109,7 +109,7 @@ func (f *ffAmd64) Add(i1, i2 interface{}, offsets ...int) {
 	}
 }
 
-func (f *ffAmd64) Sub(i1, i2 interface{}, offsets ...int) {
+func (f *FFAmd64) Sub(i1, i2 interface{}, offsets ...int) {
 	var o1, o2 int
 	if len(offsets) >= 1 {
 		o1 = offsets[0]

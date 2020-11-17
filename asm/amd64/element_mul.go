@@ -16,7 +16,7 @@ package amd64
 
 import . "github.com/consensys/bavard/amd64"
 
-func (f *ffAmd64) MulADX(registers *Registers, yat, xat func(int) string, uglyHook func(int)) []Register {
+func (f *FFAmd64) MulADX(registers *Registers, yat, xat func(int) string, uglyHook func(int)) []Register {
 	// registers
 	t := registers.PopN(f.NbWords)
 	A := registers.Pop()
@@ -103,7 +103,7 @@ func (f *ffAmd64) MulADX(registers *Registers, yat, xat func(int) string, uglyHo
 	return t
 }
 
-func (f *ffAmd64) generateInnerMul(registers *Registers, isSquare bool) {
+func (f *FFAmd64) generateInnerMul(registers *Registers, isSquare bool) {
 
 	noAdx := NewLabel()
 
@@ -167,7 +167,7 @@ func (f *ffAmd64) generateInnerMul(registers *Registers, isSquare bool) {
 	}
 }
 
-func (f *ffAmd64) generateMul() {
+func (f *FFAmd64) generateMul() {
 	stackSize := 0
 	if f.NbWords > SmallModulus {
 		stackSize = f.NbWords * 8
@@ -195,7 +195,7 @@ func (f *ffAmd64) generateMul() {
 
 }
 
-func (f *ffAmd64) generateInnerMulLarge(registers *Registers, isSquare bool) {
+func (f *FFAmd64) generateInnerMulLarge(registers *Registers, isSquare bool) {
 	WriteLn("NO_LOCAL_POINTERS")
 	noAdx := NewLabel()
 	// check ADX instruction support
@@ -305,7 +305,7 @@ func (f *ffAmd64) generateInnerMulLarge(registers *Registers, isSquare bool) {
 
 }
 
-func (f *ffAmd64) mulNoAdx(registers *Registers, x, y Register) {
+func (f *FFAmd64) mulNoAdx(registers *Registers, x, y Register) {
 	// registers
 	t := registers.PopN(f.NbWords)
 	C := registers.Pop()

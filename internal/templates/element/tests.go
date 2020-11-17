@@ -424,7 +424,6 @@ func Test{{toTitle .ElementName}}LexicographicallyLargest(t *testing.T) {
 {{ define "testBinaryOp" }}
 
 func Test{{toTitle .all.ElementName}}{{.Op}}(t *testing.T) {
-
 	parameters := gopter.DefaultTestParameters()
 	if testing.Short() {
 		parameters.MinSuccessfulTests = nbFuzzShort
@@ -619,7 +618,6 @@ func Test{{toTitle .all.ElementName}}{{.Op}}(t *testing.T) {
 {{ define "testUnaryOp" }}
 
 func Test{{toTitle .all.ElementName}}{{.Op}}(t *testing.T) {
-
 	parameters := gopter.DefaultTestParameters()
 	if testing.Short() {
 		parameters.MinSuccessfulTests = nbFuzzShort
