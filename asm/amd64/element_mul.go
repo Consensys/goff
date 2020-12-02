@@ -24,7 +24,12 @@ func (f *FFAmd64) MulADX(registers *amd64.Registers, yat, xat func(int) string, 
 	for i := 0; i < f.NbWords; i++ {
 		f.XORQ(amd64.DX, amd64.DX)
 
-		f.MOVQ(yat(i), amd64.DX)
+		if yat == nil {
+			f.POPQ(amd64.DX)
+		} else {
+			f.MOVQ(yat(i), amd64.DX)
+		}
+
 		// for j=0 to N-1
 		//    (A,t[j])  := t[j] + x[j]*y[i] + A
 		for j := 0; j < f.NbWords; j++ {
