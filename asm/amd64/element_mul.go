@@ -201,7 +201,6 @@ func (f *FFAmd64) generateMul() {
 }
 
 func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers, isSquare bool) {
-	f.WriteLn("NO_LOCAL_POINTERS")
 	noAdx := f.NewLabel()
 	// check ADX instruction support
 	f.CMPB("·supportAdx(SB)", 1)
@@ -249,6 +248,7 @@ func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers, isSquare boo
 		f.MOVQ(0, amd64.DX)
 		f.ADCXQ(amd64.DX, A)
 		f.ADOXQ(amd64.DX, A)
+		// TODO need to avoid PUSHQ / POPQ as we need to be careful with stack usage of caller funcs, and usage of virtual (SP)
 		f.PUSHQ(A)
 
 		// m := t[0]*q'[0] mod W

@@ -3,7 +3,7 @@ module github.com/consensys/goff
 go 1.15
 
 require (
-	github.com/consensys/bavard v0.1.7-0.20201117223429-eb75ed1f049f
+	github.com/consensys/bavard v0.1.7-0.20201204163638-82d1cb261299
 	github.com/leanovate/gopter v0.2.8
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5 // indirect
