@@ -3,11 +3,7 @@ package element
 const Arith = `
 import (
 	"math/bits"
-	"golang.org/x/sys/cpu"
 )
-
-var supportAdx = cpu.X86.HasADX && cpu.X86.HasBMI2
-
 
 // madd0 hi = a*b + c (discards lo bits)
 func madd0(a, b, c uint64) (hi uint64) {

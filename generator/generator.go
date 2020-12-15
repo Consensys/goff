@@ -121,6 +121,33 @@ func GenerateFF(F *field.Field, outputDir string) error {
 		}
 	}
 
+	{
+		// generate asm.go and asm_noadx.go
+		src := []string{
+			element.Asm,
+		}
+		pathSrc := filepath.Join(outputDir, "asm.go")
+		bavardOptsCpy := make([]func(*bavard.Bavard) error, len(bavardOpts))
+		copy(bavardOptsCpy, bavardOpts)
+		bavardOptsCpy = append(bavardOptsCpy, bavard.BuildTag("!noadx"))
+		if err := bavard.Generate(pathSrc, src, F, bavardOptsCpy...); err != nil {
+			return err
+		}
+	}
+	{
+		// generate asm.go and asm_noadx.go
+		src := []string{
+			element.AsmNoAdx,
+		}
+		pathSrc := filepath.Join(outputDir, "asm_noadx.go")
+		bavardOptsCpy := make([]func(*bavard.Bavard) error, len(bavardOpts))
+		copy(bavardOptsCpy, bavardOpts)
+		bavardOptsCpy = append(bavardOptsCpy, bavard.BuildTag("noadx"))
+		if err := bavard.Generate(pathSrc, src, F, bavardOptsCpy...); err != nil {
+			return err
+		}
+	}
+
 	// run go fmt on whole directory
 	cmd := exec.Command("gofmt", "-s", "-w", outputDir)
 	cmd.Stdout = os.Stdout

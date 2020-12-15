@@ -10,6 +10,7 @@ import (
 
 //go:generate go run main.go
 //go:generate go test -short -count=1 ../../../examples/...
+//go:generate go test -short -tags=noadx -count=1 ../../../examples/...
 func main() {
 	var wg sync.WaitGroup
 	for _, fData := range []struct {
