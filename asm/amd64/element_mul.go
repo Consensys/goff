@@ -201,6 +201,7 @@ func (f *FFAmd64) generateMul() {
 }
 
 func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers, isSquare bool) {
+	f.WriteLn("NO_LOCAL_POINTERS")
 	noAdx := f.NewLabel()
 	// check ADX instruction support
 	f.CMPB("·supportAdx(SB)", 1)
