@@ -263,7 +263,7 @@ func init() {
 
 }
 
-func Test{{toTitle .ElementName}}InverseZero(t *testing.T) {
+func Test{{toTitle .ElementName}}NegZero(t *testing.T) {
 	var a, b {{.ElementName}}
 	b.SetZero()
 	for a.IsZero() {
@@ -271,7 +271,7 @@ func Test{{toTitle .ElementName}}InverseZero(t *testing.T) {
 	}
 	a.Neg(&b)
 	if !a.IsZero() {
-		t.Fatal("inverse(0) != 0")
+		t.Fatal("neg(0) != 0")
 	}
 }
 
