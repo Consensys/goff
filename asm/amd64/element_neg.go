@@ -43,7 +43,7 @@ func (f *FFAmd64) generateNeg() {
 	// if x != 0, we jump to nonzero label
 	f.JNE(nonZero)
 	// if x == 0, we set the result to zero and return
-	for i := 0; i < f.NbWords/2; i++ {
+	for i := 0; i < f.NbWords; i++ {
 		f.MOVQ(x, r.At(i))
 	}
 	f.RET()

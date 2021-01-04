@@ -265,6 +265,18 @@ func init() {
 
 }
 
+func TestElementInverseZero(t *testing.T) {
+	var a, b Element
+	b.SetZero()
+	for a.IsZero() {
+		a.SetRandom()
+	}
+	a.Neg(&b)
+	if !a.IsZero() {
+		t.Fatal("inverse(0) != 0")
+	}
+}
+
 func TestElementReduce(t *testing.T) {
 	testValues := make([]Element, len(staticTestValues))
 	copy(testValues, staticTestValues)
