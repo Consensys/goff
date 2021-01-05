@@ -37,11 +37,11 @@ type FFAmd64 struct {
 }
 
 func (f *FFAmd64) qAt(index int) string {
-	return fmt.Sprintf("·q%s+%d(SB)", f.ElementName, index*8)
+	return fmt.Sprintf("q<>+%d(SB)", index*8)
 }
 
 func (f *FFAmd64) qInv0() string {
-	return fmt.Sprintf("·q%sInv0(SB)", f.ElementName)
+	return fmt.Sprintf("qInv0<>(SB)")
 }
 
 // Generate generates assembly code for the base field provided to goff
@@ -52,17 +52,9 @@ func Generate(w io.Writer, F *field.Field) error {
 
 	f.WriteLn("#include \"textflag.h\"")
 	f.WriteLn("#include \"funcdata.h\"")
+	f.WriteLn("")
 
-	// mul
-	f.generateMul()
-	// square
-	f.generateSquare()
-
-	// from mont
-	f.generateFromMont()
-
-	// reduce
-	f.generateReduce()
+	f.GenerateDefines()
 
 	// add
 	f.generateAdd()
@@ -75,6 +67,15 @@ func Generate(w io.Writer, F *field.Field) error {
 
 	// neg
 	f.generateNeg()
+
+	// mul
+	f.generateMul()
+
+	// from mont
+	f.generateFromMont()
+
+	// reduce
+	f.generateReduce()
 
 	return nil
 }

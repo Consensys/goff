@@ -19,6 +19,7 @@ func (f *FFAmd64) generateAdd() {
 	if f.NbWords > SmallModulus {
 		stackSize = f.NbWords * 8
 	}
+	f.Comment("add(res, x, y *Element)")
 	registers := f.FnHeader("add", stackSize, 24)
 
 	// registers

@@ -28,10 +28,6 @@ func mul(z, x, y *Element) {
 	_mulGeneric(z, x, y)
 }
 
-func square(z, x *Element) {
-	_squareGeneric(z, x)
-}
-
 // FromMont converts z in place (i.e. mutates) from Montgomery to regular representation
 // sets and returns z = z * 1
 func fromMont(z *Element) {

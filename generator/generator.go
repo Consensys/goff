@@ -82,11 +82,20 @@ func GenerateFF(F *field.Field, outputDir string) error {
 			if err != nil {
 				return err
 			}
-			defer f.Close()
 			if err := amd64.Generate(f, F); err != nil {
+				f.Close()
 				return err
 			}
+			f.Close()
 
+			// run asmfmt
+			// run go fmt on whole directory
+			cmd := exec.Command("asmfmt", "-w", pathSrc)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if err := cmd.Run(); err != nil {
+				return err
+			}
 		}
 
 	}

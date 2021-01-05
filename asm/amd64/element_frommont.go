@@ -14,7 +14,11 @@
 
 package amd64
 
-import "github.com/consensys/bavard/amd64"
+import (
+	"fmt"
+
+	"github.com/consensys/bavard/amd64"
+)
 
 func (f *FFAmd64) generateFromMont() {
 	stackSize := 8
@@ -63,9 +67,10 @@ func (f *FFAmd64) generateFromMont() {
 		f.XORQ(amd64.DX, amd64.DX)
 
 		// m := t[0]*q'[0] mod W
+		f.Comment("m := t[0]*q'[0] mod W")
 		regM := amd64.DX
 		f.MOVQ(t[0], amd64.DX)
-		f.MULXQ(f.qInv0(), regM, amd64.AX, "m := t[0]*q'[0] mod W")
+		f.MULXQ(f.qInv0(), regM, amd64.AX)
 
 		// clear the carry flags
 		f.XORQ(amd64.AX, amd64.AX)
@@ -77,12 +82,10 @@ func (f *FFAmd64) generateFromMont() {
 		f.ADCXQ(t[0], amd64.AX)
 		f.MOVQ(tmp, t[0])
 
-		f.Comment("for j=1 to N-1")
-		f.Comment("    (C,t[j-1]) := t[j] + m*q[j] + C")
-
 		// for j=1 to N-1
 		//    (C,t[j-1]) := t[j] + m*q[j] + C
 		for j := 1; j < f.NbWords; j++ {
+			f.Comment(fmt.Sprintf("(C,t[%[1]d]) := t[%[2]d] + m*q[%[2]d] + C", j-1, j))
 			f.ADCXQ(t[j], t[j-1])
 			f.MULXQ(f.qAt(j), amd64.AX, t[j])
 			f.ADOXQ(amd64.AX, t[j-1])

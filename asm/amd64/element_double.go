@@ -20,6 +20,7 @@ func (f *FFAmd64) generateDouble() {
 	if f.NbWords > SmallModulus {
 		stackSize = f.NbWords * 8
 	}
+	f.Comment("double(res, x *Element)")
 	registers := f.FnHeader("double", stackSize, 16)
 
 	// registers

@@ -14,15 +14,22 @@
 
 package amd64
 
-import "github.com/consensys/bavard/amd64"
+import (
+	"fmt"
+
+	"github.com/consensys/bavard/amd64"
+)
 
 func (f *FFAmd64) MulADX(registers *amd64.Registers, yat, xat func(int) string, uglyHook func(int)) []amd64.Register {
 	// registers
 	t := registers.PopN(f.NbWords)
 	A := registers.Pop()
 
+	f.LabelRegisters("t", t...)
+
 	for i := 0; i < f.NbWords; i++ {
-		f.XORQ(amd64.DX, amd64.DX)
+		f.Comment("clear the flags")
+		f.XORQ(amd64.AX, amd64.AX)
 
 		if yat == nil {
 			f.POPQ(amd64.DX)
@@ -33,6 +40,7 @@ func (f *FFAmd64) MulADX(registers *amd64.Registers, yat, xat func(int) string, 
 		// for j=0 to N-1
 		//    (A,t[j])  := t[j] + x[j]*y[i] + A
 		for j := 0; j < f.NbWords; j++ {
+			f.Comment(fmt.Sprintf("(A,t[%[1]d])  := t[%[1]d] + x[%[1]d]*y[%[2]d] + A", j, i))
 			xj := xat(j)
 
 			reg := A
@@ -55,17 +63,23 @@ func (f *FFAmd64) MulADX(registers *amd64.Registers, yat, xat func(int) string, 
 			uglyHook(i)
 		}
 
-		f.Comment("add the last carries to " + string(A))
-		f.MOVQ(0, amd64.DX)
-		f.ADCXQ(amd64.DX, A)
-		f.ADOXQ(amd64.DX, A)
+		f.Comment("A += carries from ADCXQ and ADOXQ")
+		f.MOVQ(0, amd64.AX)
+		if i != 0 {
+			f.ADCXQ(amd64.AX, A)
+		}
+		f.ADOXQ(amd64.AX, A)
 
 		// m := t[0]*q'[0] mod W
+		f.Comment("m := t[0]*q'[0] mod W")
 		m := amd64.DX
-		f.MOVQ(t[0], amd64.DX)
-		f.MULXQ(f.qInv0(), m, amd64.AX, "m := t[0]*q'[0] mod W")
+		// f.MOVQ(t[0], m)
+		// f.MULXQ(f.qInv0(), m, amd64.AX)
+		f.MOVQ(f.qInv0(), m)
+		f.IMULQ(t[0], m)
 
 		// clear the carry flags
+		f.Comment("clear the flags")
 		f.XORQ(amd64.AX, amd64.AX)
 
 		// C,_ := t[0] + m*q[0]
@@ -87,16 +101,16 @@ func (f *FFAmd64) MulADX(registers *amd64.Registers, yat, xat func(int) string, 
 			f.POPQ(A)
 		}
 
-		f.Comment("for j=1 to N-1")
-		f.Comment("    (C,t[j-1]) := t[j] + m*q[j] + C")
-
 		// for j=1 to N-1
 		//    (C,t[j-1]) := t[j] + m*q[j] + C
 		for j := 1; j < f.NbWords; j++ {
+			f.Comment(fmt.Sprintf("(C,t[%[1]d]) := t[%[2]d] + m*q[%[2]d] + C", j-1, j))
 			f.ADCXQ(t[j], t[j-1])
 			f.MULXQ(f.qAt(j), amd64.AX, t[j])
 			f.ADOXQ(amd64.AX, t[j-1])
 		}
+
+		f.Comment(fmt.Sprintf("t[%d] = C + A", f.NbWordsLastIndex))
 		f.MOVQ(0, amd64.AX)
 		f.ADCXQ(amd64.AX, t[f.NbWordsLastIndex])
 		f.ADOXQ(A, t[f.NbWordsLastIndex])
@@ -109,9 +123,8 @@ func (f *FFAmd64) MulADX(registers *amd64.Registers, yat, xat func(int) string, 
 }
 
 func (f *FFAmd64) generateInnerMul(registers *amd64.Registers, isSquare bool) {
-
+	f.WriteLn("NO_LOCAL_POINTERS")
 	noAdx := f.NewLabel()
-
 	// check ADX instruction support
 	f.CMPB("·supportAdx(SB)", 1)
 	f.JNE(noAdx)
@@ -155,28 +168,25 @@ func (f *FFAmd64) generateInnerMul(registers *amd64.Registers, isSquare bool) {
 	// no MULX, ADX instructions
 	{
 		f.LABEL(noAdx)
-		registers := amd64.NewRegisters()
-		registers.Remove(amd64.AX)
-		registers.Remove(amd64.DX)
-		x := registers.Pop()
-		y := registers.Pop()
-		if isSquare {
-			f.MOVQ("x+8(FP)", x)
-			f.MOVQ("x+8(FP)", y)
-		} else {
-			f.MOVQ("x+8(FP)", x)
-			f.MOVQ("y+16(FP)", y)
-		}
 
-		f.mulNoAdx(&registers, x, y)
+		f.MOVQ("res+0(FP)", amd64.AX)
+		f.MOVQ(amd64.AX, "(SP)")
+		f.MOVQ("x+8(FP)", amd64.AX)
+		f.MOVQ(amd64.AX, "8(SP)")
+		f.MOVQ("y+16(FP)", amd64.AX)
+		f.MOVQ(amd64.AX, "16(SP)")
+		f.WriteLn("CALL ·_mulGeneric(SB)")
+		f.RET()
+
 	}
 }
 
 func (f *FFAmd64) generateMul() {
-	stackSize := 0
+	stackSize := 3 * 8
 	if f.NbWords > SmallModulus {
 		stackSize = f.NbWords * 8
 	}
+	f.Comment("mul(res, x, y *Element)")
 	registers := f.FnHeader("mul", stackSize, 24, amd64.DX, amd64.AX)
 	f.WriteLn(`
 	// the algorithm is described here
@@ -210,6 +220,8 @@ func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers, isSquare boo
 	// registers
 	t := registers.PopN(f.NbWords)
 	A := registers.Pop()
+
+	f.LabelRegisters("t", t...)
 
 	for i := 0; i < f.NbWords; i++ {
 
@@ -258,6 +270,7 @@ func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers, isSquare boo
 		f.MULXQ(f.qInv0(), regM, amd64.AX, "m := t[0]*q'[0] mod W")
 
 		// clear the carry flags
+		f.Comment("clear the flags")
 		f.XORQ(amd64.AX, amd64.AX)
 
 		// C,_ := t[0] + m*q[0]
@@ -266,12 +279,10 @@ func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers, isSquare boo
 		f.ADCXQ(t[0], amd64.AX)
 		f.MOVQ(A, t[0])
 
-		f.Comment("for j=1 to N-1")
-		f.Comment("    (C,t[j-1]) := t[j] + m*q[j] + C")
-
 		// for j=1 to N-1
 		//    (C,t[j-1]) := t[j] + m*q[j] + C
 		for j := 1; j < f.NbWords; j++ {
+			f.Comment(fmt.Sprintf("(C,t[%[1]d]) := t[%[2]d] + m*q[%[2]d] + C", j-1, j))
 			f.ADCXQ(t[j], t[j-1])
 			f.MULXQ(f.qAt(j), amd64.AX, t[j])
 			f.ADOXQ(amd64.AX, t[j-1])
@@ -309,78 +320,4 @@ func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers, isSquare boo
 		f.RET()
 	}
 
-}
-
-func (f *FFAmd64) mulNoAdx(registers *amd64.Registers, x, y amd64.Register) {
-	// registers
-	t := registers.PopN(f.NbWords)
-	C := registers.Pop()
-	yi := registers.Pop()
-	A := registers.Pop()
-	m := registers.Pop()
-
-	for i := 0; i < f.NbWords; i++ {
-		// (A,t[0]) := t[0] + x[0]*y[{{$i}}]
-		f.MOVQ(x.At(0), amd64.AX)
-		f.MOVQ(y.At(i), yi)
-		f.MULQ(yi)
-		if i != 0 {
-			f.ADDQ(amd64.AX, t[0])
-			f.ADCQ(0, amd64.DX)
-		} else {
-			f.MOVQ(amd64.AX, t[0])
-		}
-		f.MOVQ(amd64.DX, A)
-
-		// m := t[0]*q'[0] mod W
-		f.MOVQ(f.qInv0(), m)
-		f.IMULQ(t[0], m)
-
-		// C,_ := t[0] + m*q[0]
-		f.MOVQ(f.Q[0], amd64.AX)
-		f.MULQ(m)
-		f.ADDQ(t[0], amd64.AX)
-		f.ADCQ(0, amd64.DX)
-		f.MOVQ(amd64.DX, C)
-
-		// for j=1 to N-1
-		//    (A,t[j])  := t[j] + x[j]*y[i] + A
-		//    (C,t[j-1]) := t[j] + m*q[j] + C
-		for j := 1; j < f.NbWords; j++ {
-			f.MOVQ(x.At(j), amd64.AX)
-			f.MULQ(yi)
-			if i != 0 {
-				f.ADDQ(A, t[j])
-				f.ADCQ(0, amd64.DX)
-				f.ADDQ(amd64.AX, t[j])
-				f.ADCQ(0, amd64.DX)
-			} else {
-				f.MOVQ(A, t[j])
-				f.ADDQ(amd64.AX, t[j])
-				f.ADCQ(0, amd64.DX)
-			}
-			f.MOVQ(amd64.DX, A)
-
-			f.MOVQ(f.Q[j], amd64.AX)
-			f.MULQ(m)
-			f.ADDQ(t[j], C)
-			f.ADCQ(0, amd64.DX)
-			f.ADDQ(amd64.AX, C)
-			f.ADCQ(0, amd64.DX)
-			f.MOVQ(C, t[j-1])
-			f.MOVQ(amd64.DX, C)
-		}
-
-		f.ADDQ(C, A)
-		f.MOVQ(A, t[f.NbWordsLastIndex])
-
-	}
-
-	// ---------------------------------------------------------------------------------------------
-	// reduce
-	registers.Push(C, yi, A, m, y)
-
-	f.MOVQ("res+0(FP)", x)
-	f.Reduce(registers, t, x)
-	f.RET()
 }

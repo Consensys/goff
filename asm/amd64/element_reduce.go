@@ -43,29 +43,34 @@ func (f *FFAmd64) Reduce(registers *amd64.Registers, t []amd64.Register, result 
 		f.reduceLarge(t, result, rOffset...)
 		return
 	}
-	// u = t - q
-	u := registers.PopN(f.NbWords)
-
-	f.Mov(t, u)
-	for i := 0; i < f.NbWords; i++ {
-		if i == 0 {
-			f.SUBQ(f.qAt(i), u[i])
-		} else {
-			f.SBBQ(f.qAt(i), u[i])
-		}
-	}
-
-	// conditional move of u into t (if we have a borrow we need to return t - q)
-	for i := 0; i < f.NbWords; i++ {
-		f.CMOVQCC(u[i], t[i])
-	}
-
-	// return t
 	offset := 0
 	if len(rOffset) > 0 {
 		offset = rOffset[0]
 	}
-	f.Mov(t, result, 0, offset)
+
+	// u = t - q
+	u := registers.PopN(f.NbWords)
+
+	if rm, ok := result.(amd64.Register); ok && offset == 0 {
+		f.reduceElement(rm, t, u)
+	} else {
+		f.copyElement(t, u)
+		for i := 0; i < f.NbWords; i++ {
+			if i == 0 {
+				f.SUBQ(f.qAt(i), u[i])
+			} else {
+				f.SBBQ(f.qAt(i), u[i])
+			}
+		}
+
+		// conditional move of u into t (if we have a borrow we need to return t - q)
+		for i := 0; i < f.NbWords; i++ {
+			f.CMOVQCC(u[i], t[i])
+		}
+
+		// return t
+		f.Mov(t, result, 0, offset)
+	}
 
 	registers.Push(u...)
 }

@@ -426,7 +426,7 @@ func Test{{toTitle .ElementName}}LexicographicallyLargest(t *testing.T) {
 {{template "testBinaryOp" dict "all" . "Op" "Div"}}
 {{template "testBinaryOp" dict "all" . "Op" "Exp"}}
 
-{{template "testUnaryOp" dict "all" . "Op" "Square" "GenericOp" "_squareGeneric"}}
+{{template "testUnaryOp" dict "all" . "Op" "Square" }}
 {{template "testUnaryOp" dict "all" . "Op" "Inverse"}}
 {{template "testUnaryOp" dict "all" . "Op" "Sqrt"}}
 {{template "testUnaryOp" dict "all" . "Op" "Double"  "GenericOp" "_doubleGeneric"}}

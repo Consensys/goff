@@ -1121,16 +1121,6 @@ func TestElementSquare(t *testing.T) {
 		genA,
 	))
 
-	properties.Property("Square: assembly implementation must be consistent with generic one", prop.ForAll(
-		func(a testPairElement) bool {
-			var c, d Element
-			c.Square(&a.element)
-			_squareGeneric(&d, &a.element)
-			return c.Equal(&d)
-		},
-		genA,
-	))
-
 	specialValueTest := func() {
 		// test special values
 		testValues := make([]Element, len(staticTestValues))
@@ -1144,13 +1134,6 @@ func TestElementSquare(t *testing.T) {
 
 			var d, e big.Int
 			d.Mul(&aBig, &aBig).Mod(&d, Modulus())
-
-			// checking asm against generic impl
-			var cGeneric Element
-			_squareGeneric(&cGeneric, &a)
-			if !cGeneric.Equal(&c) {
-				t.Fatal("Square failed special test values: asm and generic impl don't match")
-			}
 
 			if c.FromMont().ToBigInt(&e).Cmp(&d) != 0 {
 				t.Fatal("Square failed special test values")

@@ -246,7 +246,7 @@ func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
 // Square z = x * x mod q
 // see https://hackmd.io/@zkteam/modular_multiplication
 func (z *{{.ElementName}}) Square(x *{{.ElementName}}) *{{.ElementName}} {
-	square(z,x)
+	mul(z,x, x)
 	return z
 }
 
@@ -296,15 +296,6 @@ func _mulGeneric(z,x,y *{{.ElementName}}) {
 	{{ template "reduce" . }}
 }
 
-
-func _squareGeneric(z,x *{{.ElementName}}) {
-	{{ if .NoCarry}}
-		{{ template "mul_nocarry" dict "all" . "V1" "x" "V2" "x"}}
-	{{ else }}
-		{{ template "mul_cios" dict "all" . "V1" "x" "V2" "x" "NoReturn" true}}
-	{{ end }}
-	{{ template "reduce" . }}
-}
 
 func _fromMontGeneric(z *{{.ElementName}}) {
 	// the following lines implement z = z * 1
