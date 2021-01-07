@@ -28,36 +28,51 @@ GLOBL q<>(SB), (RODATA+NOPTR), $48
 DATA qInv0<>(SB)/8, $0x8508bfffffffffff
 GLOBL qInv0<>(SB), (RODATA+NOPTR), $8
 
-// COPY b = a
-#define COPY(ra0, ra1, ra2, ra3, ra4, ra5, rb0, rb1, rb2, rb3, rb4, rb5) \
-	MOVQ ra0, rb0; \
-	MOVQ ra1, rb1; \
-	MOVQ ra2, rb2; \
-	MOVQ ra3, rb3; \
-	MOVQ ra4, rb4; \
-	MOVQ ra5, rb5; \
+#define REDUCE_AND_MOVE(ra0, ra1, ra2, ra3, ra4, ra5, rb0, rb1, rb2, rb3, rb4, rb5, res0, res1, res2, res3, res4, res5) \
+	MOVQ    ra0, rb0;        \
+	MOVQ    ra1, rb1;        \
+	MOVQ    ra2, rb2;        \
+	MOVQ    ra3, rb3;        \
+	MOVQ    ra4, rb4;        \
+	MOVQ    ra5, rb5;        \
+	SUBQ    q<>(SB), rb0;    \
+	SBBQ    q<>+8(SB), rb1;  \
+	SBBQ    q<>+16(SB), rb2; \
+	SBBQ    q<>+24(SB), rb3; \
+	SBBQ    q<>+32(SB), rb4; \
+	SBBQ    q<>+40(SB), rb5; \
+	CMOVQCC rb0, ra0;        \
+	CMOVQCC rb1, ra1;        \
+	CMOVQCC rb2, ra2;        \
+	CMOVQCC rb3, ra3;        \
+	CMOVQCC rb4, ra4;        \
+	CMOVQCC rb5, ra5;        \
+	MOVQ    ra0, res0;       \
+	MOVQ    ra1, res1;       \
+	MOVQ    ra2, res2;       \
+	MOVQ    ra3, res3;       \
+	MOVQ    ra4, res4;       \
+	MOVQ    ra5, res5;       \
 
-// REDUCE_AND_STORE
-#define REDUCE_AND_STORE(m0, ra0, ra1, ra2, ra3, ra4, ra5, rb0, rb1, rb2, rb3, rb4, rb5) \
-	COPY(ra0,ra1,ra2,ra3,ra4,ra5,rb0,rb1,rb2,rb3,rb4,rb5); \
-	SUBQ    q<>(SB), rb0;                                  \
-	SBBQ    q<>+8(SB), rb1;                                \
-	SBBQ    q<>+16(SB), rb2;                               \
-	SBBQ    q<>+24(SB), rb3;                               \
-	SBBQ    q<>+32(SB), rb4;                               \
-	SBBQ    q<>+40(SB), rb5;                               \
-	CMOVQCC rb0, ra0;                                      \
-	MOVQ    ra0, 0(m0);                                    \
-	CMOVQCC rb1, ra1;                                      \
-	MOVQ    ra1, 8(m0);                                    \
-	CMOVQCC rb2, ra2;                                      \
-	MOVQ    ra2, 16(m0);                                   \
-	CMOVQCC rb3, ra3;                                      \
-	MOVQ    ra3, 24(m0);                                   \
-	CMOVQCC rb4, ra4;                                      \
-	MOVQ    ra4, 32(m0);                                   \
-	CMOVQCC rb5, ra5;                                      \
-	MOVQ    ra5, 40(m0);                                   \
+#define REDUCE(ra0, ra1, ra2, ra3, ra4, ra5, rb0, rb1, rb2, rb3, rb4, rb5) \
+	MOVQ    ra0, rb0;        \
+	MOVQ    ra1, rb1;        \
+	MOVQ    ra2, rb2;        \
+	MOVQ    ra3, rb3;        \
+	MOVQ    ra4, rb4;        \
+	MOVQ    ra5, rb5;        \
+	SUBQ    q<>(SB), rb0;    \
+	SBBQ    q<>+8(SB), rb1;  \
+	SBBQ    q<>+16(SB), rb2; \
+	SBBQ    q<>+24(SB), rb3; \
+	SBBQ    q<>+32(SB), rb4; \
+	SBBQ    q<>+40(SB), rb5; \
+	CMOVQCC rb0, ra0;        \
+	CMOVQCC rb1, ra1;        \
+	CMOVQCC rb2, ra2;        \
+	CMOVQCC rb3, ra3;        \
+	CMOVQCC rb4, ra4;        \
+	CMOVQCC rb5, ra5;        \
 
 // add(res, x, y *Element)
 TEXT ·add(SB), NOSPLIT, $0-24
@@ -77,8 +92,9 @@ TEXT ·add(SB), NOSPLIT, $0-24
 	ADCQ 40(DX), R9
 	MOVQ res+0(FP), CX
 
-	// reduce element(BX,BP,SI,DI,R8,R9) stores at CX
-	REDUCE_AND_STORE(CX,BX,BP,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15)
+	// reduce element(BX,BP,SI,DI,R8,R9) using temp registers (R10,R11,R12,R13,R14,R15)
+	// stores in (0(CX),8(CX),16(CX),24(CX),32(CX),40(CX))
+	REDUCE_AND_MOVE(BX,BP,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,0(CX),8(CX),16(CX),24(CX),32(CX),40(CX))
 
 	RET
 
@@ -143,8 +159,9 @@ TEXT ·double(SB), NOSPLIT, $0-16
 	ADCQ DI, DI
 	ADCQ R8, R8
 
-	// reduce element(CX,BX,BP,SI,DI,R8) stores at DX
-	REDUCE_AND_STORE(DX,CX,BX,BP,SI,DI,R8,R9,R10,R11,R12,R13,R14)
+	// reduce element(CX,BX,BP,SI,DI,R8) using temp registers (R9,R10,R11,R12,R13,R14)
+	// stores in (0(DX),8(DX),16(DX),24(DX),32(DX),40(DX))
+	REDUCE_AND_MOVE(CX,BX,BP,SI,DI,R8,R9,R10,R11,R12,R13,R14,0(DX),8(DX),16(DX),24(DX),32(DX),40(DX))
 
 	RET
 
@@ -698,8 +715,9 @@ TEXT ·mul(SB), $24-24
 	ADOXQ R9, R8
 	MOVQ  res+0(FP), R12
 
-	// reduce element(CX,BX,BP,SI,DI,R8) stores at R12
-	REDUCE_AND_STORE(R12,CX,BX,BP,SI,DI,R8,R13,R10,R11,R9,R14,R15)
+	// reduce element(CX,BX,BP,SI,DI,R8) using temp registers (R13,R10,R11,R9,R14,R15)
+	// stores in (0(R12),8(R12),16(R12),24(R12),32(R12),40(R12))
+	REDUCE_AND_MOVE(CX,BX,BP,SI,DI,R8,R13,R10,R11,R9,R14,R15,0(R12),8(R12),16(R12),24(R12),32(R12),40(R12))
 
 	RET
 
@@ -971,8 +989,9 @@ TEXT ·fromMont(SB), $8-8
 	ADCXQ AX, SI
 	ADOXQ AX, SI
 
-	// reduce element(R14,R15,CX,BX,BP,SI) stores at DI
-	REDUCE_AND_STORE(DI,R14,R15,CX,BX,BP,SI,R9,R10,R11,R12,R13,R8)
+	// reduce element(R14,R15,CX,BX,BP,SI) using temp registers (R9,R10,R11,R12,R13,R8)
+	// stores in (0(DI),8(DI),16(DI),24(DI),32(DI),40(DI))
+	REDUCE_AND_MOVE(R14,R15,CX,BX,BP,SI,R9,R10,R11,R12,R13,R8,0(DI),8(DI),16(DI),24(DI),32(DI),40(DI))
 
 	RET
 
@@ -991,7 +1010,8 @@ TEXT ·reduce(SB), NOSPLIT, $0-8
 	MOVQ 32(AX), SI
 	MOVQ 40(AX), DI
 
-	// reduce element(DX,CX,BX,BP,SI,DI) stores at AX
-	REDUCE_AND_STORE(AX,DX,CX,BX,BP,SI,DI,R8,R9,R10,R11,R12,R13)
+	// reduce element(DX,CX,BX,BP,SI,DI) using temp registers (R8,R9,R10,R11,R12,R13)
+	// stores in (0(AX),8(AX),16(AX),24(AX),32(AX),40(AX))
+	REDUCE_AND_MOVE(DX,CX,BX,BP,SI,DI,R8,R9,R10,R11,R12,R13,0(AX),8(AX),16(AX),24(AX),32(AX),40(AX))
 
 	RET

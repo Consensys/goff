@@ -51,26 +51,45 @@ func (f *FFAmd64) Reduce(registers *amd64.Registers, t []amd64.Register, result 
 	// u = t - q
 	u := registers.PopN(f.NbWords)
 
-	if rm, ok := result.(amd64.Register); ok && offset == 0 {
-		f.reduceElement(rm, t, u)
-	} else {
-		f.copyElement(t, u)
-		for i := 0; i < f.NbWords; i++ {
-			if i == 0 {
-				f.SUBQ(f.qAt(i), u[i])
-			} else {
-				f.SBBQ(f.qAt(i), u[i])
-			}
+	switch res := result.(type) {
+	case amd64.Register:
+		// memory
+		rMem := make([]amd64.Register, len(t))
+		for i := 0; i < len(rMem); i++ {
+			rMem[i] = amd64.Register(fmt.Sprintf("%d(%s)", (offset*8)+(i*8), res))
 		}
+		f.reduceElement(t, u, rMem)
 
-		// conditional move of u into t (if we have a borrow we need to return t - q)
-		for i := 0; i < f.NbWords; i++ {
-			f.CMOVQCC(u[i], t[i])
+	case []amd64.Register:
+		// set of registers
+		if offset != 0 {
+			panic("invalid call")
 		}
-
-		// return t
-		f.Mov(t, result, 0, offset)
+		f.reduceElement(t, u, res)
+	default:
+		panic("unsupported")
 	}
+
+	// if rm, ok := result.(amd64.Register); ok && offset == 0 {
+
+	// } else {
+	// 	f.copyElement(t, u)
+	// 	for i := 0; i < f.NbWords; i++ {
+	// 		if i == 0 {
+	// 			f.SUBQ(f.qAt(i), u[i])
+	// 		} else {
+	// 			f.SBBQ(f.qAt(i), u[i])
+	// 		}
+	// 	}
+
+	// 	// conditional move of u into t (if we have a borrow we need to return t - q)
+	// 	for i := 0; i < f.NbWords; i++ {
+	// 		f.CMOVQCC(u[i], t[i])
+	// 	}
+
+	// 	// return t
+	// 	f.Mov(t, result, 0, offset)
+	// }
 
 	registers.Push(u...)
 }
