@@ -6,6 +6,12 @@ const OpsAMD64 = `
 {{if .ASM}}
 
 //go:noescape
+func MulBy3(x *{{.ElementName}})
+
+//go:noescape
+func MulBy5(x *{{.ElementName}})
+
+//go:noescape
 func add(res,x,y *{{.ElementName}})
 
 //go:noescape

@@ -77,5 +77,9 @@ func Generate(w io.Writer, F *field.Field) error {
 	// reduce
 	f.generateReduce()
 
+	// mul by constants
+	f.generateMulBy3()
+	f.generateMulBy5()
+
 	return nil
 }

@@ -516,6 +516,27 @@ func _reduceGeneric(z *Element) {
 	}
 }
 
+func mulByConstant(z *Element, c uint8) {
+	switch c {
+	case 0:
+		z.SetZero()
+		return
+	case 1:
+		return
+	case 2:
+		z.Double(z)
+		return
+	case 3:
+		_z := *z
+		z.Double(z).Add(z, &_z)
+	case 5:
+		_z := *z
+		z.Double(z).Double(z).Add(z, &_z)
+	default:
+		panic("not implemented")
+	}
+}
+
 // Exp z = x^exponent mod q
 func (z *Element) Exp(x Element, exponent *big.Int) *Element {
 	var bZero big.Int

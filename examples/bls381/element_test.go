@@ -351,6 +351,83 @@ func TestElementBytes(t *testing.T) {
 	properties.TestingRun(t, gopter.ConsoleReporter(false))
 }
 
+func TestElementMulByConstants(t *testing.T) {
+
+	parameters := gopter.DefaultTestParameters()
+	if testing.Short() {
+		parameters.MinSuccessfulTests = nbFuzzShort
+	} else {
+		parameters.MinSuccessfulTests = nbFuzz
+	}
+
+	properties := gopter.NewProperties(parameters)
+
+	genA := gen()
+
+	implemented := []uint8{0, 1, 2, 3, 5}
+	properties.Property("mulByConstant", prop.ForAll(
+		func(a testPairElement) bool {
+			for _, c := range implemented {
+				var constant Element
+				constant.SetUint64(uint64(c))
+
+				b := a.element
+				b.Mul(&b, &constant)
+
+				aa := a.element
+				mulByConstant(&aa, c)
+
+				if !aa.Equal(&b) {
+					return false
+				}
+			}
+
+			return true
+		},
+		genA,
+	))
+
+	properties.Property("MulBy3(x) == Mul(x, 3)", prop.ForAll(
+		func(a testPairElement) bool {
+			var constant Element
+			constant.SetUint64(3)
+
+			b := a.element
+			b.Mul(&b, &constant)
+
+			MulBy3(&a.element)
+
+			return a.element.Equal(&b)
+		},
+		genA,
+	))
+
+	properties.Property("MulBy5(x) == Mul(x, 5)", prop.ForAll(
+		func(a testPairElement) bool {
+			var constant Element
+			constant.SetUint64(5)
+
+			b := a.element
+			b.Mul(&b, &constant)
+
+			MulBy5(&a.element)
+
+			return a.element.Equal(&b)
+		},
+		genA,
+	))
+
+	properties.TestingRun(t, gopter.ConsoleReporter(false))
+	// if we have ADX instruction enabled, test both path in assembly
+	if supportAdx {
+		t.Log("disabling ADX")
+		supportAdx = false
+		properties.TestingRun(t, gopter.ConsoleReporter(false))
+		supportAdx = true
+	}
+
+}
+
 func TestElementLegendre(t *testing.T) {
 	parameters := gopter.DefaultTestParameters()
 	if testing.Short() {

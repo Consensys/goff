@@ -416,4 +416,25 @@ func _reduceGeneric(z *{{.ElementName}})  {
 	{{ template "reduce" . }}
 }
 
+func mulByConstant(z *{{.ElementName}}, c uint8) {
+	switch c {
+	case 0:
+		z.SetZero()
+		return
+	case 1:
+		return
+	case 2:
+		z.Double(z)
+		return
+	case 3:
+		_z := *z
+		z.Double(z).Add(z, &_z)
+	case 5:
+		_z := *z
+		z.Double(z).Double(z).Add(z, &_z)
+	default:
+		panic("not implemented")
+	}
+}
+
 `

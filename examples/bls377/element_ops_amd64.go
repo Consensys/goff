@@ -17,6 +17,12 @@
 package fp
 
 //go:noescape
+func MulBy3(x *Element)
+
+//go:noescape
+func MulBy5(x *Element)
+
+//go:noescape
 func add(res, x, y *Element)
 
 //go:noescape
