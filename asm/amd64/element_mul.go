@@ -203,14 +203,14 @@ func (f *FFAmd64) generateMul() {
 	// 		t[N-1] = C + A
 	`)
 	if f.NbWords > SmallModulus {
-		f.generateInnerMulLarge(&registers, false)
+		f.generateInnerMulLarge(&registers)
 	} else {
 		f.generateInnerMul(&registers, false)
 	}
 
 }
 
-func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers, isSquare bool) {
+func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers) {
 	f.WriteLn("NO_LOCAL_POINTERS")
 	noAdx := f.NewLabel()
 	// check ADX instruction support
@@ -220,54 +220,76 @@ func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers, isSquare boo
 	// registers
 	t := registers.PopN(f.NbWords)
 	A := registers.Pop()
-
+	f.LabelRegisters("A", A)
 	f.LabelRegisters("t", t...)
 
+	x := make([]amd64.Register, f.NbWords)
 	for i := 0; i < f.NbWords; i++ {
+		// use stack
+		x[i] = amd64.Register(fmt.Sprintf("x%d-%d(SP)", i, 8+i*8))
 
+	}
+
+	for i := 0; i < f.NbWords; i++ {
+		f.Comment("clear the flags")
 		f.XORQ(amd64.DX, amd64.DX)
 		yi := amd64.DX
-		if isSquare {
-			f.MOVQ("x+8(FP)", yi)
-		} else {
-			f.MOVQ("y+16(FP)", yi)
-		}
+		f.MOVQ("y+16(FP)", yi)
 		f.MOVQ(yi.At(i), yi)
+
 		// for j=0 to N-1
 		//    (A,t[j])  := t[j] + x[j]*y[i] + A
 		for j := 0; j < f.NbWords; j++ {
+			f.Comment(fmt.Sprintf("(A,t[%[1]d])  := t[%[1]d] + x[%[1]d]*y[%[2]d] + A", j, i))
 			xj := amd64.AX
-			f.MOVQ("x+8(FP)", xj)
-			f.MOVQ(xj.At(j), xj)
-
-			reg := A
 			if i == 0 {
+				xj = A
 				if j == 0 {
-					f.MULXQ(xj, t[j], t[j+1])
-				} else if j != f.NbWordsLastIndex {
-					reg = t[j+1]
+					f.Comment(fmt.Sprintf("using A(%s) to store x", A))
+					f.MOVQ("x+8(FP)", xj)
 				}
-			} else if j != 0 {
-				f.ADCXQ(A, t[j])
+				f.MOVQ(xj.At(j), amd64.AX)
+				f.MOVQ(amd64.AX, x[j])
+			} else {
+				// f.MOVQ("x+8(FP)", xj)
 			}
 
-			if !(i == 0 && j == 0) {
-				f.MULXQ(xj, amd64.AX, reg)
+			reg := A
+			if i == 0 && j == 0 {
+				f.MULXQ(amd64.AX, t[j], t[j+1])
+			}
+			if i != 0 && j != 0 {
+				f.ADCXQ(A, t[j])
+			}
+			if i != 0 || j != 0 {
+				if i == 0 && j != f.NbWordsLastIndex {
+					reg = t[j+1]
+				}
+				if i == 0 {
+					f.MULXQ(amd64.AX, amd64.AX, reg)
+				} else {
+					f.MULXQ(x[j], amd64.AX, reg)
+				}
 				f.ADOXQ(amd64.AX, t[j])
 			}
 		}
 
-		f.Comment("add the last carries to " + string(A))
+		f.Comment("A += carries from ADCXQ and ADOXQ")
 		f.MOVQ(0, amd64.DX)
-		f.ADCXQ(amd64.DX, A)
+		if i != 0 {
+			f.ADCXQ(amd64.DX, A)
+		}
 		f.ADOXQ(amd64.DX, A)
 		// TODO need to avoid PUSHQ / POPQ as we need to be careful with stack usage of caller funcs, and usage of virtual (SP)
 		f.PUSHQ(A)
 
 		// m := t[0]*q'[0] mod W
-		regM := amd64.DX
-		f.MOVQ(t[0], amd64.DX)
-		f.MULXQ(f.qInv0(), regM, amd64.AX, "m := t[0]*q'[0] mod W")
+		f.Comment("m := t[0]*q'[0] mod W")
+		m := amd64.DX
+		// f.MOVQ(t[0], amd64.DX)
+		// f.MULXQ(f.qInv0(), m, amd64.AX)
+		f.MOVQ(f.qInv0(), m)
+		f.IMULQ(t[0], m)
 
 		// clear the carry flags
 		f.Comment("clear the flags")
@@ -288,6 +310,7 @@ func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers, isSquare boo
 			f.ADOXQ(amd64.AX, t[j-1])
 		}
 
+		f.Comment(fmt.Sprintf("t[%d] = C + A", f.NbWordsLastIndex))
 		f.POPQ(A)
 		f.MOVQ(0, amd64.AX)
 		f.ADCXQ(amd64.AX, t[f.NbWordsLastIndex])
@@ -310,14 +333,9 @@ func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers, isSquare boo
 	f.MOVQ(amd64.AX, "(SP)")
 	f.MOVQ("x+8(FP)", amd64.AX)
 	f.MOVQ(amd64.AX, "8(SP)")
-	if isSquare {
-		f.WriteLn("CALL ·_squareGeneric(SB)")
-		f.RET()
-	} else {
-		f.MOVQ("y+16(FP)", amd64.AX)
-		f.MOVQ(amd64.AX, "16(SP)")
-		f.WriteLn("CALL ·_mulGeneric(SB)")
-		f.RET()
-	}
+	f.MOVQ("y+16(FP)", amd64.AX)
+	f.MOVQ(amd64.AX, "16(SP)")
+	f.WriteLn("CALL ·_mulGeneric(SB)")
+	f.RET()
 
 }

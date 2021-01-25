@@ -25,8 +25,15 @@ import (
 
 // LabelRegisters write comment with friendler name to registers
 func (f *FFAmd64) LabelRegisters(name string, r ...amd64.Register) {
-	for i := 0; i < len(r); i++ {
-		f.Comment(fmt.Sprintf("%s[%d] = %s", name, i, string(r[i])))
+	switch len(r) {
+	case 0:
+		return
+	case 1:
+		f.Comment(fmt.Sprintf("%s = %s", name, string(r[0])))
+	default:
+		for i := 0; i < len(r); i++ {
+			f.Comment(fmt.Sprintf("%s[%d] = %s", name, i, string(r[i])))
+		}
 	}
 	f.WriteLn("")
 }
