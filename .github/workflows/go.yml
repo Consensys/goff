@@ -1,25 +1,22 @@
-name: Go
-
-on:
-  push:
-    branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
-
+on: [push, pull_request]
+name: goff CI
 jobs:
-
-  build:
-    runs-on: ubuntu-latest
+  test:
+    strategy:
+      matrix:
+        go-version: [1.14.x, 1.15.x]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Go
+    - name: Install Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.15
-
-    - name: Build
-      run: go build -v ./...
-
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install bin dependencies
+      run: go get golang.org/x/tools/cmd/goimports && go get github.com/klauspost/asmfmt/cmd/asmfmt
     - name: Test
-      run: go test -v -short ./...
+      run: |
+        go generate ./...
+        go test -v -short ./...
