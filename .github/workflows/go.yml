@@ -10,7 +10,7 @@ jobs:
     steps:
     - name: Install Git
       if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install git
+      run: sudo apt-get install git
     - name: Install Go
       uses: actions/setup-go@v2
       with:
