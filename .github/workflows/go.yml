@@ -2,16 +2,12 @@ on: [push, pull_request]
 name: goff CI
 jobs:
   staticcheck:
-    strategy:
-      matrix:
-        go-version: [1.15.x]
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
     - name: install Go
       uses: actions/setup-go@v2
       with:
-        go-version: ${{ matrix.go-version }}
+        go-version: 1.15.x
     - name: checkout code
       uses: actions/checkout@v2
       with:
@@ -43,11 +39,7 @@ jobs:
     - name: check version
       run: goffVersion=$(./goff --version | cut -d ' ' -f 3-);gitVersion=$(git describe --abbrev=0);if [[ $goffVersion != $gitVersion ]]; then echo "goff version doesn't match git last semver tag"; exit 1; fi;
   test-short:
-    strategy:
-      matrix:
-        go-version: [1.15.x]
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     needs:
       - staticcheck
     steps:
@@ -65,7 +57,7 @@ jobs:
     name: post workflow status to slack
     needs:
       - staticcheck
-      - test
+      - test-short
     runs-on: ubuntu-latest
     steps:
       - name: Slack Workflow Notification
