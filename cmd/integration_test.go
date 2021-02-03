@@ -41,7 +41,7 @@ func TestIntegration(t *testing.T) {
 	var bits []int
 	if testing.Short() {
 		for i := 128; i <= 448; i += 64 {
-			bits = append(bits, i-3, i-2, i-1, i)
+			bits = append(bits, i-3, i-2, i-1, i, i+1)
 		}
 	} else {
 		for i := 120; i < 704; i++ {
