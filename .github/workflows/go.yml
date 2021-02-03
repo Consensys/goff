@@ -24,8 +24,22 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
-    - name: Install bin dependencies
+    - name: install bin dependencies
       run: go get golang.org/x/tools/cmd/goimports && go get github.com/klauspost/asmfmt/cmd/asmfmt
+    - name: generate files
+      run: go generate ./...
+    - name: gofmt
+      run: if [[ -n $(gofmt -l .) ]]; then echo "Please run gofmt"; exit 1; fi
+    - name: go vet
+      run: go vet ./...
+    - name: staticcheck
+      run: |
+        go get -u honnef.co/go/tools/cmd/staticcheck
+        staticcheck ./...
+    - name: gosec
+      run: |
+        go get -u github.com/securego/gosec/cmd/gosec
+        gosec ./examples/...
     - name: Test
       run: |
         go test -short ./...
@@ -36,4 +50,3 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         GOARCH=386 go test -short ./examples/...
-        GOARCH=386 go test -race -short ./examples/...

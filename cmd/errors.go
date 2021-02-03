@@ -17,6 +17,5 @@ package cmd
 import "errors"
 
 var (
-	errMissingArgument    = errors.New("missing argument")
-	errUnsupportedModulus = errors.New("unsupported modulus. goff only works for prime modulus w/ size > 64bits")
+	errMissingArgument = errors.New("missing argument")
 )

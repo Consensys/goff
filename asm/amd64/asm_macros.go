@@ -17,7 +17,6 @@ package amd64
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"text/template"
 
 	"github.com/consensys/bavard/amd64"
@@ -272,14 +271,6 @@ func (f *FFAmd64) Sub(i1, i2 interface{}, offsets ...int) {
 	default:
 		panic("unsupported")
 	}
-}
-
-func aggregate(values []string) string {
-	var sb strings.Builder
-	for _, v := range values {
-		sb.WriteString(v)
-	}
-	return sb.String()
 }
 
 // Template helpers (txt/template)

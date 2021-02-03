@@ -9,7 +9,7 @@ import (
 	"github.com/consensys/bavard"
 )
 
-//go:generate go run main.go
+// go run main.go
 func main() {
 	v, err := exec.Command("git", "describe", "--abbrev=0").CombinedOutput()
 	if err != nil {
