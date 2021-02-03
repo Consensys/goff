@@ -17,4 +17,4 @@
 package field
 
 // Version goff version
-const Version = "v0.3.TEST_ERROR_CI"
+const Version = "v0.3.10"
