@@ -56,3 +56,20 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         GOARCH=386 go test -short ./examples/...
+
+  slack-workflow-status:
+    if: always()
+    name: post workflow status to slack
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Slack Workflow Notification
+        uses: Gamesight/slack-workflow-status@master
+        with:
+          # Required Input
+          repo_token: ${{secrets.GITHUB_TOKEN}}
+          slack_webhook_url: ${{secrets.SLACK_WEBHOOK_URL}}
+          # Optional Input
+          channel: '#team-gnark'
+          name: 'goff CI'
