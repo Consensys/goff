@@ -40,6 +40,10 @@ jobs:
       run: |
         go get -u github.com/securego/gosec/cmd/gosec
         gosec ./examples/...
+    - name: build
+      run: go build
+    - name: check version
+      -run: goffVersion=$(./goff --version | cut -d ' ' -f 3-);gitVersion=$(git describe --abbrev=0);if [[ $goffVersion != $gitVersion ]]; then echo "goff version doesn't match git last semver tag"; exit 1; fi;
     - name: Test
       run: |
         go test -short ./...
