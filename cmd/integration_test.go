@@ -29,11 +29,12 @@ import (
 
 // integration test will create modulus for various field sizes and run tests
 
+const rootDir = "integration_test"
+
 func TestIntegration(t *testing.T) {
-	parentDir := "./integration_test"
-	os.RemoveAll(parentDir)
-	err := os.MkdirAll(parentDir, 0700)
-	defer os.RemoveAll(parentDir)
+	os.RemoveAll(rootDir)
+	err := os.MkdirAll(rootDir, 0700)
+	defer os.RemoveAll(rootDir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +74,7 @@ func TestIntegration(t *testing.T) {
 
 	for elementName, modulus := range moduli {
 		// generate field
-		childDir := filepath.Join(parentDir, elementName)
+		childDir := filepath.Join(rootDir, elementName)
 		fIntegration, err := field.NewField("integration", elementName, modulus)
 		if err != nil {
 			t.Fatal(elementName, err)
@@ -84,7 +85,12 @@ func TestIntegration(t *testing.T) {
 	}
 
 	// run go test
-	cmd := exec.Command("go", "test", "./"+parentDir+"/...")
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	packageDir := filepath.Join(wd, rootDir) + string(filepath.Separator) + "..."
+	cmd := exec.Command("go", "test", packageDir)
 	out, err := cmd.CombinedOutput()
 	fmt.Println(string(out))
 	if err != nil {
