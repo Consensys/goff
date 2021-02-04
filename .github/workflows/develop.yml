@@ -1,5 +1,11 @@
-on: [push, pull_request]
-name: goff CI
+on:
+  push:
+    branches:
+      - 'develop'
+  pull_request:
+    branches:
+      - 'develop'
+name: CI (develop)
 jobs:
   staticcheck:
     runs-on: ubuntu-latest
