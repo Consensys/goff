@@ -2,9 +2,11 @@ on:
   push:
     branches:
       - 'develop'
+      - 'master'
   pull_request:
     branches:
       - 'develop'
+      - 'master'
 name: CI (develop)
 jobs:
   staticcheck:
