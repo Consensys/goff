@@ -42,7 +42,7 @@ jobs:
     strategy:
       matrix:
         go-version: [1.14.x, 1.15.x]
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     needs:
       - staticcheck
@@ -66,6 +66,7 @@ jobs:
     - name: go mod download
       run: go mod download
     - name: install deps
+      if: github.ref == 'refs/heads/master'
       run: go get golang.org/x/tools/cmd/goimports && go get github.com/klauspost/asmfmt/cmd/asmfmt
     - name: Test (master)
       if: github.ref == 'refs/heads/master'
