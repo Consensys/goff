@@ -109,6 +109,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: GOARCH=386 go test -v -short ./examples/...
 
+      
   slack-workflow-status:
     if: always()
     name: post workflow status to slack
@@ -118,10 +119,12 @@ jobs:
       - test-full
     runs-on: ubuntu-latest
     steps:
-      - name: Slack Workflow Notification
-        uses: Gamesight/slack-workflow-status@master
-        with:
-          repo_token: ${{secrets.GITHUB_TOKEN}}
-          slack_webhook_url: ${{secrets.SLACK_WEBHOOK_URL}}
+      - name: Build notification
+        if: always()
+        uses: act10ns/slack@v1
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with: 
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
           channel: '#team-gnark'
-          include_jobs: false
