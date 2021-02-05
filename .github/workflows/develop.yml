@@ -66,7 +66,6 @@ jobs:
     - name: go mod download
       run: go mod download
     - name: install deps
-      if: github.ref == 'refs/heads/master'
       run: go get golang.org/x/tools/cmd/goimports && go get github.com/klauspost/asmfmt/cmd/asmfmt
     - name: Test (master)
       if: github.ref == 'refs/heads/master'
@@ -98,3 +97,4 @@ jobs:
           repo_token: ${{secrets.GITHUB_TOKEN}}
           slack_webhook_url: ${{secrets.SLACK_WEBHOOK_URL}}
           channel: '#team-gnark'
+          include_jobs: false
