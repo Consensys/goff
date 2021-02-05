@@ -1,12 +1,4 @@
-on:
-  push:
-    branches:
-      - 'develop'
-      - 'master'
-  pull_request:
-    branches:
-      - 'develop'
-      - 'master'
+on: [push, pull_request]
 name: CI (develop)
 jobs:
   staticcheck:
@@ -46,7 +38,7 @@ jobs:
       run: go build
     - name: check version
       run: goffVersion=$(./goff --version | cut -d ' ' -f 3-);gitVersion=$(git describe --abbrev=0);if [[ $goffVersion != $gitVersion ]]; then echo "goff version doesn't match git last semver tag"; exit 1; fi;
-  test-short:
+  test:
     strategy:
       matrix:
         go-version: [1.14.x, 1.15.x]
@@ -72,23 +64,30 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
     - name: install deps
+      if: github.ref == 'refs/heads/master'
       run: go get golang.org/x/tools/cmd/goimports && go get github.com/klauspost/asmfmt/cmd/asmfmt
-    - name: Test
+    - name: Test (master)
+      if: github.ref == 'refs/heads/master'
       run: |
-        go test -short ./...
-        go test -race -short ./...
-    - name: Test (tags = noadx)
-      run: go test -tags=noadx -short ./...
+        go test -v -short ./...
+        go test -v -race -short ./...
+        go test -v -tags=noadx -short ./...
+    - name: Test (!master)
+      if: github.ref != 'refs/heads/master'
+      run: |
+        go test -v -short ./examples/...
+        go test -v -race -short ./examples/...
+        go test -v -tags=noadx -short ./examples/...
     - name: Test (32bits -- GOARCH=386)
       if: matrix.os == 'ubuntu-latest'
-      run: GOARCH=386 go test -short ./examples/...
+      run: GOARCH=386 go test -v -short ./examples/...
 
   slack-workflow-status:
     if: always()
     name: post workflow status to slack
     needs:
       - staticcheck
-      - test-short
+      - test
     runs-on: ubuntu-latest
     steps:
       - name: Slack Workflow Notification
