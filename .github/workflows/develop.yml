@@ -38,11 +38,13 @@ jobs:
       run: go build
     - name: check version
       run: goffVersion=$(./goff --version | cut -d ' ' -f 3-);gitVersion=$(git describe --abbrev=0);if [[ $goffVersion != $gitVersion ]]; then echo "goff version doesn't match git last semver tag"; exit 1; fi;
-  test:
+  
+  test-short:
+    if: github.ref != 'refs/heads/master'
     strategy:
       matrix:
-        go-version: [1.14.x, 1.15.x]
-        os: [ubuntu-latest, windows-latest]
+        go-version: [1.15.x]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     needs:
       - staticcheck
@@ -63,23 +65,46 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
-    - name: go mod download
-      run: go mod download
-    - name: install deps
-      if: github.ref == 'refs/heads/master'
-      run: go get golang.org/x/tools/cmd/goimports && go get github.com/klauspost/asmfmt/cmd/asmfmt
-    - name: Test (master)
-      if: github.ref == 'refs/heads/master'
-      run: |
-        go test -v -short ./...
-        go test -v -race -short ./...
-        go test -v -tags=noadx -short ./...
-    - name: Test (!master)
-      if: github.ref != 'refs/heads/master'
+    - name: Test
       run: |
         go test -v -short ./examples/...
         go test -v -race -short ./examples/...
         go test -v -tags=noadx -short ./examples/...
+        GOARCH=386 go test -v -short ./examples/...
+  
+  test-full:
+    if: github.ref == 'refs/heads/master'
+    strategy:
+      matrix:
+        go-version: [1.14.x, 1.15.x]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    needs:
+      - staticcheck
+    steps:
+    - name: install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: checkout code
+      uses: actions/checkout@v2
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+          ~/Library/Caches/go-build
+          %LocalAppData%\go-build
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: install deps
+      run: go get golang.org/x/tools/cmd/goimports && go get github.com/klauspost/asmfmt/cmd/asmfmt
+    - name: Test (master)
+      run: |
+        go test -v -short ./...
+        go test -v -race -short ./...
+        go test -v -tags=noadx -short ./...
     - name: Test (32bits -- GOARCH=386)
       if: matrix.os == 'ubuntu-latest'
       run: GOARCH=386 go test -v -short ./examples/...
@@ -89,7 +114,8 @@ jobs:
     name: post workflow status to slack
     needs:
       - staticcheck
-      - test
+      - test-short
+      - test-full
     runs-on: ubuntu-latest
     steps:
       - name: Slack Workflow Notification
