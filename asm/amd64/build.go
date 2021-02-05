@@ -41,7 +41,7 @@ func (f *FFAmd64) qAt(index int) string {
 }
 
 func (f *FFAmd64) qInv0() string {
-	return fmt.Sprintf("qInv0<>(SB)")
+	return "qInv0<>(SB)"
 }
 
 // Generate generates assembly code for the base field provided to goff

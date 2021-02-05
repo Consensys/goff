@@ -86,7 +86,7 @@ func NewField(packageName, elementName, modulus string) (*Field, error) {
 	_qHalved := big.NewInt(0)
 	bOne := new(big.Int).SetUint64(1)
 	_qHalved.Sub(&bModulus, bOne).Rsh(_qHalved, 1).Add(_qHalved, bOne)
-	F.QMinusOneHalvedP = toUint64Slice(_qHalved)
+	F.QMinusOneHalvedP = toUint64Slice(_qHalved, F.NbWords)
 
 	//  setting qInverse
 	_r := big.NewInt(1)

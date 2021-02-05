@@ -250,8 +250,6 @@ func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers) {
 				}
 				f.MOVQ(xj.At(j), amd64.AX)
 				f.MOVQ(amd64.AX, x[j])
-			} else {
-				// f.MOVQ("x+8(FP)", xj)
 			}
 
 			reg := A
