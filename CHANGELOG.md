@@ -1,7 +1,17 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+
+<a name="v0.3.11"></a>
+## [v0.3.11] - 2021-02-05
 ### Build
+- try job level conditionals
+- remove macos for test purposes
+- fix previous commits, maybe.
+- added go mod download
+- ugraded deps in go.mod
+- faster CI workflow when not on master branch
+- remove master workflow, too slow.
 - added per branch workflow, faster on non dev/master
 - tentatively, added windows target
 - fix yml ci file, maybe.
@@ -26,6 +36,9 @@
 - added git dep install in go.yml
 - experimenting with github actions
 - experimenting with github actions
+
+### Chore
+- added auto-generated CHANGELOG.md
 
 ### Fix
 - field generation for LexicographicallyLargest failed for some modulus
@@ -157,7 +170,8 @@
 - Merge pull request [#2](https://github.com/consensys/goff/issues/2) from alexeykiselev/fix-set-random
 
 
-[Unreleased]: https://github.com/consensys/goff/compare/v0.3.10...HEAD
+[Unreleased]: https://github.com/consensys/goff/compare/v0.3.11...HEAD
+[v0.3.11]: https://github.com/consensys/goff/compare/v0.3.10...v0.3.11
 [v0.3.10]: https://github.com/consensys/goff/compare/v0.3.9...v0.3.10
 [v0.3.9]: https://github.com/consensys/goff/compare/v0.3.8...v0.3.9
 [v0.3.8]: https://github.com/consensys/goff/compare/v0.3.7...v0.3.8

@@ -15,4 +15,4 @@
 package field
 
 // Version goff version
-const Version = "v0.3.10"
+const Version = "v0.3.11"
