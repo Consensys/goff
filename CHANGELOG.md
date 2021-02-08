@@ -2,6 +2,19 @@
 ## [Unreleased]
 
 
+<a name="v0.3.12"></a>
+## [v0.3.12] - 2021-02-08
+### Build
+- notify slack only if build fails
+- test new slack notification action
+
+### Fix
+- removed default value for big int in pool, to prevent race condition
+
+### Pull Requests
+- Merge pull request [#25](https://github.com/consensys/goff/issues/25) from ConsenSys/develop
+
+
 <a name="v0.3.11"></a>
 ## [v0.3.11] - 2021-02-05
 ### Build
@@ -170,7 +183,8 @@
 - Merge pull request [#2](https://github.com/consensys/goff/issues/2) from alexeykiselev/fix-set-random
 
 
-[Unreleased]: https://github.com/consensys/goff/compare/v0.3.11...HEAD
+[Unreleased]: https://github.com/consensys/goff/compare/v0.3.12...HEAD
+[v0.3.12]: https://github.com/consensys/goff/compare/v0.3.11...v0.3.12
 [v0.3.11]: https://github.com/consensys/goff/compare/v0.3.10...v0.3.11
 [v0.3.10]: https://github.com/consensys/goff/compare/v0.3.9...v0.3.10
 [v0.3.9]: https://github.com/consensys/goff/compare/v0.3.8...v0.3.9
