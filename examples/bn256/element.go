@@ -76,19 +76,14 @@ var rSquare = Element{
 	493319470278259999,
 }
 
-var bigIntDefault [Limbs]big.Word
 var bigIntPool = sync.Pool{
 	New: func() interface{} {
-		return new(big.Int).SetBits(bigIntDefault[:])
+		return new(big.Int)
 	},
 }
 
 func init() {
 	_modulus.SetString("21888242871839275222246405745257275088696311157297823662689037894645226208583", 10)
-	for i := 0; i < len(bigIntDefault); i++ {
-		bigIntDefault[i] = big.Word(0x1)
-	}
-
 }
 
 // SetUint64 z = v, sets z LSB to v (non-Montgomery form) and convert z to Montgomery form

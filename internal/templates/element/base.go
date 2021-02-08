@@ -57,19 +57,15 @@ var rSquare = {{.ElementName}}{
 	{{$i}},{{end}}
 }
 
-var bigIntDefault [Limbs]big.Word
+
 var bigIntPool = sync.Pool{
 	New: func() interface{} {
-		return new(big.Int).SetBits(bigIntDefault[:])
+		return new(big.Int)
 	},
 }
 
 func init() {
 	_modulus.SetString("{{.Modulus}}", 10)
-	for i:=0; i < len(bigIntDefault); i++ {
-		bigIntDefault[i] = big.Word(0x1)
-	}
-	
 }
 
 
