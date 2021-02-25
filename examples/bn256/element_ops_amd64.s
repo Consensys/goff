@@ -65,34 +65,34 @@ TEXT ·add(SB), NOSPLIT, $0-24
 
 // sub(res, x, y *Element)
 TEXT ·sub(SB), NOSPLIT, $0-24
+	XORQ    DI, DI
 	MOVQ    x+8(FP), SI
 	MOVQ    0(SI), AX
 	MOVQ    8(SI), DX
 	MOVQ    16(SI), CX
 	MOVQ    24(SI), BX
-	MOVQ    y+16(FP), DI
-	SUBQ    0(DI), AX
-	SBBQ    8(DI), DX
-	SBBQ    16(DI), CX
-	SBBQ    24(DI), BX
+	MOVQ    y+16(FP), SI
+	SUBQ    0(SI), AX
+	SBBQ    8(SI), DX
+	SBBQ    16(SI), CX
+	SBBQ    24(SI), BX
 	MOVQ    $0x3c208c16d87cfd47, R8
 	MOVQ    $0x97816a916871ca8d, R9
 	MOVQ    $0xb85045b68181585d, R10
 	MOVQ    $0x30644e72e131a029, R11
-	MOVQ    $0, R12
-	CMOVQCC R12, R8
-	CMOVQCC R12, R9
-	CMOVQCC R12, R10
-	CMOVQCC R12, R11
+	CMOVQCC DI, R8
+	CMOVQCC DI, R9
+	CMOVQCC DI, R10
+	CMOVQCC DI, R11
 	ADDQ    R8, AX
 	ADCQ    R9, DX
 	ADCQ    R10, CX
 	ADCQ    R11, BX
-	MOVQ    res+0(FP), R13
-	MOVQ    AX, 0(R13)
-	MOVQ    DX, 8(R13)
-	MOVQ    CX, 16(R13)
-	MOVQ    BX, 24(R13)
+	MOVQ    res+0(FP), R12
+	MOVQ    AX, 0(R12)
+	MOVQ    DX, 8(R12)
+	MOVQ    CX, 16(R12)
+	MOVQ    BX, 24(R12)
 	RET
 
 // double(res, x *Element)

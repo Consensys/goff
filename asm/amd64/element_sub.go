@@ -22,22 +22,46 @@ func (f *FFAmd64) generateSub() {
 	defer f.AssertCleanStack(0, 0)
 
 	// registers
+	var zero amd64.Register
 	t := registers.PopN(f.NbWords)
-	x := registers.Pop()
-	y := registers.Pop()
+	xy := registers.Pop()
 
-	f.MOVQ("x+8(FP)", x)
-	f.Mov(x, t)
+	// set a register to zero if needed
+	if f.NbWords <= SmallModulus {
+		zero = registers.Pop()
+		f.XORQ(zero, zero)
+	}
+
+	f.MOVQ("x+8(FP)", xy)
+	f.Mov(xy, t)
 
 	// z = x - y mod q
-	f.MOVQ("y+16(FP)", y)
-	f.Sub(y, t)
-	registers.Push(y)
+	f.MOVQ("y+16(FP)", xy)
+	f.Sub(xy, t)
+	registers.Push(xy)
 
-	if f.NbWords > 6 {
-		f.ReduceAfterSub(&registers, t, false)
+	if f.NbWords > SmallModulus {
+		noReduce := f.NewLabel()
+		f.JCC(noReduce)
+		q := registers.Pop()
+		f.MOVQ(f.Q[0], q)
+		f.ADDQ(q, t[0])
+		for i := 1; i < f.NbWords; i++ {
+			f.MOVQ(f.Q[i], q)
+			f.ADCQ(q, t[i])
+		}
+		f.LABEL(noReduce)
+		registers.Push(q)
 	} else {
-		f.ReduceAfterSub(&registers, t, true)
+		q := registers.PopN(f.NbWords)
+		f.Mov(f.Q, q)
+		for i := 0; i < f.NbWords; i++ {
+			f.CMOVQCC(zero, q[i])
+		}
+		// add registers (q or 0) to t, and set to result
+		f.Add(q, t)
+		registers.Push(q...)
+		registers.Push(zero)
 	}
 
 	r := registers.Pop()
@@ -46,36 +70,4 @@ func (f *FFAmd64) generateSub() {
 
 	f.RET()
 
-}
-
-func (f *FFAmd64) ReduceAfterSub(registers *amd64.Registers, t []amd64.Register, noJump bool) {
-	if noJump {
-		q := registers.PopN(f.NbWords)
-		r := registers.Pop()
-		f.Mov(f.Q, q)
-		f.MOVQ(0, r)
-		// overwrite with 0 if borrow is set
-		for i := 0; i < f.NbWords; i++ {
-			f.CMOVQCC(r, q[i])
-		}
-
-		// add registers (q or 0) to t, and set to result
-		f.Add(q, t)
-
-		registers.Push(r)
-		registers.Push(q...)
-	} else {
-		noReduce := f.NewLabel()
-
-		f.JCC(noReduce)
-		for i := 0; i < f.NbWords; i++ {
-			if i == 0 {
-				f.ADDQ(f.qAt(i), t[i])
-			} else {
-				f.ADCQ(f.qAt(i), t[i])
-			}
-		}
-		f.LABEL(noReduce)
-
-	}
 }

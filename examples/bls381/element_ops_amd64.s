@@ -79,6 +79,7 @@ TEXT ·add(SB), NOSPLIT, $0-24
 
 // sub(res, x, y *Element)
 TEXT ·sub(SB), NOSPLIT, $0-24
+	XORQ    R9, R9
 	MOVQ    x+8(FP), R8
 	MOVQ    0(R8), AX
 	MOVQ    8(R8), DX
@@ -86,20 +87,19 @@ TEXT ·sub(SB), NOSPLIT, $0-24
 	MOVQ    24(R8), BX
 	MOVQ    32(R8), SI
 	MOVQ    40(R8), DI
-	MOVQ    y+16(FP), R9
-	SUBQ    0(R9), AX
-	SBBQ    8(R9), DX
-	SBBQ    16(R9), CX
-	SBBQ    24(R9), BX
-	SBBQ    32(R9), SI
-	SBBQ    40(R9), DI
+	MOVQ    y+16(FP), R8
+	SUBQ    0(R8), AX
+	SBBQ    8(R8), DX
+	SBBQ    16(R8), CX
+	SBBQ    24(R8), BX
+	SBBQ    32(R8), SI
+	SBBQ    40(R8), DI
 	MOVQ    $0xb9feffffffffaaab, R10
 	MOVQ    $0x1eabfffeb153ffff, R11
 	MOVQ    $0x6730d2a0f6b0f624, R12
 	MOVQ    $0x64774b84f38512bf, R13
 	MOVQ    $0x4b1ba7b6434bacd7, R14
 	MOVQ    $0x1a0111ea397fe69a, R15
-	MOVQ    $0, R9
 	CMOVQCC R9, R10
 	CMOVQCC R9, R11
 	CMOVQCC R9, R12
@@ -112,13 +112,13 @@ TEXT ·sub(SB), NOSPLIT, $0-24
 	ADCQ    R13, BX
 	ADCQ    R14, SI
 	ADCQ    R15, DI
-	MOVQ    res+0(FP), R9
-	MOVQ    AX, 0(R9)
-	MOVQ    DX, 8(R9)
-	MOVQ    CX, 16(R9)
-	MOVQ    BX, 24(R9)
-	MOVQ    SI, 32(R9)
-	MOVQ    DI, 40(R9)
+	MOVQ    res+0(FP), R8
+	MOVQ    AX, 0(R8)
+	MOVQ    DX, 8(R8)
+	MOVQ    CX, 16(R8)
+	MOVQ    BX, 24(R8)
+	MOVQ    SI, 32(R8)
+	MOVQ    DI, 40(R8)
 	RET
 
 // double(res, x *Element)
