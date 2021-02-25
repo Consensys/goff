@@ -18,6 +18,7 @@ package amd64
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/consensys/bavard"
 
@@ -28,12 +29,81 @@ import (
 const SmallModulus = 6
 
 func NewFFAmd64(w io.Writer, F *field.Field) *FFAmd64 {
-	return &FFAmd64{F, amd64.NewAmd64(w)}
+	return &FFAmd64{F, amd64.NewAmd64(w), 0, 0}
 }
 
 type FFAmd64 struct {
 	*field.Field
 	*amd64.Amd64
+	nbElementsOnStack int
+	maxOnStack        int
+}
+
+func (f *FFAmd64) StackSize(maxNbRegistersNeeded, nbRegistersReserved, minStackSize int) int {
+	got := amd64.NbRegisters - nbRegistersReserved
+	r := got - maxNbRegistersNeeded
+	if r >= 0 {
+		return minStackSize
+	}
+	r *= -8
+	return r + minStackSize
+}
+
+func (f *FFAmd64) AssertCleanStack(reservedStackSize, minStackSize int) {
+	if f.nbElementsOnStack != 0 {
+		panic("missing f.Push stack elements")
+	}
+	if reservedStackSize < minStackSize {
+		panic("invalid minStackSize or reservedStackSize")
+	}
+	usedStackSize := f.maxOnStack * 8
+	if usedStackSize > reservedStackSize {
+		panic("using more stack size than reserved")
+	} else if usedStackSize+minStackSize < reservedStackSize {
+		panic("reserved more stack size than needed") // TODO wip this shouldn't not panic as this may be by design for aligment
+	}
+
+	f.maxOnStack = 0
+}
+
+func (f *FFAmd64) Push(registers *amd64.Registers, rIn ...amd64.Register) {
+	for _, r := range rIn {
+		if strings.HasPrefix(string(r), "s") {
+			// it's on the stack, decrease the offset
+			f.nbElementsOnStack--
+			continue
+		}
+		registers.Push(r)
+	}
+}
+
+func (f *FFAmd64) Pop(registers *amd64.Registers) amd64.Register {
+	if registers.Available() >= 1 {
+		return registers.Pop()
+	}
+	r := amd64.Register(fmt.Sprintf("s%d-%d(SP)", f.nbElementsOnStack, f.nbElementsOnStack*8))
+	f.nbElementsOnStack++
+	if f.nbElementsOnStack > f.maxOnStack {
+		f.maxOnStack = f.nbElementsOnStack
+	}
+	return r
+}
+
+func (f *FFAmd64) PopN(registers *amd64.Registers) []amd64.Register {
+	if registers.Available() >= f.NbWords {
+		return registers.PopN(f.NbWords)
+	}
+	nbStack := f.NbWords - registers.Available()
+	u := registers.PopN(registers.Available())
+
+	for i := f.nbElementsOnStack; i < nbStack+f.nbElementsOnStack; i++ {
+		u = append(u, amd64.Register(fmt.Sprintf("s%d-%d(SP)", i, i*8)))
+	}
+	f.nbElementsOnStack += nbStack
+	if f.nbElementsOnStack > f.maxOnStack {
+		f.maxOnStack = f.nbElementsOnStack
+	}
+	return u
 }
 
 func (f *FFAmd64) qAt(index int) string {

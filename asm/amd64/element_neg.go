@@ -17,15 +17,15 @@ package amd64
 func (f *FFAmd64) generateNeg() {
 	f.Comment("neg(res, x *Element)")
 	registers := f.FnHeader("neg", 0, 16)
+	defer f.AssertCleanStack(0, 0)
 
 	// labels
 	zero := f.NewLabel()
 
 	// registers
 	x := registers.Pop()
-	r := registers.Pop()
-	q := registers.Pop()
 	t := registers.PopN(f.NbWords)
+	r := registers.Pop()
 
 	f.MOVQ("res+0(FP)", r)
 	f.MOVQ("x+8(FP)", x)
@@ -43,7 +43,8 @@ func (f *FFAmd64) generateNeg() {
 
 	// if x == 0, we jump to nonzero label
 	f.JEQ(zero)
-
+	registers.Push(x)
+	q := registers.Pop()
 	// z = x - q
 	for i := 0; i < f.NbWords; i++ {
 		f.MOVQ(f.Q[i], q)
@@ -54,7 +55,7 @@ func (f *FFAmd64) generateNeg() {
 		}
 		f.MOVQ(q, r.At(i))
 	}
-
+	registers.Push(q)
 	f.RET()
 
 	f.LABEL(zero)

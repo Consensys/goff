@@ -19,6 +19,7 @@ import "github.com/consensys/bavard/amd64"
 func (f *FFAmd64) generateSub() {
 	f.Comment("sub(res, x, y *Element)")
 	registers := f.FnHeader("sub", 0, 24)
+	defer f.AssertCleanStack(0, 0)
 
 	// registers
 	t := registers.PopN(f.NbWords)
@@ -31,6 +32,7 @@ func (f *FFAmd64) generateSub() {
 	// z = x - y mod q
 	f.MOVQ("y+16(FP)", y)
 	f.Sub(y, t)
+	registers.Push(y)
 
 	if f.NbWords > 6 {
 		f.ReduceAfterSub(&registers, t, false)

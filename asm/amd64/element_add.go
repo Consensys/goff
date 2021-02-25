@@ -15,34 +15,33 @@
 package amd64
 
 func (f *FFAmd64) generateAdd() {
-	stackSize := 0
-	if f.NbWords > SmallModulus {
-		stackSize = f.NbWords * 8
-	}
 	f.Comment("add(res, x, y *Element)")
+
+	stackSize := f.StackSize(f.NbWords*2, 0, 0)
 	registers := f.FnHeader("add", stackSize, 24)
+	defer f.AssertCleanStack(stackSize, 0)
 
 	// registers
 	x := registers.Pop()
 	y := registers.Pop()
-	r := registers.Pop()
 	t := registers.PopN(f.NbWords)
 
-	f.MOVQ("x+8(FP)", x)
-
 	// t = x
+	f.MOVQ("x+8(FP)", x)
 	f.Mov(x, t)
-
-	f.MOVQ("y+16(FP)", y)
+	registers.Push(x)
 
 	// t = t + y = x + y
+	f.MOVQ("y+16(FP)", y)
 	f.Add(y, t)
+	registers.Push(y)
 
-	// dereference res
+	// reduce t
+	f.Reduce(&registers, t)
+
+	r := registers.Pop()
 	f.MOVQ("res+0(FP)", r)
-
-	// reduce t into res
-	f.Reduce(&registers, t, r)
+	f.Mov(t, r)
 
 	f.RET()
 

@@ -16,24 +16,25 @@ package amd64
 
 func (f *FFAmd64) generateDouble() {
 	// func header
-	stackSize := 0
-	if f.NbWords > SmallModulus {
-		stackSize = f.NbWords * 8
-	}
 	f.Comment("double(res, x *Element)")
+	stackSize := f.StackSize(f.NbWords*2, 0, 0)
 	registers := f.FnHeader("double", stackSize, 16)
+	defer f.AssertCleanStack(stackSize, 0)
 
 	// registers
 	x := registers.Pop()
-	r := registers.Pop()
 	t := registers.PopN(f.NbWords)
 
-	f.MOVQ("res+0(FP)", r)
 	f.MOVQ("x+8(FP)", x)
-
 	f.Mov(x, t)
+	registers.Push(x)
+
 	f.Add(t, t)
-	f.Reduce(&registers, t, r)
+	f.Reduce(&registers, t)
+
+	r := registers.Pop()
+	f.MOVQ("res+0(FP)", r)
+	f.Mov(t, r)
 
 	f.RET()
 }

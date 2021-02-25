@@ -15,110 +15,28 @@
 package amd64
 
 import (
-	"fmt"
-
 	"github.com/consensys/bavard/amd64"
 )
 
 func (f *FFAmd64) generateReduce() {
-	stackSize := 0
-	if f.NbWords > SmallModulus {
-		stackSize = f.NbWords * 8
-	}
+	stackSize := f.StackSize(1+f.NbWords*2, 0, 0)
 	registers := f.FnHeader("reduce", stackSize, 8)
+	defer f.AssertCleanStack(stackSize, 0)
 
 	// registers
 	r := registers.Pop()
 	t := registers.PopN(f.NbWords)
 
 	f.MOVQ("res+0(FP)", r)
-
 	f.Mov(r, t)
-	f.Reduce(&registers, t, r)
+	f.Reduce(&registers, t)
+	f.Mov(t, r)
 	f.RET()
 }
 
-func (f *FFAmd64) Reduce(registers *amd64.Registers, t []amd64.Register, result interface{}, rOffset ...int) {
-	if f.NbWords > SmallModulus {
-		f.reduceLarge(t, result, rOffset...)
-		return
-	}
-	offset := 0
-	if len(rOffset) > 0 {
-		offset = rOffset[0]
-	}
-
-	// u = t - q
-	u := registers.PopN(f.NbWords)
-
-	switch res := result.(type) {
-	case amd64.Register:
-		// memory
-		rMem := make([]amd64.Register, len(t))
-		for i := 0; i < len(rMem); i++ {
-			rMem[i] = amd64.Register(fmt.Sprintf("%d(%s)", (offset*8)+(i*8), res))
-		}
-		f.reduceElement(t, u, rMem)
-
-	case []amd64.Register:
-		// set of registers
-		if offset != 0 {
-			panic("invalid call")
-		}
-		f.reduceElement(t, u, res)
-	default:
-		panic("unsupported")
-	}
-
-	// if rm, ok := result.(amd64.Register); ok && offset == 0 {
-
-	// } else {
-	// 	f.copyElement(t, u)
-	// 	for i := 0; i < f.NbWords; i++ {
-	// 		if i == 0 {
-	// 			f.SUBQ(f.qAt(i), u[i])
-	// 		} else {
-	// 			f.SBBQ(f.qAt(i), u[i])
-	// 		}
-	// 	}
-
-	// 	// conditional move of u into t (if we have a borrow we need to return t - q)
-	// 	for i := 0; i < f.NbWords; i++ {
-	// 		f.CMOVQCC(u[i], t[i])
-	// 	}
-
-	// 	// return t
-	// 	f.Mov(t, result, 0, offset)
-	// }
-
-	registers.Push(u...)
-}
-
-func (f *FFAmd64) reduceLarge(t []amd64.Register, result interface{}, rOffset ...int) {
-	// u = t - q
-	u := make([]string, f.NbWords)
-
-	for i := 0; i < f.NbWords; i++ {
-		// use stack
-		u[i] = fmt.Sprintf("t%d-%d(SP)", i, 8+i*8)
-		f.MOVQ(t[i], u[i])
-
-		if i == 0 {
-			f.SUBQ(f.qAt(i), t[i])
-		} else {
-			f.SBBQ(f.qAt(i), t[i])
-		}
-	}
-
-	// conditional move of u into t (if we have a borrow we need to return t - q)
-	for i := 0; i < f.NbWords; i++ {
-		f.CMOVQCS(u[i], t[i])
-	}
-
-	offset := 0
-	if len(rOffset) > 0 {
-		offset = rOffset[0]
-	}
-	// return t
-	f.Mov(t, result, 0, offset)
+// Reduce scratch can be on the stack or a set of registers.
+func (f *FFAmd64) Reduce(registers *amd64.Registers, t []amd64.Register) {
+	scratch := f.PopN(registers)
+	f.reduceElement(t, scratch)
+	f.Push(registers, scratch...)
 }

@@ -37,42 +37,21 @@ func (f *FFAmd64) LabelRegisters(name string, r ...amd64.Register) {
 	f.WriteLn("")
 }
 
-func (f *FFAmd64) reduceElement(a, b, res []amd64.Register) {
-	if len(a) != len(b) || len(b) != len(res) {
+func (f *FFAmd64) reduceElement(t, scratch []amd64.Register) {
+	if len(t) != len(scratch) {
 		panic("invalid call")
 	}
-	needMov := false
-	for i := 0; i < len(a); i++ {
-		if string(a[i]) != string(res[i]) {
-			needMov = true
-			break
-		}
-	}
-	const tmplWithMov = `// reduce element({{- range $i, $a := .A}}{{$a}}{{- if ne $.Last $i}},{{ end}}{{- end}}) using temp registers ({{- range $i, $b := .B}}{{$b}}{{- if ne $.Last $i}},{{ end}}{{- end}})
-	// stores in ({{- range $i, $r := .Res}}{{$r}}{{- if ne $.Last $i}},{{ end}}{{- end}})
-	REDUCE_AND_MOVE({{- range $i, $a := .A}}{{$a}},{{- end}}
-		{{- range $i, $b := .B}}{{$b}},{{- end}}
-		{{- range $i, $r := .Res}}{{$r}}{{- if ne $.Last $i}},{{- end}}{{- end}})`
 
-	const tmplNoMov = `// reduce element({{- range $i, $a := .A}}{{$a}}{{- if ne $.Last $i}},{{ end}}{{- end}}) using temp registers ({{- range $i, $b := .B}}{{$b}}{{- if ne $.Last $i}},{{ end}}{{- end}})
+	const tmplReduce = `// reduce element({{- range $i, $a := .A}}{{$a}}{{- if ne $.Last $i}},{{ end}}{{- end}}) using temp registers ({{- range $i, $b := .B}}{{$b}}{{- if ne $.Last $i}},{{ end}}{{- end}})
 	REDUCE({{- range $i, $a := .A}}{{$a}},{{- end}}
 		{{- range $i, $b := .B}}{{$b}}{{- if ne $.Last $i}},{{ end}}{{- end}})`
 
 	var buf bytes.Buffer
-	var err error
-	if needMov {
-		err = template.Must(template.New("").
-			Parse(tmplWithMov)).Execute(&buf, struct {
-			A, B, Res []amd64.Register
-			Last      int
-		}{a, b, res, len(b) - 1})
-	} else {
-		err = template.Must(template.New("").
-			Parse(tmplNoMov)).Execute(&buf, struct {
-			A, B, Res []amd64.Register
-			Last      int
-		}{a, b, res, len(b) - 1})
-	}
+	err := template.Must(template.New("").
+		Parse(tmplReduce)).Execute(&buf, struct {
+		A, B []amd64.Register
+		Last int
+	}{t, scratch, len(scratch) - 1})
 
 	if err != nil {
 		panic(err)
@@ -95,34 +74,16 @@ GLOBL q<>(SB), (RODATA+NOPTR), ${{mul 8 $.NbWords}}
 DATA qInv0<>(SB)/8, {{$qinv0 := index .QInverse 0}}{{imm $qinv0}}
 GLOBL qInv0<>(SB), (RODATA+NOPTR), $8
 
-#define REDUCE_AND_MOVE({{- range $i := .NbWordsIndexesFull}}ra{{$i}},{{- end}}
-						{{- range $i := .NbWordsIndexesFull}}rb{{$i}},{{- end}}
-						{{- range $i := .NbWordsIndexesFull}}res{{$i}}{{- if ne $.NbWordsLastIndex $i}},{{- end}}{{- end}}) \
-	{{- range $i := .NbWordsIndexesFull}}
-	MOVQ ra{{$i}}, rb{{$i}};  \
-	{{- end}}
-	SUBQ    q<>(SB), rb0; \
-	{{- range $i := .NbWordsIndexesNoZero}}
-	SBBQ  q<>+{{mul $i 8}}(SB), rb{{$i}}; \
-	{{- end}}
-	{{- range $i := .NbWordsIndexesFull}}
-	CMOVQCC rb{{$i}}, ra{{$i}};  \
-	{{- end}}
-	{{- range $i := .NbWordsIndexesFull}}
-	MOVQ ra{{$i}}, res{{$i}};  \
-	{{- end}}
-
 #define REDUCE(	{{- range $i := .NbWordsIndexesFull}}ra{{$i}},{{- end}}
 				{{- range $i := .NbWordsIndexesFull}}rb{{$i}}{{- if ne $.NbWordsLastIndex $i}},{{- end}}{{- end}}) \
-	{{- range $i := .NbWordsIndexesFull}}
-	MOVQ ra{{$i}}, rb{{$i}};  \
-	{{- end}}
-	SUBQ    q<>(SB), rb0; \
+	MOVQ ra0, rb0;  \
+	SUBQ    q<>(SB), ra0; \
 	{{- range $i := .NbWordsIndexesNoZero}}
-	SBBQ  q<>+{{mul $i 8}}(SB), rb{{$i}}; \
+	MOVQ ra{{$i}}, rb{{$i}};  \
+	SBBQ  q<>+{{mul $i 8}}(SB), ra{{$i}}; \
 	{{- end}}
 	{{- range $i := .NbWordsIndexesFull}}
-	CMOVQCC rb{{$i}}, ra{{$i}};  \
+	CMOVQCS rb{{$i}}, ra{{$i}};  \
 	{{- end}}
 `
 

@@ -85,21 +85,9 @@ func (f *FFAmd64) MulADX(registers *amd64.Registers, yat, xat func(int) string, 
 		// C,_ := t[0] + m*q[0]
 		f.Comment("C,_ := t[0] + m*q[0]")
 
-		needPop := false
-		if registers.Available() == 0 {
-			needPop = true
-			f.PUSHQ(A)
-			registers.Push(A)
-		}
-		tmp := registers.Pop()
-		f.MULXQ(f.qAt(0), amd64.AX, tmp)
+		f.MULXQ(f.qAt(0), amd64.AX, amd64.BP)
 		f.ADCXQ(t[0], amd64.AX)
-		f.MOVQ(tmp, t[0])
-		registers.Push(tmp)
-		if needPop {
-			A = registers.Pop()
-			f.POPQ(A)
-		}
+		f.MOVQ(amd64.BP, t[0])
 
 		// for j=1 to N-1
 		//    (C,t[j-1]) := t[j] + m*q[j] + C
@@ -122,46 +110,51 @@ func (f *FFAmd64) MulADX(registers *amd64.Registers, yat, xat func(int) string, 
 	return t
 }
 
-func (f *FFAmd64) generateInnerMul(registers *amd64.Registers, isSquare bool) {
+func (f *FFAmd64) generateInnerMul(registers *amd64.Registers) {
 	f.WriteLn("NO_LOCAL_POINTERS")
 	noAdx := f.NewLabel()
 	// check ADX instruction support
 	f.CMPB("·supportAdx(SB)", 1)
 	f.JNE(noAdx)
+
 	{
-		var t []amd64.Register
-		if isSquare {
-			x := registers.Pop()
-			f.MOVQ("x+8(FP)", x)
+		hasSpareRegisters := f.NbWords <= 4
+		var t, _x []amd64.Register
 
-			xat := func(i int) string {
-				return x.At(i)
-			}
-			t = f.MulADX(registers, xat, xat, nil)
-			registers.Push(x, x)
-		} else {
-			x := registers.Pop()
-			y := registers.Pop()
-			f.MOVQ("x+8(FP)", x)
-			f.MOVQ("y+16(FP)", y)
-
-			yat := func(i int) string {
-				return y.At(i)
-			}
-			xat := func(i int) string {
-				return x.At(i)
-			}
-			t = f.MulADX(registers, yat, xat, nil)
-			registers.Push(x, y)
+		x := registers.Pop()
+		f.MOVQ("x+8(FP)", x)
+		if hasSpareRegisters {
+			_x = registers.PopN(f.NbWords)
+			f.LabelRegisters("x", _x...)
+			f.Mov(x, _x)
+			registers.Push(x)
 		}
 
-		r := registers.Pop()
+		y := registers.Pop()
+		f.MOVQ("y+16(FP)", y)
+
+		yat := func(i int) string {
+			return y.At(i)
+		}
+		xat := func(i int) string {
+			if hasSpareRegisters {
+				return string(_x[i])
+			}
+			return x.At(i)
+		}
+		t = f.MulADX(registers, yat, xat, nil)
+		registers.Push(y)
+		if !hasSpareRegisters {
+			registers.Push(x)
+		}
+
 		// ---------------------------------------------------------------------------------------------
 		// reduce
-		f.MOVQ("res+0(FP)", r)
-		f.Reduce(registers, t, r)
+		f.Reduce(registers, t)
+
+		f.MOVQ("res+0(FP)", amd64.AX)
+		f.Mov(t, amd64.AX)
 		f.RET()
-		registers.Push(r)
 	}
 
 	// ---------------------------------------------------------------------------------------------
@@ -182,12 +175,12 @@ func (f *FFAmd64) generateInnerMul(registers *amd64.Registers, isSquare bool) {
 }
 
 func (f *FFAmd64) generateMul() {
-	stackSize := 3 * 8
-	if f.NbWords > SmallModulus {
-		stackSize = f.NbWords * 8
-	}
 	f.Comment("mul(res, x, y *Element)")
+
+	stackSize := f.StackSize(f.NbWords*2, 2, 3*8)
 	registers := f.FnHeader("mul", stackSize, 24, amd64.DX, amd64.AX)
+	defer f.AssertCleanStack(stackSize, 3*8)
+
 	f.WriteLn(`
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
@@ -205,7 +198,7 @@ func (f *FFAmd64) generateMul() {
 	if f.NbWords > SmallModulus {
 		f.generateInnerMulLarge(&registers)
 	} else {
-		f.generateInnerMul(&registers, false)
+		f.generateInnerMul(&registers)
 	}
 
 }
@@ -219,16 +212,11 @@ func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers) {
 
 	// registers
 	t := registers.PopN(f.NbWords)
-	A := registers.Pop()
+	A := amd64.BP
 	f.LabelRegisters("A", A)
 	f.LabelRegisters("t", t...)
 
-	x := make([]amd64.Register, f.NbWords)
-	for i := 0; i < f.NbWords; i++ {
-		// use stack
-		x[i] = amd64.Register(fmt.Sprintf("x%d-%d(SP)", i, 8+i*8))
-
-	}
+	x := f.PopN(registers)
 
 	for i := 0; i < f.NbWords; i++ {
 		f.Comment("clear the flags")
@@ -315,14 +303,13 @@ func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers) {
 		f.ADOXQ(A, t[f.NbWordsLastIndex])
 	}
 
-	// free registers
-	registers.Push(A)
+	f.Push(registers, x...)
 
 	// ---------------------------------------------------------------------------------------------
 	// reduce
-	r := registers.Pop()
-	f.MOVQ("res+0(FP)", r)
-	f.reduceLarge(t, r)
+	f.Reduce(registers, t)
+	f.MOVQ("res+0(FP)", amd64.AX)
+	f.Mov(t, amd64.AX)
 	f.RET()
 
 	// No adx

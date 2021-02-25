@@ -15,13 +15,10 @@
 package amd64
 
 func (f *FFAmd64) generateMulBy3() {
-	stackSize := 0
-	if f.NbWords > SmallModulus {
-		stackSize = f.NbWords * 8
-	}
 	f.Comment("MulBy3(x *Element)")
+	stackSize := f.StackSize(1+f.NbWords*2, 0, 0)
 	registers := f.FnHeader("MulBy3", stackSize, 8)
-
+	defer f.AssertCleanStack(stackSize, 0)
 	// registers
 	x := registers.Pop()
 	t := registers.PopN(f.NbWords)
@@ -30,20 +27,20 @@ func (f *FFAmd64) generateMulBy3() {
 
 	f.Mov(x, t)
 	f.Add(t, t)
-	f.Reduce(&registers, t, t)
+
+	f.Reduce(&registers, t)
 	f.Add(x, t)
-	f.Reduce(&registers, t, x)
+	f.Reduce(&registers, t)
+	f.Mov(t, x)
 
 	f.RET()
 }
 
 func (f *FFAmd64) generateMulBy5() {
-	stackSize := 0
-	if f.NbWords > SmallModulus {
-		stackSize = f.NbWords * 8
-	}
 	f.Comment("MulBy5(x *Element)")
+	stackSize := f.StackSize(1+f.NbWords*2, 0, 0)
 	registers := f.FnHeader("MulBy5", stackSize, 8)
+	defer f.AssertCleanStack(stackSize, 0)
 
 	// registers
 	x := registers.Pop()
@@ -53,11 +50,12 @@ func (f *FFAmd64) generateMulBy5() {
 
 	f.Mov(x, t)
 	f.Add(t, t)
-	f.Reduce(&registers, t, t)
+	f.Reduce(&registers, t)
 	f.Add(t, t)
-	f.Reduce(&registers, t, t)
+	f.Reduce(&registers, t)
 	f.Add(x, t)
-	f.Reduce(&registers, t, x)
+	f.Reduce(&registers, t)
 
+	f.Mov(t, x)
 	f.RET()
 }

@@ -21,11 +21,10 @@ import (
 )
 
 func (f *FFAmd64) generateFromMont() {
-	stackSize := 8
-	if f.NbWords > SmallModulus {
-		stackSize = f.NbWords * 8
-	}
+	stackSize := f.StackSize(f.NbWords*2, 2, 8)
 	registers := f.FnHeader("fromMont", stackSize, 8, amd64.DX, amd64.AX)
+	defer f.AssertCleanStack(stackSize, 8)
+
 	f.WriteLn("NO_LOCAL_POINTERS")
 	f.WriteLn(`
 	// the algorithm is described here
@@ -47,30 +46,22 @@ func (f *FFAmd64) generateFromMont() {
 
 	// registers
 	t := registers.PopN(f.NbWords)
-	r := registers.Pop()
 
-	f.MOVQ("res+0(FP)", r)
+	f.MOVQ("res+0(FP)", amd64.DX)
 
 	// 	for i=0 to N-1
 	//     t[i] = a[i]
-	f.Mov(r, t)
+	f.Mov(amd64.DX, t)
 
-	var tmp amd64.Register
-	hasRegisters := registers.Available() > 0
-	if !hasRegisters {
-		tmp = r
-	} else {
-		tmp = registers.Pop()
-	}
 	for i := 0; i < f.NbWords; i++ {
 
 		f.XORQ(amd64.DX, amd64.DX)
 
 		// m := t[0]*q'[0] mod W
 		f.Comment("m := t[0]*q'[0] mod W")
-		regM := amd64.DX
-		f.MOVQ(t[0], amd64.DX)
-		f.MULXQ(f.qInv0(), regM, amd64.AX)
+		m := amd64.DX
+		f.MOVQ(f.qInv0(), m)
+		f.IMULQ(t[0], m)
 
 		// clear the carry flags
 		f.XORQ(amd64.AX, amd64.AX)
@@ -78,9 +69,9 @@ func (f *FFAmd64) generateFromMont() {
 		// C,_ := t[0] + m*q[0]
 		f.Comment("C,_ := t[0] + m*q[0]")
 
-		f.MULXQ(f.qAt(0), amd64.AX, tmp)
+		f.MULXQ(f.qAt(0), amd64.AX, amd64.BP)
 		f.ADCXQ(t[0], amd64.AX)
-		f.MOVQ(tmp, t[0])
+		f.MOVQ(amd64.BP, t[0])
 
 		// for j=1 to N-1
 		//    (C,t[j-1]) := t[j] + m*q[j] + C
@@ -96,14 +87,11 @@ func (f *FFAmd64) generateFromMont() {
 
 	}
 
-	if !hasRegisters {
-		f.MOVQ("res+0(FP)", r)
-	} else {
-		registers.Push(tmp)
-	}
 	// ---------------------------------------------------------------------------------------------
 	// reduce
-	f.Reduce(&registers, t, r)
+	f.Reduce(&registers, t)
+	f.MOVQ("res+0(FP)", amd64.AX)
+	f.Mov(t, amd64.AX)
 	f.RET()
 
 	// No adx
