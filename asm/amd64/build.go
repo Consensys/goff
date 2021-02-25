@@ -81,7 +81,7 @@ func (f *FFAmd64) Pop(registers *amd64.Registers) amd64.Register {
 	if registers.Available() >= 1 {
 		return registers.Pop()
 	}
-	r := amd64.Register(fmt.Sprintf("s%d-%d(SP)", f.nbElementsOnStack, f.nbElementsOnStack*8))
+	r := amd64.Register(fmt.Sprintf("s%d-%d(SP)", f.nbElementsOnStack, 8+f.nbElementsOnStack*8))
 	f.nbElementsOnStack++
 	if f.nbElementsOnStack > f.maxOnStack {
 		f.maxOnStack = f.nbElementsOnStack
@@ -97,7 +97,7 @@ func (f *FFAmd64) PopN(registers *amd64.Registers) []amd64.Register {
 	u := registers.PopN(registers.Available())
 
 	for i := f.nbElementsOnStack; i < nbStack+f.nbElementsOnStack; i++ {
-		u = append(u, amd64.Register(fmt.Sprintf("s%d-%d(SP)", i, i*8)))
+		u = append(u, amd64.Register(fmt.Sprintf("s%d-%d(SP)", i, 8+i*8)))
 	}
 	f.nbElementsOnStack += nbStack
 	if f.nbElementsOnStack > f.maxOnStack {

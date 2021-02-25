@@ -101,8 +101,8 @@ TEXT ·add(SB), $80-24
 	ADCQ 80(DX), R14
 	ADCQ 88(DX), R15
 
-	// reduce element(CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15) using temp registers (AX,DX,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP))
-	REDUCE(CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,AX,DX,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP))
+	// reduce element(CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15) using temp registers (AX,DX,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP))
+	REDUCE(CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,AX,DX,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP))
 
 	MOVQ res+0(FP), AX
 	MOVQ CX, 0(AX)
@@ -205,8 +205,8 @@ TEXT ·double(SB), $80-16
 	ADCQ R13, R13
 	ADCQ R14, R14
 
-	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,AX,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP))
-	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,AX,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP))
+	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,AX,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP))
+	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,AX,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP))
 
 	MOVQ res+0(FP), R15
 	MOVQ DX, 0(R15)
@@ -350,72 +350,72 @@ TEXT ·mul(SB), $120-24
 	// using A(BP) to store x
 	MOVQ  x+8(FP), BP
 	MOVQ  0(BP), AX
-	MOVQ  AX, s0-0(SP)
+	MOVQ  AX, s0-8(SP)
 	MULXQ AX, R14, R15
 
 	// (A,t[1])  := t[1] + x[1]*y[0] + A
 	MOVQ  8(BP), AX
-	MOVQ  AX, s1-8(SP)
+	MOVQ  AX, s1-16(SP)
 	MULXQ AX, AX, CX
 	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[0] + A
 	MOVQ  16(BP), AX
-	MOVQ  AX, s2-16(SP)
+	MOVQ  AX, s2-24(SP)
 	MULXQ AX, AX, BX
 	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[0] + A
 	MOVQ  24(BP), AX
-	MOVQ  AX, s3-24(SP)
+	MOVQ  AX, s3-32(SP)
 	MULXQ AX, AX, SI
 	ADOXQ AX, BX
 
 	// (A,t[4])  := t[4] + x[4]*y[0] + A
 	MOVQ  32(BP), AX
-	MOVQ  AX, s4-32(SP)
+	MOVQ  AX, s4-40(SP)
 	MULXQ AX, AX, DI
 	ADOXQ AX, SI
 
 	// (A,t[5])  := t[5] + x[5]*y[0] + A
 	MOVQ  40(BP), AX
-	MOVQ  AX, s5-40(SP)
+	MOVQ  AX, s5-48(SP)
 	MULXQ AX, AX, R8
 	ADOXQ AX, DI
 
 	// (A,t[6])  := t[6] + x[6]*y[0] + A
 	MOVQ  48(BP), AX
-	MOVQ  AX, s6-48(SP)
+	MOVQ  AX, s6-56(SP)
 	MULXQ AX, AX, R9
 	ADOXQ AX, R8
 
 	// (A,t[7])  := t[7] + x[7]*y[0] + A
 	MOVQ  56(BP), AX
-	MOVQ  AX, s7-56(SP)
+	MOVQ  AX, s7-64(SP)
 	MULXQ AX, AX, R10
 	ADOXQ AX, R9
 
 	// (A,t[8])  := t[8] + x[8]*y[0] + A
 	MOVQ  64(BP), AX
-	MOVQ  AX, s8-64(SP)
+	MOVQ  AX, s8-72(SP)
 	MULXQ AX, AX, R11
 	ADOXQ AX, R10
 
 	// (A,t[9])  := t[9] + x[9]*y[0] + A
 	MOVQ  72(BP), AX
-	MOVQ  AX, s9-72(SP)
+	MOVQ  AX, s9-80(SP)
 	MULXQ AX, AX, R12
 	ADOXQ AX, R11
 
 	// (A,t[10])  := t[10] + x[10]*y[0] + A
 	MOVQ  80(BP), AX
-	MOVQ  AX, s10-80(SP)
+	MOVQ  AX, s10-88(SP)
 	MULXQ AX, AX, R13
 	ADOXQ AX, R12
 
 	// (A,t[11])  := t[11] + x[11]*y[0] + A
 	MOVQ  88(BP), AX
-	MOVQ  AX, s11-88(SP)
+	MOVQ  AX, s11-96(SP)
 	MULXQ AX, AX, BP
 	ADOXQ AX, R13
 
@@ -503,62 +503,62 @@ TEXT ·mul(SB), $120-24
 	MOVQ 8(DX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[1] + A
-	MULXQ s0-0(SP), AX, BP
+	MULXQ s0-8(SP), AX, BP
 	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[1] + A
 	ADCXQ BP, R15
-	MULXQ s1-8(SP), AX, BP
+	MULXQ s1-16(SP), AX, BP
 	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[1] + A
 	ADCXQ BP, CX
-	MULXQ s2-16(SP), AX, BP
+	MULXQ s2-24(SP), AX, BP
 	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[1] + A
 	ADCXQ BP, BX
-	MULXQ s3-24(SP), AX, BP
+	MULXQ s3-32(SP), AX, BP
 	ADOXQ AX, BX
 
 	// (A,t[4])  := t[4] + x[4]*y[1] + A
 	ADCXQ BP, SI
-	MULXQ s4-32(SP), AX, BP
+	MULXQ s4-40(SP), AX, BP
 	ADOXQ AX, SI
 
 	// (A,t[5])  := t[5] + x[5]*y[1] + A
 	ADCXQ BP, DI
-	MULXQ s5-40(SP), AX, BP
+	MULXQ s5-48(SP), AX, BP
 	ADOXQ AX, DI
 
 	// (A,t[6])  := t[6] + x[6]*y[1] + A
 	ADCXQ BP, R8
-	MULXQ s6-48(SP), AX, BP
+	MULXQ s6-56(SP), AX, BP
 	ADOXQ AX, R8
 
 	// (A,t[7])  := t[7] + x[7]*y[1] + A
 	ADCXQ BP, R9
-	MULXQ s7-56(SP), AX, BP
+	MULXQ s7-64(SP), AX, BP
 	ADOXQ AX, R9
 
 	// (A,t[8])  := t[8] + x[8]*y[1] + A
 	ADCXQ BP, R10
-	MULXQ s8-64(SP), AX, BP
+	MULXQ s8-72(SP), AX, BP
 	ADOXQ AX, R10
 
 	// (A,t[9])  := t[9] + x[9]*y[1] + A
 	ADCXQ BP, R11
-	MULXQ s9-72(SP), AX, BP
+	MULXQ s9-80(SP), AX, BP
 	ADOXQ AX, R11
 
 	// (A,t[10])  := t[10] + x[10]*y[1] + A
 	ADCXQ BP, R12
-	MULXQ s10-80(SP), AX, BP
+	MULXQ s10-88(SP), AX, BP
 	ADOXQ AX, R12
 
 	// (A,t[11])  := t[11] + x[11]*y[1] + A
 	ADCXQ BP, R13
-	MULXQ s11-88(SP), AX, BP
+	MULXQ s11-96(SP), AX, BP
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
@@ -646,62 +646,62 @@ TEXT ·mul(SB), $120-24
 	MOVQ 16(DX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[2] + A
-	MULXQ s0-0(SP), AX, BP
+	MULXQ s0-8(SP), AX, BP
 	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[2] + A
 	ADCXQ BP, R15
-	MULXQ s1-8(SP), AX, BP
+	MULXQ s1-16(SP), AX, BP
 	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[2] + A
 	ADCXQ BP, CX
-	MULXQ s2-16(SP), AX, BP
+	MULXQ s2-24(SP), AX, BP
 	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[2] + A
 	ADCXQ BP, BX
-	MULXQ s3-24(SP), AX, BP
+	MULXQ s3-32(SP), AX, BP
 	ADOXQ AX, BX
 
 	// (A,t[4])  := t[4] + x[4]*y[2] + A
 	ADCXQ BP, SI
-	MULXQ s4-32(SP), AX, BP
+	MULXQ s4-40(SP), AX, BP
 	ADOXQ AX, SI
 
 	// (A,t[5])  := t[5] + x[5]*y[2] + A
 	ADCXQ BP, DI
-	MULXQ s5-40(SP), AX, BP
+	MULXQ s5-48(SP), AX, BP
 	ADOXQ AX, DI
 
 	// (A,t[6])  := t[6] + x[6]*y[2] + A
 	ADCXQ BP, R8
-	MULXQ s6-48(SP), AX, BP
+	MULXQ s6-56(SP), AX, BP
 	ADOXQ AX, R8
 
 	// (A,t[7])  := t[7] + x[7]*y[2] + A
 	ADCXQ BP, R9
-	MULXQ s7-56(SP), AX, BP
+	MULXQ s7-64(SP), AX, BP
 	ADOXQ AX, R9
 
 	// (A,t[8])  := t[8] + x[8]*y[2] + A
 	ADCXQ BP, R10
-	MULXQ s8-64(SP), AX, BP
+	MULXQ s8-72(SP), AX, BP
 	ADOXQ AX, R10
 
 	// (A,t[9])  := t[9] + x[9]*y[2] + A
 	ADCXQ BP, R11
-	MULXQ s9-72(SP), AX, BP
+	MULXQ s9-80(SP), AX, BP
 	ADOXQ AX, R11
 
 	// (A,t[10])  := t[10] + x[10]*y[2] + A
 	ADCXQ BP, R12
-	MULXQ s10-80(SP), AX, BP
+	MULXQ s10-88(SP), AX, BP
 	ADOXQ AX, R12
 
 	// (A,t[11])  := t[11] + x[11]*y[2] + A
 	ADCXQ BP, R13
-	MULXQ s11-88(SP), AX, BP
+	MULXQ s11-96(SP), AX, BP
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
@@ -789,62 +789,62 @@ TEXT ·mul(SB), $120-24
 	MOVQ 24(DX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[3] + A
-	MULXQ s0-0(SP), AX, BP
+	MULXQ s0-8(SP), AX, BP
 	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[3] + A
 	ADCXQ BP, R15
-	MULXQ s1-8(SP), AX, BP
+	MULXQ s1-16(SP), AX, BP
 	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[3] + A
 	ADCXQ BP, CX
-	MULXQ s2-16(SP), AX, BP
+	MULXQ s2-24(SP), AX, BP
 	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[3] + A
 	ADCXQ BP, BX
-	MULXQ s3-24(SP), AX, BP
+	MULXQ s3-32(SP), AX, BP
 	ADOXQ AX, BX
 
 	// (A,t[4])  := t[4] + x[4]*y[3] + A
 	ADCXQ BP, SI
-	MULXQ s4-32(SP), AX, BP
+	MULXQ s4-40(SP), AX, BP
 	ADOXQ AX, SI
 
 	// (A,t[5])  := t[5] + x[5]*y[3] + A
 	ADCXQ BP, DI
-	MULXQ s5-40(SP), AX, BP
+	MULXQ s5-48(SP), AX, BP
 	ADOXQ AX, DI
 
 	// (A,t[6])  := t[6] + x[6]*y[3] + A
 	ADCXQ BP, R8
-	MULXQ s6-48(SP), AX, BP
+	MULXQ s6-56(SP), AX, BP
 	ADOXQ AX, R8
 
 	// (A,t[7])  := t[7] + x[7]*y[3] + A
 	ADCXQ BP, R9
-	MULXQ s7-56(SP), AX, BP
+	MULXQ s7-64(SP), AX, BP
 	ADOXQ AX, R9
 
 	// (A,t[8])  := t[8] + x[8]*y[3] + A
 	ADCXQ BP, R10
-	MULXQ s8-64(SP), AX, BP
+	MULXQ s8-72(SP), AX, BP
 	ADOXQ AX, R10
 
 	// (A,t[9])  := t[9] + x[9]*y[3] + A
 	ADCXQ BP, R11
-	MULXQ s9-72(SP), AX, BP
+	MULXQ s9-80(SP), AX, BP
 	ADOXQ AX, R11
 
 	// (A,t[10])  := t[10] + x[10]*y[3] + A
 	ADCXQ BP, R12
-	MULXQ s10-80(SP), AX, BP
+	MULXQ s10-88(SP), AX, BP
 	ADOXQ AX, R12
 
 	// (A,t[11])  := t[11] + x[11]*y[3] + A
 	ADCXQ BP, R13
-	MULXQ s11-88(SP), AX, BP
+	MULXQ s11-96(SP), AX, BP
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
@@ -932,62 +932,62 @@ TEXT ·mul(SB), $120-24
 	MOVQ 32(DX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[4] + A
-	MULXQ s0-0(SP), AX, BP
+	MULXQ s0-8(SP), AX, BP
 	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[4] + A
 	ADCXQ BP, R15
-	MULXQ s1-8(SP), AX, BP
+	MULXQ s1-16(SP), AX, BP
 	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[4] + A
 	ADCXQ BP, CX
-	MULXQ s2-16(SP), AX, BP
+	MULXQ s2-24(SP), AX, BP
 	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[4] + A
 	ADCXQ BP, BX
-	MULXQ s3-24(SP), AX, BP
+	MULXQ s3-32(SP), AX, BP
 	ADOXQ AX, BX
 
 	// (A,t[4])  := t[4] + x[4]*y[4] + A
 	ADCXQ BP, SI
-	MULXQ s4-32(SP), AX, BP
+	MULXQ s4-40(SP), AX, BP
 	ADOXQ AX, SI
 
 	// (A,t[5])  := t[5] + x[5]*y[4] + A
 	ADCXQ BP, DI
-	MULXQ s5-40(SP), AX, BP
+	MULXQ s5-48(SP), AX, BP
 	ADOXQ AX, DI
 
 	// (A,t[6])  := t[6] + x[6]*y[4] + A
 	ADCXQ BP, R8
-	MULXQ s6-48(SP), AX, BP
+	MULXQ s6-56(SP), AX, BP
 	ADOXQ AX, R8
 
 	// (A,t[7])  := t[7] + x[7]*y[4] + A
 	ADCXQ BP, R9
-	MULXQ s7-56(SP), AX, BP
+	MULXQ s7-64(SP), AX, BP
 	ADOXQ AX, R9
 
 	// (A,t[8])  := t[8] + x[8]*y[4] + A
 	ADCXQ BP, R10
-	MULXQ s8-64(SP), AX, BP
+	MULXQ s8-72(SP), AX, BP
 	ADOXQ AX, R10
 
 	// (A,t[9])  := t[9] + x[9]*y[4] + A
 	ADCXQ BP, R11
-	MULXQ s9-72(SP), AX, BP
+	MULXQ s9-80(SP), AX, BP
 	ADOXQ AX, R11
 
 	// (A,t[10])  := t[10] + x[10]*y[4] + A
 	ADCXQ BP, R12
-	MULXQ s10-80(SP), AX, BP
+	MULXQ s10-88(SP), AX, BP
 	ADOXQ AX, R12
 
 	// (A,t[11])  := t[11] + x[11]*y[4] + A
 	ADCXQ BP, R13
-	MULXQ s11-88(SP), AX, BP
+	MULXQ s11-96(SP), AX, BP
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
@@ -1075,62 +1075,62 @@ TEXT ·mul(SB), $120-24
 	MOVQ 40(DX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[5] + A
-	MULXQ s0-0(SP), AX, BP
+	MULXQ s0-8(SP), AX, BP
 	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[5] + A
 	ADCXQ BP, R15
-	MULXQ s1-8(SP), AX, BP
+	MULXQ s1-16(SP), AX, BP
 	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[5] + A
 	ADCXQ BP, CX
-	MULXQ s2-16(SP), AX, BP
+	MULXQ s2-24(SP), AX, BP
 	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[5] + A
 	ADCXQ BP, BX
-	MULXQ s3-24(SP), AX, BP
+	MULXQ s3-32(SP), AX, BP
 	ADOXQ AX, BX
 
 	// (A,t[4])  := t[4] + x[4]*y[5] + A
 	ADCXQ BP, SI
-	MULXQ s4-32(SP), AX, BP
+	MULXQ s4-40(SP), AX, BP
 	ADOXQ AX, SI
 
 	// (A,t[5])  := t[5] + x[5]*y[5] + A
 	ADCXQ BP, DI
-	MULXQ s5-40(SP), AX, BP
+	MULXQ s5-48(SP), AX, BP
 	ADOXQ AX, DI
 
 	// (A,t[6])  := t[6] + x[6]*y[5] + A
 	ADCXQ BP, R8
-	MULXQ s6-48(SP), AX, BP
+	MULXQ s6-56(SP), AX, BP
 	ADOXQ AX, R8
 
 	// (A,t[7])  := t[7] + x[7]*y[5] + A
 	ADCXQ BP, R9
-	MULXQ s7-56(SP), AX, BP
+	MULXQ s7-64(SP), AX, BP
 	ADOXQ AX, R9
 
 	// (A,t[8])  := t[8] + x[8]*y[5] + A
 	ADCXQ BP, R10
-	MULXQ s8-64(SP), AX, BP
+	MULXQ s8-72(SP), AX, BP
 	ADOXQ AX, R10
 
 	// (A,t[9])  := t[9] + x[9]*y[5] + A
 	ADCXQ BP, R11
-	MULXQ s9-72(SP), AX, BP
+	MULXQ s9-80(SP), AX, BP
 	ADOXQ AX, R11
 
 	// (A,t[10])  := t[10] + x[10]*y[5] + A
 	ADCXQ BP, R12
-	MULXQ s10-80(SP), AX, BP
+	MULXQ s10-88(SP), AX, BP
 	ADOXQ AX, R12
 
 	// (A,t[11])  := t[11] + x[11]*y[5] + A
 	ADCXQ BP, R13
-	MULXQ s11-88(SP), AX, BP
+	MULXQ s11-96(SP), AX, BP
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
@@ -1218,62 +1218,62 @@ TEXT ·mul(SB), $120-24
 	MOVQ 48(DX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[6] + A
-	MULXQ s0-0(SP), AX, BP
+	MULXQ s0-8(SP), AX, BP
 	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[6] + A
 	ADCXQ BP, R15
-	MULXQ s1-8(SP), AX, BP
+	MULXQ s1-16(SP), AX, BP
 	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[6] + A
 	ADCXQ BP, CX
-	MULXQ s2-16(SP), AX, BP
+	MULXQ s2-24(SP), AX, BP
 	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[6] + A
 	ADCXQ BP, BX
-	MULXQ s3-24(SP), AX, BP
+	MULXQ s3-32(SP), AX, BP
 	ADOXQ AX, BX
 
 	// (A,t[4])  := t[4] + x[4]*y[6] + A
 	ADCXQ BP, SI
-	MULXQ s4-32(SP), AX, BP
+	MULXQ s4-40(SP), AX, BP
 	ADOXQ AX, SI
 
 	// (A,t[5])  := t[5] + x[5]*y[6] + A
 	ADCXQ BP, DI
-	MULXQ s5-40(SP), AX, BP
+	MULXQ s5-48(SP), AX, BP
 	ADOXQ AX, DI
 
 	// (A,t[6])  := t[6] + x[6]*y[6] + A
 	ADCXQ BP, R8
-	MULXQ s6-48(SP), AX, BP
+	MULXQ s6-56(SP), AX, BP
 	ADOXQ AX, R8
 
 	// (A,t[7])  := t[7] + x[7]*y[6] + A
 	ADCXQ BP, R9
-	MULXQ s7-56(SP), AX, BP
+	MULXQ s7-64(SP), AX, BP
 	ADOXQ AX, R9
 
 	// (A,t[8])  := t[8] + x[8]*y[6] + A
 	ADCXQ BP, R10
-	MULXQ s8-64(SP), AX, BP
+	MULXQ s8-72(SP), AX, BP
 	ADOXQ AX, R10
 
 	// (A,t[9])  := t[9] + x[9]*y[6] + A
 	ADCXQ BP, R11
-	MULXQ s9-72(SP), AX, BP
+	MULXQ s9-80(SP), AX, BP
 	ADOXQ AX, R11
 
 	// (A,t[10])  := t[10] + x[10]*y[6] + A
 	ADCXQ BP, R12
-	MULXQ s10-80(SP), AX, BP
+	MULXQ s10-88(SP), AX, BP
 	ADOXQ AX, R12
 
 	// (A,t[11])  := t[11] + x[11]*y[6] + A
 	ADCXQ BP, R13
-	MULXQ s11-88(SP), AX, BP
+	MULXQ s11-96(SP), AX, BP
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
@@ -1361,62 +1361,62 @@ TEXT ·mul(SB), $120-24
 	MOVQ 56(DX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[7] + A
-	MULXQ s0-0(SP), AX, BP
+	MULXQ s0-8(SP), AX, BP
 	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[7] + A
 	ADCXQ BP, R15
-	MULXQ s1-8(SP), AX, BP
+	MULXQ s1-16(SP), AX, BP
 	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[7] + A
 	ADCXQ BP, CX
-	MULXQ s2-16(SP), AX, BP
+	MULXQ s2-24(SP), AX, BP
 	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[7] + A
 	ADCXQ BP, BX
-	MULXQ s3-24(SP), AX, BP
+	MULXQ s3-32(SP), AX, BP
 	ADOXQ AX, BX
 
 	// (A,t[4])  := t[4] + x[4]*y[7] + A
 	ADCXQ BP, SI
-	MULXQ s4-32(SP), AX, BP
+	MULXQ s4-40(SP), AX, BP
 	ADOXQ AX, SI
 
 	// (A,t[5])  := t[5] + x[5]*y[7] + A
 	ADCXQ BP, DI
-	MULXQ s5-40(SP), AX, BP
+	MULXQ s5-48(SP), AX, BP
 	ADOXQ AX, DI
 
 	// (A,t[6])  := t[6] + x[6]*y[7] + A
 	ADCXQ BP, R8
-	MULXQ s6-48(SP), AX, BP
+	MULXQ s6-56(SP), AX, BP
 	ADOXQ AX, R8
 
 	// (A,t[7])  := t[7] + x[7]*y[7] + A
 	ADCXQ BP, R9
-	MULXQ s7-56(SP), AX, BP
+	MULXQ s7-64(SP), AX, BP
 	ADOXQ AX, R9
 
 	// (A,t[8])  := t[8] + x[8]*y[7] + A
 	ADCXQ BP, R10
-	MULXQ s8-64(SP), AX, BP
+	MULXQ s8-72(SP), AX, BP
 	ADOXQ AX, R10
 
 	// (A,t[9])  := t[9] + x[9]*y[7] + A
 	ADCXQ BP, R11
-	MULXQ s9-72(SP), AX, BP
+	MULXQ s9-80(SP), AX, BP
 	ADOXQ AX, R11
 
 	// (A,t[10])  := t[10] + x[10]*y[7] + A
 	ADCXQ BP, R12
-	MULXQ s10-80(SP), AX, BP
+	MULXQ s10-88(SP), AX, BP
 	ADOXQ AX, R12
 
 	// (A,t[11])  := t[11] + x[11]*y[7] + A
 	ADCXQ BP, R13
-	MULXQ s11-88(SP), AX, BP
+	MULXQ s11-96(SP), AX, BP
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
@@ -1504,62 +1504,62 @@ TEXT ·mul(SB), $120-24
 	MOVQ 64(DX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[8] + A
-	MULXQ s0-0(SP), AX, BP
+	MULXQ s0-8(SP), AX, BP
 	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[8] + A
 	ADCXQ BP, R15
-	MULXQ s1-8(SP), AX, BP
+	MULXQ s1-16(SP), AX, BP
 	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[8] + A
 	ADCXQ BP, CX
-	MULXQ s2-16(SP), AX, BP
+	MULXQ s2-24(SP), AX, BP
 	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[8] + A
 	ADCXQ BP, BX
-	MULXQ s3-24(SP), AX, BP
+	MULXQ s3-32(SP), AX, BP
 	ADOXQ AX, BX
 
 	// (A,t[4])  := t[4] + x[4]*y[8] + A
 	ADCXQ BP, SI
-	MULXQ s4-32(SP), AX, BP
+	MULXQ s4-40(SP), AX, BP
 	ADOXQ AX, SI
 
 	// (A,t[5])  := t[5] + x[5]*y[8] + A
 	ADCXQ BP, DI
-	MULXQ s5-40(SP), AX, BP
+	MULXQ s5-48(SP), AX, BP
 	ADOXQ AX, DI
 
 	// (A,t[6])  := t[6] + x[6]*y[8] + A
 	ADCXQ BP, R8
-	MULXQ s6-48(SP), AX, BP
+	MULXQ s6-56(SP), AX, BP
 	ADOXQ AX, R8
 
 	// (A,t[7])  := t[7] + x[7]*y[8] + A
 	ADCXQ BP, R9
-	MULXQ s7-56(SP), AX, BP
+	MULXQ s7-64(SP), AX, BP
 	ADOXQ AX, R9
 
 	// (A,t[8])  := t[8] + x[8]*y[8] + A
 	ADCXQ BP, R10
-	MULXQ s8-64(SP), AX, BP
+	MULXQ s8-72(SP), AX, BP
 	ADOXQ AX, R10
 
 	// (A,t[9])  := t[9] + x[9]*y[8] + A
 	ADCXQ BP, R11
-	MULXQ s9-72(SP), AX, BP
+	MULXQ s9-80(SP), AX, BP
 	ADOXQ AX, R11
 
 	// (A,t[10])  := t[10] + x[10]*y[8] + A
 	ADCXQ BP, R12
-	MULXQ s10-80(SP), AX, BP
+	MULXQ s10-88(SP), AX, BP
 	ADOXQ AX, R12
 
 	// (A,t[11])  := t[11] + x[11]*y[8] + A
 	ADCXQ BP, R13
-	MULXQ s11-88(SP), AX, BP
+	MULXQ s11-96(SP), AX, BP
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
@@ -1647,62 +1647,62 @@ TEXT ·mul(SB), $120-24
 	MOVQ 72(DX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[9] + A
-	MULXQ s0-0(SP), AX, BP
+	MULXQ s0-8(SP), AX, BP
 	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[9] + A
 	ADCXQ BP, R15
-	MULXQ s1-8(SP), AX, BP
+	MULXQ s1-16(SP), AX, BP
 	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[9] + A
 	ADCXQ BP, CX
-	MULXQ s2-16(SP), AX, BP
+	MULXQ s2-24(SP), AX, BP
 	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[9] + A
 	ADCXQ BP, BX
-	MULXQ s3-24(SP), AX, BP
+	MULXQ s3-32(SP), AX, BP
 	ADOXQ AX, BX
 
 	// (A,t[4])  := t[4] + x[4]*y[9] + A
 	ADCXQ BP, SI
-	MULXQ s4-32(SP), AX, BP
+	MULXQ s4-40(SP), AX, BP
 	ADOXQ AX, SI
 
 	// (A,t[5])  := t[5] + x[5]*y[9] + A
 	ADCXQ BP, DI
-	MULXQ s5-40(SP), AX, BP
+	MULXQ s5-48(SP), AX, BP
 	ADOXQ AX, DI
 
 	// (A,t[6])  := t[6] + x[6]*y[9] + A
 	ADCXQ BP, R8
-	MULXQ s6-48(SP), AX, BP
+	MULXQ s6-56(SP), AX, BP
 	ADOXQ AX, R8
 
 	// (A,t[7])  := t[7] + x[7]*y[9] + A
 	ADCXQ BP, R9
-	MULXQ s7-56(SP), AX, BP
+	MULXQ s7-64(SP), AX, BP
 	ADOXQ AX, R9
 
 	// (A,t[8])  := t[8] + x[8]*y[9] + A
 	ADCXQ BP, R10
-	MULXQ s8-64(SP), AX, BP
+	MULXQ s8-72(SP), AX, BP
 	ADOXQ AX, R10
 
 	// (A,t[9])  := t[9] + x[9]*y[9] + A
 	ADCXQ BP, R11
-	MULXQ s9-72(SP), AX, BP
+	MULXQ s9-80(SP), AX, BP
 	ADOXQ AX, R11
 
 	// (A,t[10])  := t[10] + x[10]*y[9] + A
 	ADCXQ BP, R12
-	MULXQ s10-80(SP), AX, BP
+	MULXQ s10-88(SP), AX, BP
 	ADOXQ AX, R12
 
 	// (A,t[11])  := t[11] + x[11]*y[9] + A
 	ADCXQ BP, R13
-	MULXQ s11-88(SP), AX, BP
+	MULXQ s11-96(SP), AX, BP
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
@@ -1790,62 +1790,62 @@ TEXT ·mul(SB), $120-24
 	MOVQ 80(DX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[10] + A
-	MULXQ s0-0(SP), AX, BP
+	MULXQ s0-8(SP), AX, BP
 	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[10] + A
 	ADCXQ BP, R15
-	MULXQ s1-8(SP), AX, BP
+	MULXQ s1-16(SP), AX, BP
 	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[10] + A
 	ADCXQ BP, CX
-	MULXQ s2-16(SP), AX, BP
+	MULXQ s2-24(SP), AX, BP
 	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[10] + A
 	ADCXQ BP, BX
-	MULXQ s3-24(SP), AX, BP
+	MULXQ s3-32(SP), AX, BP
 	ADOXQ AX, BX
 
 	// (A,t[4])  := t[4] + x[4]*y[10] + A
 	ADCXQ BP, SI
-	MULXQ s4-32(SP), AX, BP
+	MULXQ s4-40(SP), AX, BP
 	ADOXQ AX, SI
 
 	// (A,t[5])  := t[5] + x[5]*y[10] + A
 	ADCXQ BP, DI
-	MULXQ s5-40(SP), AX, BP
+	MULXQ s5-48(SP), AX, BP
 	ADOXQ AX, DI
 
 	// (A,t[6])  := t[6] + x[6]*y[10] + A
 	ADCXQ BP, R8
-	MULXQ s6-48(SP), AX, BP
+	MULXQ s6-56(SP), AX, BP
 	ADOXQ AX, R8
 
 	// (A,t[7])  := t[7] + x[7]*y[10] + A
 	ADCXQ BP, R9
-	MULXQ s7-56(SP), AX, BP
+	MULXQ s7-64(SP), AX, BP
 	ADOXQ AX, R9
 
 	// (A,t[8])  := t[8] + x[8]*y[10] + A
 	ADCXQ BP, R10
-	MULXQ s8-64(SP), AX, BP
+	MULXQ s8-72(SP), AX, BP
 	ADOXQ AX, R10
 
 	// (A,t[9])  := t[9] + x[9]*y[10] + A
 	ADCXQ BP, R11
-	MULXQ s9-72(SP), AX, BP
+	MULXQ s9-80(SP), AX, BP
 	ADOXQ AX, R11
 
 	// (A,t[10])  := t[10] + x[10]*y[10] + A
 	ADCXQ BP, R12
-	MULXQ s10-80(SP), AX, BP
+	MULXQ s10-88(SP), AX, BP
 	ADOXQ AX, R12
 
 	// (A,t[11])  := t[11] + x[11]*y[10] + A
 	ADCXQ BP, R13
-	MULXQ s11-88(SP), AX, BP
+	MULXQ s11-96(SP), AX, BP
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
@@ -1933,62 +1933,62 @@ TEXT ·mul(SB), $120-24
 	MOVQ 88(DX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[11] + A
-	MULXQ s0-0(SP), AX, BP
+	MULXQ s0-8(SP), AX, BP
 	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[11] + A
 	ADCXQ BP, R15
-	MULXQ s1-8(SP), AX, BP
+	MULXQ s1-16(SP), AX, BP
 	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[11] + A
 	ADCXQ BP, CX
-	MULXQ s2-16(SP), AX, BP
+	MULXQ s2-24(SP), AX, BP
 	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[11] + A
 	ADCXQ BP, BX
-	MULXQ s3-24(SP), AX, BP
+	MULXQ s3-32(SP), AX, BP
 	ADOXQ AX, BX
 
 	// (A,t[4])  := t[4] + x[4]*y[11] + A
 	ADCXQ BP, SI
-	MULXQ s4-32(SP), AX, BP
+	MULXQ s4-40(SP), AX, BP
 	ADOXQ AX, SI
 
 	// (A,t[5])  := t[5] + x[5]*y[11] + A
 	ADCXQ BP, DI
-	MULXQ s5-40(SP), AX, BP
+	MULXQ s5-48(SP), AX, BP
 	ADOXQ AX, DI
 
 	// (A,t[6])  := t[6] + x[6]*y[11] + A
 	ADCXQ BP, R8
-	MULXQ s6-48(SP), AX, BP
+	MULXQ s6-56(SP), AX, BP
 	ADOXQ AX, R8
 
 	// (A,t[7])  := t[7] + x[7]*y[11] + A
 	ADCXQ BP, R9
-	MULXQ s7-56(SP), AX, BP
+	MULXQ s7-64(SP), AX, BP
 	ADOXQ AX, R9
 
 	// (A,t[8])  := t[8] + x[8]*y[11] + A
 	ADCXQ BP, R10
-	MULXQ s8-64(SP), AX, BP
+	MULXQ s8-72(SP), AX, BP
 	ADOXQ AX, R10
 
 	// (A,t[9])  := t[9] + x[9]*y[11] + A
 	ADCXQ BP, R11
-	MULXQ s9-72(SP), AX, BP
+	MULXQ s9-80(SP), AX, BP
 	ADOXQ AX, R11
 
 	// (A,t[10])  := t[10] + x[10]*y[11] + A
 	ADCXQ BP, R12
-	MULXQ s10-80(SP), AX, BP
+	MULXQ s10-88(SP), AX, BP
 	ADOXQ AX, R12
 
 	// (A,t[11])  := t[11] + x[11]*y[11] + A
 	ADCXQ BP, R13
-	MULXQ s11-88(SP), AX, BP
+	MULXQ s11-96(SP), AX, BP
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
@@ -2070,8 +2070,8 @@ TEXT ·mul(SB), $120-24
 	ADCXQ AX, R13
 	ADOXQ BP, R13
 
-	// reduce element(R14,R15,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13) using temp registers (s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP),s11-88(SP))
-	REDUCE(R14,R15,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP),s11-88(SP))
+	// reduce element(R14,R15,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13) using temp registers (s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP),s11-96(SP))
+	REDUCE(R14,R15,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP),s11-96(SP))
 
 	MOVQ res+0(FP), AX
 	MOVQ R14, 0(AX)
@@ -2956,8 +2956,8 @@ TEXT ·fromMont(SB), $104-8
 	ADCXQ AX, R13
 	ADOXQ AX, R13
 
-	// reduce element(R14,R15,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13) using temp registers (s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP),s11-88(SP))
-	REDUCE(R14,R15,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP),s11-88(SP))
+	// reduce element(R14,R15,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13) using temp registers (s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP),s11-96(SP))
+	REDUCE(R14,R15,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP),s11-96(SP))
 
 	MOVQ res+0(FP), AX
 	MOVQ R14, 0(AX)
@@ -2995,8 +2995,8 @@ TEXT ·reduce(SB), $88-8
 	MOVQ 80(AX), R13
 	MOVQ 88(AX), R14
 
-	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP))
-	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP))
+	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP))
+	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP))
 
 	MOVQ DX, 0(AX)
 	MOVQ CX, 8(AX)
@@ -3040,8 +3040,8 @@ TEXT ·MulBy3(SB), $88-8
 	ADCQ R13, R13
 	ADCQ R14, R14
 
-	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP))
-	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP))
+	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP))
+	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP))
 
 	ADDQ 0(AX), DX
 	ADCQ 8(AX), CX
@@ -3056,8 +3056,8 @@ TEXT ·MulBy3(SB), $88-8
 	ADCQ 80(AX), R13
 	ADCQ 88(AX), R14
 
-	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP))
-	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP))
+	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP))
+	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP))
 
 	MOVQ DX, 0(AX)
 	MOVQ CX, 8(AX)
@@ -3101,8 +3101,8 @@ TEXT ·MulBy5(SB), $88-8
 	ADCQ R13, R13
 	ADCQ R14, R14
 
-	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP))
-	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP))
+	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP))
+	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP))
 
 	ADDQ DX, DX
 	ADCQ CX, CX
@@ -3117,8 +3117,8 @@ TEXT ·MulBy5(SB), $88-8
 	ADCQ R13, R13
 	ADCQ R14, R14
 
-	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP))
-	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP))
+	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP))
+	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP))
 
 	ADDQ 0(AX), DX
 	ADCQ 8(AX), CX
@@ -3133,8 +3133,8 @@ TEXT ·MulBy5(SB), $88-8
 	ADCQ 80(AX), R13
 	ADCQ 88(AX), R14
 
-	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP))
-	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,s0-0(SP),s1-8(SP),s2-16(SP),s3-24(SP),s4-32(SP),s5-40(SP),s6-48(SP),s7-56(SP),s8-64(SP),s9-72(SP),s10-80(SP))
+	// reduce element(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14) using temp registers (R15,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP))
+	REDUCE(DX,CX,BX,SI,DI,R8,R9,R10,R11,R12,R13,R14,R15,s0-8(SP),s1-16(SP),s2-24(SP),s3-32(SP),s4-40(SP),s5-48(SP),s6-56(SP),s7-64(SP),s8-72(SP),s9-80(SP),s10-88(SP))
 
 	MOVQ DX, 0(AX)
 	MOVQ CX, 8(AX)
