@@ -39,26 +39,35 @@ func (f *FFAmd64) MulADX(registers *amd64.Registers, yat, xat func(int) string, 
 
 		// for j=0 to N-1
 		//    (A,t[j])  := t[j] + x[j]*y[i] + A
-		for j := 0; j < f.NbWords; j++ {
-			f.Comment(fmt.Sprintf("(A,t[%[1]d])  := t[%[1]d] + x[%[1]d]*y[%[2]d] + A", j, i))
-			xj := xat(j)
+		if i == 0 {
+			for j := 0; j < f.NbWords; j++ {
+				f.Comment(fmt.Sprintf("(A,t[%[1]d])  := x[%[1]d]*y[%[2]d] + A", j, i))
+				xj := xat(j)
 
-			reg := A
-			if i == 0 {
 				if j == 0 {
 					f.MULXQ(xj, t[j], t[j+1])
-				} else if j != f.NbWordsLastIndex {
-					reg = t[j+1]
+				} else {
+					highBits := A
+					if j != f.NbWordsLastIndex {
+						highBits = t[j+1]
+					}
+					f.MULXQ(xj, amd64.AX, highBits)
+					f.ADOXQ(amd64.AX, t[j])
 				}
-			} else if j != 0 {
-				f.ADCXQ(A, t[j])
 			}
+		} else {
+			for j := 0; j < f.NbWords; j++ {
+				f.Comment(fmt.Sprintf("(A,t[%[1]d])  := t[%[1]d] + x[%[1]d]*y[%[2]d] + A", j, i))
+				xj := xat(j)
 
-			if !(i == 0 && j == 0) {
-				f.MULXQ(xj, amd64.AX, reg)
+				if j != 0 {
+					f.ADCXQ(A, t[j])
+				}
+				f.MULXQ(xj, amd64.AX, A)
 				f.ADOXQ(amd64.AX, t[j])
 			}
 		}
+
 		if uglyHook != nil {
 			uglyHook(i)
 		}
@@ -213,10 +222,18 @@ func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers) {
 	// registers
 	t := registers.PopN(f.NbWords)
 	A := amd64.BP
-	f.LabelRegisters("A", A)
+	x := f.PopN(registers)
+
+	{
+		f.LabelRegisters("x", x...)
+		f.MOVQ("x+8(FP)", amd64.BP)
+		f.Mov(amd64.BP, t)
+		f.Mov(t, x)
+	}
+
 	f.LabelRegisters("t", t...)
 
-	x := f.PopN(registers)
+	f.LabelRegisters("A", A)
 
 	for i := 0; i < f.NbWords; i++ {
 		f.Comment("clear the flags")
@@ -227,35 +244,28 @@ func (f *FFAmd64) generateInnerMulLarge(registers *amd64.Registers) {
 
 		// for j=0 to N-1
 		//    (A,t[j])  := t[j] + x[j]*y[i] + A
-		for j := 0; j < f.NbWords; j++ {
-			f.Comment(fmt.Sprintf("(A,t[%[1]d])  := t[%[1]d] + x[%[1]d]*y[%[2]d] + A", j, i))
-			xj := amd64.AX
-			if i == 0 {
-				xj = A
+		if i == 0 {
+			// first iteration, t[j] are zeroes
+			for j := 0; j < f.NbWords; j++ {
+				f.Comment(fmt.Sprintf("(A,t[%[1]d])  := x[%[1]d]*y[%[2]d] + A", j, i))
 				if j == 0 {
-					f.Comment(fmt.Sprintf("using A(%s) to store x", A))
-					f.MOVQ("x+8(FP)", xj)
-				}
-				f.MOVQ(xj.At(j), amd64.AX)
-				f.MOVQ(amd64.AX, x[j])
-			}
-
-			reg := A
-			if i == 0 && j == 0 {
-				f.MULXQ(amd64.AX, t[j], t[j+1])
-			}
-			if i != 0 && j != 0 {
-				f.ADCXQ(A, t[j])
-			}
-			if i != 0 || j != 0 {
-				if i == 0 && j != f.NbWordsLastIndex {
-					reg = t[j+1]
-				}
-				if i == 0 {
-					f.MULXQ(amd64.AX, amd64.AX, reg)
+					f.MULXQ(x[j], t[j], t[j+1]) // t[j] == x[j] when i == 0
 				} else {
-					f.MULXQ(x[j], amd64.AX, reg)
+					highBits := A
+					if j != f.NbWordsLastIndex {
+						highBits = t[j+1]
+					}
+					f.MULXQ(x[j], amd64.AX, highBits)
+					f.ADOXQ(amd64.AX, t[j])
 				}
+			}
+		} else {
+			for j := 0; j < f.NbWords; j++ {
+				f.Comment(fmt.Sprintf("(A,t[%[1]d])  := t[%[1]d] + x[%[1]d]*y[%[2]d] + A", j, i))
+				if j != 0 {
+					f.ADCXQ(A, t[j])
+				}
+				f.MULXQ(x[j], amd64.AX, A)
 				f.ADOXQ(amd64.AX, t[j])
 			}
 		}

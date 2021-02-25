@@ -193,18 +193,18 @@ TEXT ·mul(SB), $24-24
 	XORQ AX, AX
 	MOVQ 0(DI), DX
 
-	// (A,t[0])  := t[0] + x[0]*y[0] + A
+	// (A,t[0])  := x[0]*y[0] + A
 	MULXQ R15, R8, R9
 
-	// (A,t[1])  := t[1] + x[1]*y[0] + A
+	// (A,t[1])  := x[1]*y[0] + A
 	MULXQ CX, AX, R10
 	ADOXQ AX, R9
 
-	// (A,t[2])  := t[2] + x[2]*y[0] + A
+	// (A,t[2])  := x[2]*y[0] + A
 	MULXQ BX, AX, R11
 	ADOXQ AX, R10
 
-	// (A,t[3])  := t[3] + x[3]*y[0] + A
+	// (A,t[3])  := x[3]*y[0] + A
 	MULXQ SI, AX, R12
 	ADOXQ AX, R11
 
