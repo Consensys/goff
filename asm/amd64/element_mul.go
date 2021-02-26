@@ -131,11 +131,43 @@ func (f *FFAmd64) mulADX(registers *amd64.Registers, x, y func(int) string, t []
 	return t
 }
 
-func (f *FFAmd64) generateInnerMul(registers *amd64.Registers) {
+func (f *FFAmd64) generateMul(forceADX bool) {
+	f.Comment("mul(res, x, y *Element)")
+
+	const argSize = 3 * 8
+	minStackSize := argSize
+	if forceADX {
+		minStackSize = 0
+	}
+	stackSize := f.StackSize(f.NbWords*2, 2, minStackSize)
+	registers := f.FnHeader("mul", stackSize, argSize, amd64.DX, amd64.AX)
+	defer f.AssertCleanStack(stackSize, minStackSize)
+
+	f.WriteLn(`
+	// the algorithm is described here
+	// https://hackmd.io/@zkteam/modular_multiplication
+	// however, to benefit from the ADCX and ADOX carry chains
+	// we split the inner loops in 2:
+	// for i=0 to N-1
+	// 		for j=0 to N-1
+	// 		    (A,t[j])  := t[j] + x[j]*y[i] + A
+	// 		m := t[0]*q'[0] mod W
+	// 		C,_ := t[0] + m*q[0]
+	// 		for j=1 to N-1
+	// 		    (C,t[j-1]) := t[j] + m*q[j] + C
+	// 		t[N-1] = C + A
+	`)
+	if stackSize > 0 {
+		f.WriteLn("NO_LOCAL_POINTERS")
+	}
+
 	noAdx := f.NewLabel()
-	// check ADX instruction support
-	f.CMPB("·supportAdx(SB)", 1)
-	f.JNE(noAdx)
+
+	if !forceADX {
+		// check ADX instruction support
+		f.CMPB("·supportAdx(SB)", 1)
+		f.JNE(noAdx)
+	}
 
 	{
 		// we need to access x and y words, per index
@@ -161,7 +193,7 @@ func (f *FFAmd64) generateInnerMul(registers *amd64.Registers) {
 
 			// we move x on the stack.
 			f.MOVQ("x+8(FP)", amd64.AX)
-			_x := f.PopN(registers, true)
+			_x := f.PopN(&registers, true)
 			f.LabelRegisters("x", _x...)
 			f.Mov(amd64.AX, t)
 			f.Mov(t, _x)
@@ -169,7 +201,7 @@ func (f *FFAmd64) generateInnerMul(registers *amd64.Registers) {
 				return string(_x[i])
 			}
 			gc = func() {
-				f.Push(registers, _x...)
+				f.Push(&registers, _x...)
 			}
 		case 1:
 			// y is access through use of AX/DX
@@ -265,12 +297,12 @@ func (f *FFAmd64) generateInnerMul(registers *amd64.Registers) {
 
 		}
 
-		f.mulADX(registers, xat, yat, t)
+		f.mulADX(&registers, xat, yat, t)
 		gc()
 
 		// ---------------------------------------------------------------------------------------------
 		// reduce
-		f.Reduce(registers, t)
+		f.Reduce(&registers, t)
 
 		f.MOVQ("res+0(FP)", amd64.AX)
 		f.Mov(t, amd64.AX)
@@ -279,7 +311,7 @@ func (f *FFAmd64) generateInnerMul(registers *amd64.Registers) {
 
 	// ---------------------------------------------------------------------------------------------
 	// no MULX, ADX instructions
-	{
+	if !forceADX {
 		f.LABEL(noAdx)
 
 		f.MOVQ("res+0(FP)", amd64.AX)
@@ -292,32 +324,4 @@ func (f *FFAmd64) generateInnerMul(registers *amd64.Registers) {
 		f.RET()
 
 	}
-}
-
-func (f *FFAmd64) generateMul() {
-	f.Comment("mul(res, x, y *Element)")
-
-	const argSize = 3 * 8
-	stackSize := f.StackSize(f.NbWords*2, 2, argSize)
-	registers := f.FnHeader("mul", stackSize, argSize, amd64.DX, amd64.AX)
-	defer f.AssertCleanStack(stackSize, 3*8)
-
-	f.WriteLn(`
-	// the algorithm is described here
-	// https://hackmd.io/@zkteam/modular_multiplication
-	// however, to benefit from the ADCX and ADOX carry chains
-	// we split the inner loops in 2:
-	// for i=0 to N-1
-	// 		for j=0 to N-1
-	// 		    (A,t[j])  := t[j] + x[j]*y[i] + A
-	// 		m := t[0]*q'[0] mod W
-	// 		C,_ := t[0] + m*q[0]
-	// 		for j=1 to N-1
-	// 		    (C,t[j-1]) := t[j] + m*q[j] + C
-	// 		t[N-1] = C + A
-	`)
-	if stackSize > 0 {
-		f.WriteLn("NO_LOCAL_POINTERS")
-	}
-	f.generateInnerMul(&registers)
 }

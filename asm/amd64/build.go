@@ -151,18 +151,48 @@ func Generate(w io.Writer, F *field.Field) error {
 	// neg
 	f.generateNeg()
 
-	// mul
-	f.generateMul()
-
-	// from mont
-	f.generateFromMont()
-
 	// reduce
 	f.generateReduce()
 
 	// mul by constants
 	f.generateMulBy3()
 	f.generateMulBy5()
+
+	return nil
+}
+
+func GenerateMul(w io.Writer, F *field.Field) error {
+	f := NewFFAmd64(w, F)
+	f.WriteLn(bavard.Apache2Header("ConsenSys Software Inc.", 2020))
+
+	f.WriteLn("#include \"textflag.h\"")
+	f.WriteLn("#include \"funcdata.h\"")
+	f.WriteLn("")
+	f.GenerateDefines()
+
+	// mul
+	f.generateMul(false)
+
+	// from mont
+	f.generateFromMont(false)
+
+	return nil
+}
+
+func GenerateMulADX(w io.Writer, F *field.Field) error {
+	f := NewFFAmd64(w, F)
+	f.WriteLn(bavard.Apache2Header("ConsenSys Software Inc.", 2020))
+
+	f.WriteLn("#include \"textflag.h\"")
+	f.WriteLn("#include \"funcdata.h\"")
+	f.WriteLn("")
+	f.GenerateDefines()
+
+	// mul
+	f.generateMul(true)
+
+	// from mont
+	f.generateFromMont(true)
 
 	return nil
 }

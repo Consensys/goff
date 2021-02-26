@@ -20,12 +20,19 @@ import (
 	"github.com/consensys/bavard/amd64"
 )
 
-func (f *FFAmd64) generateFromMont() {
-	stackSize := f.StackSize(f.NbWords*2, 2, 8)
-	registers := f.FnHeader("fromMont", stackSize, 8, amd64.DX, amd64.AX)
-	defer f.AssertCleanStack(stackSize, 8)
+func (f *FFAmd64) generateFromMont(forceADX bool) {
+	const argSize = 8
+	minStackSize := argSize
+	if forceADX {
+		minStackSize = 0
+	}
+	stackSize := f.StackSize(f.NbWords*2, 2, minStackSize)
+	registers := f.FnHeader("fromMont", stackSize, argSize, amd64.DX, amd64.AX)
+	defer f.AssertCleanStack(stackSize, minStackSize)
 
-	f.WriteLn("NO_LOCAL_POINTERS")
+	if stackSize > 0 {
+		f.WriteLn("NO_LOCAL_POINTERS")
+	}
 	f.WriteLn(`
 	// the algorithm is described here
 	// https://hackmd.io/@zkteam/modular_multiplication
@@ -40,9 +47,11 @@ func (f *FFAmd64) generateFromMont() {
 	// 		t[N-1] = C`)
 
 	noAdx := f.NewLabel()
-	// check ADX instruction support
-	f.CMPB("·supportAdx(SB)", 1)
-	f.JNE(noAdx)
+	if !forceADX {
+		// check ADX instruction support
+		f.CMPB("·supportAdx(SB)", 1)
+		f.JNE(noAdx)
+	}
 
 	// registers
 	t := registers.PopN(f.NbWords)
@@ -95,10 +104,12 @@ func (f *FFAmd64) generateFromMont() {
 	f.RET()
 
 	// No adx
-	f.LABEL(noAdx)
-	f.MOVQ("res+0(FP)", amd64.AX)
-	f.MOVQ(amd64.AX, "(SP)")
-	f.WriteLn("CALL ·_fromMontGeneric(SB)")
-	f.RET()
+	if !forceADX {
+		f.LABEL(noAdx)
+		f.MOVQ("res+0(FP)", amd64.AX)
+		f.MOVQ(amd64.AX, "(SP)")
+		f.WriteLn("CALL ·_fromMontGeneric(SB)")
+		f.RET()
+	}
 
 }
