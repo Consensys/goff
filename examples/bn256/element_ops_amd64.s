@@ -171,267 +171,269 @@ TEXT ·mul(SB), $24-24
 	NO_LOCAL_POINTERS
 	CMPB ·supportAdx(SB), $1
 	JNE  l2
-	MOVQ x+8(FP), R14
+	MOVQ x+8(FP), SI
 
-	// x[0] = R15
-	// x[1] = CX
-	// x[2] = BX
-	// x[3] = SI
+	// x[0] = DI
+	// x[1] = R8
+	// x[2] = R9
+	// x[3] = R10
 
-	MOVQ 0(R14), R15
-	MOVQ 8(R14), CX
-	MOVQ 16(R14), BX
-	MOVQ 24(R14), SI
-	MOVQ y+16(FP), DI
+	MOVQ 0(SI), DI
+	MOVQ 8(SI), R8
+	MOVQ 16(SI), R9
+	MOVQ 24(SI), R10
+	MOVQ y+16(FP), R11
 
-	// t[0] = R8
-	// t[1] = R9
-	// t[2] = R10
-	// t[3] = R11
+	// A = BP
+
+	// t[0] = R14
+	// t[1] = R15
+	// t[2] = CX
+	// t[3] = BX
 
 	// clear the flags
 	XORQ AX, AX
-	MOVQ 0(DI), DX
+	MOVQ 0(R11), DX
 
 	// (A,t[0])  := x[0]*y[0] + A
-	MULXQ R15, R8, R9
+	MULXQ DI, R14, R15
 
 	// (A,t[1])  := x[1]*y[0] + A
-	MULXQ CX, AX, R10
-	ADOXQ AX, R9
+	MULXQ R8, AX, CX
+	ADOXQ AX, R15
 
 	// (A,t[2])  := x[2]*y[0] + A
-	MULXQ BX, AX, R11
-	ADOXQ AX, R10
+	MULXQ R9, AX, BX
+	ADOXQ AX, CX
 
 	// (A,t[3])  := x[3]*y[0] + A
-	MULXQ SI, AX, R12
-	ADOXQ AX, R11
+	MULXQ R10, AX, BP
+	ADOXQ AX, BX
 
 	// A += carries from ADCXQ and ADOXQ
 	MOVQ  $0, AX
-	ADOXQ AX, R12
+	ADOXQ AX, BP
 
 	// m := t[0]*q'[0] mod W
 	MOVQ  qInv0<>(SB), DX
-	IMULQ R8, DX
+	IMULQ R14, DX
 
 	// clear the flags
 	XORQ AX, AX
 
 	// C,_ := t[0] + m*q[0]
-	MULXQ q<>+0(SB), AX, BP
-	ADCXQ R8, AX
-	MOVQ  BP, R8
+	MULXQ q<>+0(SB), AX, R12
+	ADCXQ R14, AX
+	MOVQ  R12, R14
 
 	// (C,t[0]) := t[1] + m*q[1] + C
-	ADCXQ R9, R8
-	MULXQ q<>+8(SB), AX, R9
-	ADOXQ AX, R8
+	ADCXQ R15, R14
+	MULXQ q<>+8(SB), AX, R15
+	ADOXQ AX, R14
 
 	// (C,t[1]) := t[2] + m*q[2] + C
-	ADCXQ R10, R9
-	MULXQ q<>+16(SB), AX, R10
-	ADOXQ AX, R9
+	ADCXQ CX, R15
+	MULXQ q<>+16(SB), AX, CX
+	ADOXQ AX, R15
 
 	// (C,t[2]) := t[3] + m*q[3] + C
-	ADCXQ R11, R10
-	MULXQ q<>+24(SB), AX, R11
-	ADOXQ AX, R10
+	ADCXQ BX, CX
+	MULXQ q<>+24(SB), AX, BX
+	ADOXQ AX, CX
 
 	// t[3] = C + A
 	MOVQ  $0, AX
-	ADCXQ AX, R11
-	ADOXQ R12, R11
+	ADCXQ AX, BX
+	ADOXQ BP, BX
 
 	// clear the flags
 	XORQ AX, AX
-	MOVQ 8(DI), DX
+	MOVQ 8(R11), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[1] + A
-	MULXQ R15, AX, R12
-	ADOXQ AX, R8
+	MULXQ DI, AX, BP
+	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[1] + A
-	ADCXQ R12, R9
-	MULXQ CX, AX, R12
-	ADOXQ AX, R9
+	ADCXQ BP, R15
+	MULXQ R8, AX, BP
+	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[1] + A
-	ADCXQ R12, R10
-	MULXQ BX, AX, R12
-	ADOXQ AX, R10
+	ADCXQ BP, CX
+	MULXQ R9, AX, BP
+	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[1] + A
-	ADCXQ R12, R11
-	MULXQ SI, AX, R12
-	ADOXQ AX, R11
+	ADCXQ BP, BX
+	MULXQ R10, AX, BP
+	ADOXQ AX, BX
 
 	// A += carries from ADCXQ and ADOXQ
 	MOVQ  $0, AX
-	ADCXQ AX, R12
-	ADOXQ AX, R12
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 
 	// m := t[0]*q'[0] mod W
 	MOVQ  qInv0<>(SB), DX
-	IMULQ R8, DX
+	IMULQ R14, DX
 
 	// clear the flags
 	XORQ AX, AX
 
 	// C,_ := t[0] + m*q[0]
-	MULXQ q<>+0(SB), AX, BP
-	ADCXQ R8, AX
-	MOVQ  BP, R8
+	MULXQ q<>+0(SB), AX, R12
+	ADCXQ R14, AX
+	MOVQ  R12, R14
 
 	// (C,t[0]) := t[1] + m*q[1] + C
-	ADCXQ R9, R8
-	MULXQ q<>+8(SB), AX, R9
-	ADOXQ AX, R8
+	ADCXQ R15, R14
+	MULXQ q<>+8(SB), AX, R15
+	ADOXQ AX, R14
 
 	// (C,t[1]) := t[2] + m*q[2] + C
-	ADCXQ R10, R9
-	MULXQ q<>+16(SB), AX, R10
-	ADOXQ AX, R9
+	ADCXQ CX, R15
+	MULXQ q<>+16(SB), AX, CX
+	ADOXQ AX, R15
 
 	// (C,t[2]) := t[3] + m*q[3] + C
-	ADCXQ R11, R10
-	MULXQ q<>+24(SB), AX, R11
-	ADOXQ AX, R10
+	ADCXQ BX, CX
+	MULXQ q<>+24(SB), AX, BX
+	ADOXQ AX, CX
 
 	// t[3] = C + A
 	MOVQ  $0, AX
-	ADCXQ AX, R11
-	ADOXQ R12, R11
+	ADCXQ AX, BX
+	ADOXQ BP, BX
 
 	// clear the flags
 	XORQ AX, AX
-	MOVQ 16(DI), DX
+	MOVQ 16(R11), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[2] + A
-	MULXQ R15, AX, R12
-	ADOXQ AX, R8
+	MULXQ DI, AX, BP
+	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[2] + A
-	ADCXQ R12, R9
-	MULXQ CX, AX, R12
-	ADOXQ AX, R9
+	ADCXQ BP, R15
+	MULXQ R8, AX, BP
+	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[2] + A
-	ADCXQ R12, R10
-	MULXQ BX, AX, R12
-	ADOXQ AX, R10
+	ADCXQ BP, CX
+	MULXQ R9, AX, BP
+	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[2] + A
-	ADCXQ R12, R11
-	MULXQ SI, AX, R12
-	ADOXQ AX, R11
+	ADCXQ BP, BX
+	MULXQ R10, AX, BP
+	ADOXQ AX, BX
 
 	// A += carries from ADCXQ and ADOXQ
 	MOVQ  $0, AX
-	ADCXQ AX, R12
-	ADOXQ AX, R12
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 
 	// m := t[0]*q'[0] mod W
 	MOVQ  qInv0<>(SB), DX
-	IMULQ R8, DX
+	IMULQ R14, DX
 
 	// clear the flags
 	XORQ AX, AX
 
 	// C,_ := t[0] + m*q[0]
-	MULXQ q<>+0(SB), AX, BP
-	ADCXQ R8, AX
-	MOVQ  BP, R8
+	MULXQ q<>+0(SB), AX, R12
+	ADCXQ R14, AX
+	MOVQ  R12, R14
 
 	// (C,t[0]) := t[1] + m*q[1] + C
-	ADCXQ R9, R8
-	MULXQ q<>+8(SB), AX, R9
-	ADOXQ AX, R8
+	ADCXQ R15, R14
+	MULXQ q<>+8(SB), AX, R15
+	ADOXQ AX, R14
 
 	// (C,t[1]) := t[2] + m*q[2] + C
-	ADCXQ R10, R9
-	MULXQ q<>+16(SB), AX, R10
-	ADOXQ AX, R9
+	ADCXQ CX, R15
+	MULXQ q<>+16(SB), AX, CX
+	ADOXQ AX, R15
 
 	// (C,t[2]) := t[3] + m*q[3] + C
-	ADCXQ R11, R10
-	MULXQ q<>+24(SB), AX, R11
-	ADOXQ AX, R10
+	ADCXQ BX, CX
+	MULXQ q<>+24(SB), AX, BX
+	ADOXQ AX, CX
 
 	// t[3] = C + A
 	MOVQ  $0, AX
-	ADCXQ AX, R11
-	ADOXQ R12, R11
+	ADCXQ AX, BX
+	ADOXQ BP, BX
 
 	// clear the flags
 	XORQ AX, AX
-	MOVQ 24(DI), DX
+	MOVQ 24(R11), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[3] + A
-	MULXQ R15, AX, R12
-	ADOXQ AX, R8
+	MULXQ DI, AX, BP
+	ADOXQ AX, R14
 
 	// (A,t[1])  := t[1] + x[1]*y[3] + A
-	ADCXQ R12, R9
-	MULXQ CX, AX, R12
-	ADOXQ AX, R9
+	ADCXQ BP, R15
+	MULXQ R8, AX, BP
+	ADOXQ AX, R15
 
 	// (A,t[2])  := t[2] + x[2]*y[3] + A
-	ADCXQ R12, R10
-	MULXQ BX, AX, R12
-	ADOXQ AX, R10
+	ADCXQ BP, CX
+	MULXQ R9, AX, BP
+	ADOXQ AX, CX
 
 	// (A,t[3])  := t[3] + x[3]*y[3] + A
-	ADCXQ R12, R11
-	MULXQ SI, AX, R12
-	ADOXQ AX, R11
+	ADCXQ BP, BX
+	MULXQ R10, AX, BP
+	ADOXQ AX, BX
 
 	// A += carries from ADCXQ and ADOXQ
 	MOVQ  $0, AX
-	ADCXQ AX, R12
-	ADOXQ AX, R12
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 
 	// m := t[0]*q'[0] mod W
 	MOVQ  qInv0<>(SB), DX
-	IMULQ R8, DX
+	IMULQ R14, DX
 
 	// clear the flags
 	XORQ AX, AX
 
 	// C,_ := t[0] + m*q[0]
-	MULXQ q<>+0(SB), AX, BP
-	ADCXQ R8, AX
-	MOVQ  BP, R8
+	MULXQ q<>+0(SB), AX, R12
+	ADCXQ R14, AX
+	MOVQ  R12, R14
 
 	// (C,t[0]) := t[1] + m*q[1] + C
-	ADCXQ R9, R8
-	MULXQ q<>+8(SB), AX, R9
-	ADOXQ AX, R8
+	ADCXQ R15, R14
+	MULXQ q<>+8(SB), AX, R15
+	ADOXQ AX, R14
 
 	// (C,t[1]) := t[2] + m*q[2] + C
-	ADCXQ R10, R9
-	MULXQ q<>+16(SB), AX, R10
-	ADOXQ AX, R9
+	ADCXQ CX, R15
+	MULXQ q<>+16(SB), AX, CX
+	ADOXQ AX, R15
 
 	// (C,t[2]) := t[3] + m*q[3] + C
-	ADCXQ R11, R10
-	MULXQ q<>+24(SB), AX, R11
-	ADOXQ AX, R10
+	ADCXQ BX, CX
+	MULXQ q<>+24(SB), AX, BX
+	ADOXQ AX, CX
 
 	// t[3] = C + A
 	MOVQ  $0, AX
-	ADCXQ AX, R11
-	ADOXQ R12, R11
+	ADCXQ AX, BX
+	ADOXQ BP, BX
 
-	// reduce element(R8,R9,R10,R11) using temp registers (R13,R14,R12,DI)
-	REDUCE(R8,R9,R10,R11,R13,R14,R12,DI)
+	// reduce element(R14,R15,CX,BX) using temp registers (R13,SI,R12,R11)
+	REDUCE(R14,R15,CX,BX,R13,SI,R12,R11)
 
 	MOVQ res+0(FP), AX
-	MOVQ R8, 0(AX)
-	MOVQ R9, 8(AX)
-	MOVQ R10, 16(AX)
-	MOVQ R11, 24(AX)
+	MOVQ R14, 0(AX)
+	MOVQ R15, 8(AX)
+	MOVQ CX, 16(AX)
+	MOVQ BX, 24(AX)
 	RET
 
 l2:

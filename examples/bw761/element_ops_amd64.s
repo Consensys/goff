@@ -337,6 +337,7 @@ TEXT ·mul(SB), $120-24
 	NO_LOCAL_POINTERS
 	CMPB ·supportAdx(SB), $1
 	JNE  l3
+	MOVQ x+8(FP), AX
 
 	// x[0] = s0-8(SP)
 	// x[1] = s1-16(SP)
@@ -351,19 +352,18 @@ TEXT ·mul(SB), $120-24
 	// x[10] = s10-88(SP)
 	// x[11] = s11-96(SP)
 
-	MOVQ x+8(FP), BP
-	MOVQ 0(BP), R14
-	MOVQ 8(BP), R15
-	MOVQ 16(BP), CX
-	MOVQ 24(BP), BX
-	MOVQ 32(BP), SI
-	MOVQ 40(BP), DI
-	MOVQ 48(BP), R8
-	MOVQ 56(BP), R9
-	MOVQ 64(BP), R10
-	MOVQ 72(BP), R11
-	MOVQ 80(BP), R12
-	MOVQ 88(BP), R13
+	MOVQ 0(AX), R14
+	MOVQ 8(AX), R15
+	MOVQ 16(AX), CX
+	MOVQ 24(AX), BX
+	MOVQ 32(AX), SI
+	MOVQ 40(AX), DI
+	MOVQ 48(AX), R8
+	MOVQ 56(AX), R9
+	MOVQ 64(AX), R10
+	MOVQ 72(AX), R11
+	MOVQ 80(AX), R12
+	MOVQ 88(AX), R13
 	MOVQ R14, s0-8(SP)
 	MOVQ R15, s1-16(SP)
 	MOVQ CX, s2-24(SP)
@@ -376,6 +376,8 @@ TEXT ·mul(SB), $120-24
 	MOVQ R11, s9-80(SP)
 	MOVQ R12, s10-88(SP)
 	MOVQ R13, s11-96(SP)
+
+	// A = BP
 
 	// t[0] = R14
 	// t[1] = R15
@@ -390,12 +392,10 @@ TEXT ·mul(SB), $120-24
 	// t[10] = R12
 	// t[11] = R13
 
-	// A = BP
-
 	// clear the flags
-	XORQ DX, DX
-	MOVQ y+16(FP), DX
-	MOVQ 0(DX), DX
+	XORQ AX, AX
+	MOVQ y+16(FP), AX
+	MOVQ 0(AX), DX
 
 	// (A,t[0])  := x[0]*y[0] + A
 	MULXQ s0-8(SP), R14, R15
@@ -445,8 +445,8 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
-	MOVQ  $0, DX
-	ADOXQ DX, BP
+	MOVQ  $0, AX
+	ADOXQ AX, BP
 	PUSHQ BP
 
 	// m := t[0]*q'[0] mod W
@@ -460,6 +460,7 @@ TEXT ·mul(SB), $120-24
 	MULXQ q<>+0(SB), AX, BP
 	ADCXQ R14, AX
 	MOVQ  BP, R14
+	POPQ  BP
 
 	// (C,t[0]) := t[1] + m*q[1] + C
 	ADCXQ R15, R14
@@ -517,15 +518,14 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R12
 
 	// t[11] = C + A
-	POPQ  BP
 	MOVQ  $0, AX
 	ADCXQ AX, R13
 	ADOXQ BP, R13
 
 	// clear the flags
-	XORQ DX, DX
-	MOVQ y+16(FP), DX
-	MOVQ 8(DX), DX
+	XORQ AX, AX
+	MOVQ y+16(FP), AX
+	MOVQ 8(AX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[1] + A
 	MULXQ s0-8(SP), AX, BP
@@ -587,9 +587,9 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
-	MOVQ  $0, DX
-	ADCXQ DX, BP
-	ADOXQ DX, BP
+	MOVQ  $0, AX
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 	PUSHQ BP
 
 	// m := t[0]*q'[0] mod W
@@ -603,6 +603,7 @@ TEXT ·mul(SB), $120-24
 	MULXQ q<>+0(SB), AX, BP
 	ADCXQ R14, AX
 	MOVQ  BP, R14
+	POPQ  BP
 
 	// (C,t[0]) := t[1] + m*q[1] + C
 	ADCXQ R15, R14
@@ -660,15 +661,14 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R12
 
 	// t[11] = C + A
-	POPQ  BP
 	MOVQ  $0, AX
 	ADCXQ AX, R13
 	ADOXQ BP, R13
 
 	// clear the flags
-	XORQ DX, DX
-	MOVQ y+16(FP), DX
-	MOVQ 16(DX), DX
+	XORQ AX, AX
+	MOVQ y+16(FP), AX
+	MOVQ 16(AX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[2] + A
 	MULXQ s0-8(SP), AX, BP
@@ -730,9 +730,9 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
-	MOVQ  $0, DX
-	ADCXQ DX, BP
-	ADOXQ DX, BP
+	MOVQ  $0, AX
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 	PUSHQ BP
 
 	// m := t[0]*q'[0] mod W
@@ -746,6 +746,7 @@ TEXT ·mul(SB), $120-24
 	MULXQ q<>+0(SB), AX, BP
 	ADCXQ R14, AX
 	MOVQ  BP, R14
+	POPQ  BP
 
 	// (C,t[0]) := t[1] + m*q[1] + C
 	ADCXQ R15, R14
@@ -803,15 +804,14 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R12
 
 	// t[11] = C + A
-	POPQ  BP
 	MOVQ  $0, AX
 	ADCXQ AX, R13
 	ADOXQ BP, R13
 
 	// clear the flags
-	XORQ DX, DX
-	MOVQ y+16(FP), DX
-	MOVQ 24(DX), DX
+	XORQ AX, AX
+	MOVQ y+16(FP), AX
+	MOVQ 24(AX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[3] + A
 	MULXQ s0-8(SP), AX, BP
@@ -873,9 +873,9 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
-	MOVQ  $0, DX
-	ADCXQ DX, BP
-	ADOXQ DX, BP
+	MOVQ  $0, AX
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 	PUSHQ BP
 
 	// m := t[0]*q'[0] mod W
@@ -889,6 +889,7 @@ TEXT ·mul(SB), $120-24
 	MULXQ q<>+0(SB), AX, BP
 	ADCXQ R14, AX
 	MOVQ  BP, R14
+	POPQ  BP
 
 	// (C,t[0]) := t[1] + m*q[1] + C
 	ADCXQ R15, R14
@@ -946,15 +947,14 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R12
 
 	// t[11] = C + A
-	POPQ  BP
 	MOVQ  $0, AX
 	ADCXQ AX, R13
 	ADOXQ BP, R13
 
 	// clear the flags
-	XORQ DX, DX
-	MOVQ y+16(FP), DX
-	MOVQ 32(DX), DX
+	XORQ AX, AX
+	MOVQ y+16(FP), AX
+	MOVQ 32(AX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[4] + A
 	MULXQ s0-8(SP), AX, BP
@@ -1016,9 +1016,9 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
-	MOVQ  $0, DX
-	ADCXQ DX, BP
-	ADOXQ DX, BP
+	MOVQ  $0, AX
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 	PUSHQ BP
 
 	// m := t[0]*q'[0] mod W
@@ -1032,6 +1032,7 @@ TEXT ·mul(SB), $120-24
 	MULXQ q<>+0(SB), AX, BP
 	ADCXQ R14, AX
 	MOVQ  BP, R14
+	POPQ  BP
 
 	// (C,t[0]) := t[1] + m*q[1] + C
 	ADCXQ R15, R14
@@ -1089,15 +1090,14 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R12
 
 	// t[11] = C + A
-	POPQ  BP
 	MOVQ  $0, AX
 	ADCXQ AX, R13
 	ADOXQ BP, R13
 
 	// clear the flags
-	XORQ DX, DX
-	MOVQ y+16(FP), DX
-	MOVQ 40(DX), DX
+	XORQ AX, AX
+	MOVQ y+16(FP), AX
+	MOVQ 40(AX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[5] + A
 	MULXQ s0-8(SP), AX, BP
@@ -1159,9 +1159,9 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
-	MOVQ  $0, DX
-	ADCXQ DX, BP
-	ADOXQ DX, BP
+	MOVQ  $0, AX
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 	PUSHQ BP
 
 	// m := t[0]*q'[0] mod W
@@ -1175,6 +1175,7 @@ TEXT ·mul(SB), $120-24
 	MULXQ q<>+0(SB), AX, BP
 	ADCXQ R14, AX
 	MOVQ  BP, R14
+	POPQ  BP
 
 	// (C,t[0]) := t[1] + m*q[1] + C
 	ADCXQ R15, R14
@@ -1232,15 +1233,14 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R12
 
 	// t[11] = C + A
-	POPQ  BP
 	MOVQ  $0, AX
 	ADCXQ AX, R13
 	ADOXQ BP, R13
 
 	// clear the flags
-	XORQ DX, DX
-	MOVQ y+16(FP), DX
-	MOVQ 48(DX), DX
+	XORQ AX, AX
+	MOVQ y+16(FP), AX
+	MOVQ 48(AX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[6] + A
 	MULXQ s0-8(SP), AX, BP
@@ -1302,9 +1302,9 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
-	MOVQ  $0, DX
-	ADCXQ DX, BP
-	ADOXQ DX, BP
+	MOVQ  $0, AX
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 	PUSHQ BP
 
 	// m := t[0]*q'[0] mod W
@@ -1318,6 +1318,7 @@ TEXT ·mul(SB), $120-24
 	MULXQ q<>+0(SB), AX, BP
 	ADCXQ R14, AX
 	MOVQ  BP, R14
+	POPQ  BP
 
 	// (C,t[0]) := t[1] + m*q[1] + C
 	ADCXQ R15, R14
@@ -1375,15 +1376,14 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R12
 
 	// t[11] = C + A
-	POPQ  BP
 	MOVQ  $0, AX
 	ADCXQ AX, R13
 	ADOXQ BP, R13
 
 	// clear the flags
-	XORQ DX, DX
-	MOVQ y+16(FP), DX
-	MOVQ 56(DX), DX
+	XORQ AX, AX
+	MOVQ y+16(FP), AX
+	MOVQ 56(AX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[7] + A
 	MULXQ s0-8(SP), AX, BP
@@ -1445,9 +1445,9 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
-	MOVQ  $0, DX
-	ADCXQ DX, BP
-	ADOXQ DX, BP
+	MOVQ  $0, AX
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 	PUSHQ BP
 
 	// m := t[0]*q'[0] mod W
@@ -1461,6 +1461,7 @@ TEXT ·mul(SB), $120-24
 	MULXQ q<>+0(SB), AX, BP
 	ADCXQ R14, AX
 	MOVQ  BP, R14
+	POPQ  BP
 
 	// (C,t[0]) := t[1] + m*q[1] + C
 	ADCXQ R15, R14
@@ -1518,15 +1519,14 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R12
 
 	// t[11] = C + A
-	POPQ  BP
 	MOVQ  $0, AX
 	ADCXQ AX, R13
 	ADOXQ BP, R13
 
 	// clear the flags
-	XORQ DX, DX
-	MOVQ y+16(FP), DX
-	MOVQ 64(DX), DX
+	XORQ AX, AX
+	MOVQ y+16(FP), AX
+	MOVQ 64(AX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[8] + A
 	MULXQ s0-8(SP), AX, BP
@@ -1588,9 +1588,9 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
-	MOVQ  $0, DX
-	ADCXQ DX, BP
-	ADOXQ DX, BP
+	MOVQ  $0, AX
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 	PUSHQ BP
 
 	// m := t[0]*q'[0] mod W
@@ -1604,6 +1604,7 @@ TEXT ·mul(SB), $120-24
 	MULXQ q<>+0(SB), AX, BP
 	ADCXQ R14, AX
 	MOVQ  BP, R14
+	POPQ  BP
 
 	// (C,t[0]) := t[1] + m*q[1] + C
 	ADCXQ R15, R14
@@ -1661,15 +1662,14 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R12
 
 	// t[11] = C + A
-	POPQ  BP
 	MOVQ  $0, AX
 	ADCXQ AX, R13
 	ADOXQ BP, R13
 
 	// clear the flags
-	XORQ DX, DX
-	MOVQ y+16(FP), DX
-	MOVQ 72(DX), DX
+	XORQ AX, AX
+	MOVQ y+16(FP), AX
+	MOVQ 72(AX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[9] + A
 	MULXQ s0-8(SP), AX, BP
@@ -1731,9 +1731,9 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
-	MOVQ  $0, DX
-	ADCXQ DX, BP
-	ADOXQ DX, BP
+	MOVQ  $0, AX
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 	PUSHQ BP
 
 	// m := t[0]*q'[0] mod W
@@ -1747,6 +1747,7 @@ TEXT ·mul(SB), $120-24
 	MULXQ q<>+0(SB), AX, BP
 	ADCXQ R14, AX
 	MOVQ  BP, R14
+	POPQ  BP
 
 	// (C,t[0]) := t[1] + m*q[1] + C
 	ADCXQ R15, R14
@@ -1804,15 +1805,14 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R12
 
 	// t[11] = C + A
-	POPQ  BP
 	MOVQ  $0, AX
 	ADCXQ AX, R13
 	ADOXQ BP, R13
 
 	// clear the flags
-	XORQ DX, DX
-	MOVQ y+16(FP), DX
-	MOVQ 80(DX), DX
+	XORQ AX, AX
+	MOVQ y+16(FP), AX
+	MOVQ 80(AX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[10] + A
 	MULXQ s0-8(SP), AX, BP
@@ -1874,9 +1874,9 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
-	MOVQ  $0, DX
-	ADCXQ DX, BP
-	ADOXQ DX, BP
+	MOVQ  $0, AX
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 	PUSHQ BP
 
 	// m := t[0]*q'[0] mod W
@@ -1890,6 +1890,7 @@ TEXT ·mul(SB), $120-24
 	MULXQ q<>+0(SB), AX, BP
 	ADCXQ R14, AX
 	MOVQ  BP, R14
+	POPQ  BP
 
 	// (C,t[0]) := t[1] + m*q[1] + C
 	ADCXQ R15, R14
@@ -1947,15 +1948,14 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R12
 
 	// t[11] = C + A
-	POPQ  BP
 	MOVQ  $0, AX
 	ADCXQ AX, R13
 	ADOXQ BP, R13
 
 	// clear the flags
-	XORQ DX, DX
-	MOVQ y+16(FP), DX
-	MOVQ 88(DX), DX
+	XORQ AX, AX
+	MOVQ y+16(FP), AX
+	MOVQ 88(AX), DX
 
 	// (A,t[0])  := t[0] + x[0]*y[11] + A
 	MULXQ s0-8(SP), AX, BP
@@ -2017,9 +2017,9 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R13
 
 	// A += carries from ADCXQ and ADOXQ
-	MOVQ  $0, DX
-	ADCXQ DX, BP
-	ADOXQ DX, BP
+	MOVQ  $0, AX
+	ADCXQ AX, BP
+	ADOXQ AX, BP
 	PUSHQ BP
 
 	// m := t[0]*q'[0] mod W
@@ -2033,6 +2033,7 @@ TEXT ·mul(SB), $120-24
 	MULXQ q<>+0(SB), AX, BP
 	ADCXQ R14, AX
 	MOVQ  BP, R14
+	POPQ  BP
 
 	// (C,t[0]) := t[1] + m*q[1] + C
 	ADCXQ R15, R14
@@ -2090,7 +2091,6 @@ TEXT ·mul(SB), $120-24
 	ADOXQ AX, R12
 
 	// t[11] = C + A
-	POPQ  BP
 	MOVQ  $0, AX
 	ADCXQ AX, R13
 	ADOXQ BP, R13

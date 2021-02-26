@@ -77,8 +77,8 @@ func (f *FFAmd64) Push(registers *amd64.Registers, rIn ...amd64.Register) {
 	}
 }
 
-func (f *FFAmd64) Pop(registers *amd64.Registers) amd64.Register {
-	if registers.Available() >= 1 {
+func (f *FFAmd64) Pop(registers *amd64.Registers, forceStack ...bool) amd64.Register {
+	if registers.Available() >= 1 && !(len(forceStack) > 0 && forceStack[0]) {
 		return registers.Pop()
 	}
 	r := amd64.Register(fmt.Sprintf("s%d-%d(SP)", f.nbElementsOnStack, 8+f.nbElementsOnStack*8))
@@ -89,7 +89,20 @@ func (f *FFAmd64) Pop(registers *amd64.Registers) amd64.Register {
 	return r
 }
 
-func (f *FFAmd64) PopN(registers *amd64.Registers) []amd64.Register {
+func (f *FFAmd64) PopN(registers *amd64.Registers, forceStack ...bool) []amd64.Register {
+	if len(forceStack) > 0 && forceStack[0] {
+		nbStack := f.NbWords
+		var u []amd64.Register
+
+		for i := f.nbElementsOnStack; i < nbStack+f.nbElementsOnStack; i++ {
+			u = append(u, amd64.Register(fmt.Sprintf("s%d-%d(SP)", i, 8+i*8)))
+		}
+		f.nbElementsOnStack += nbStack
+		if f.nbElementsOnStack > f.maxOnStack {
+			f.maxOnStack = f.nbElementsOnStack
+		}
+		return u
+	}
 	if registers.Available() >= f.NbWords {
 		return registers.PopN(f.NbWords)
 	}
