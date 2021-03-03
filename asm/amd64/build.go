@@ -46,7 +46,14 @@ func (f *FFAmd64) StackSize(maxNbRegistersNeeded, nbRegistersReserved, minStackS
 		return minStackSize
 	}
 	r *= -8
-	return r + minStackSize
+	return max(r, minStackSize)
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 func (f *FFAmd64) AssertCleanStack(reservedStackSize, minStackSize int) {
@@ -59,7 +66,7 @@ func (f *FFAmd64) AssertCleanStack(reservedStackSize, minStackSize int) {
 	usedStackSize := f.maxOnStack * 8
 	if usedStackSize > reservedStackSize {
 		panic("using more stack size than reserved")
-	} else if usedStackSize+minStackSize < reservedStackSize {
+	} else if max(usedStackSize, minStackSize) < reservedStackSize {
 		panic("reserved more stack size than needed") // TODO wip this shouldn't not panic as this may be by design for aligment
 	}
 
