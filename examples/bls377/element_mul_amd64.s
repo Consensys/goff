@@ -71,24 +71,21 @@ TEXT ·mul(SB), $24-24
 	JNE  l1
 	MOVQ x+8(FP), R8
 
-	// x[0] = R10
-	// x[1] = R11
-	// x[2] = R12
-
+	// x[0] -> R10
+	// x[1] -> R11
+	// x[2] -> R12
 	MOVQ 0(R8), R10
 	MOVQ 8(R8), R11
 	MOVQ 16(R8), R12
 	MOVQ y+16(FP), R13
 
-	// A = BP
-
-	// t[0] = R14
-	// t[1] = R15
-	// t[2] = CX
-	// t[3] = BX
-	// t[4] = SI
-	// t[5] = DI
-
+	// A -> BP
+	// t[0] -> R14
+	// t[1] -> R15
+	// t[2] -> CX
+	// t[3] -> BX
+	// t[4] -> SI
+	// t[5] -> DI
 	// clear the flags
 	XORQ AX, AX
 	MOVQ 0(R13), DX

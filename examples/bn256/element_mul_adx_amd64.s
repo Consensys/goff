@@ -60,24 +60,21 @@ TEXT ·mul(SB), NOSPLIT, $0-24
 
 	MOVQ x+8(FP), SI
 
-	// x[0] = DI
-	// x[1] = R8
-	// x[2] = R9
-	// x[3] = R10
-
+	// x[0] -> DI
+	// x[1] -> R8
+	// x[2] -> R9
+	// x[3] -> R10
 	MOVQ 0(SI), DI
 	MOVQ 8(SI), R8
 	MOVQ 16(SI), R9
 	MOVQ 24(SI), R10
 	MOVQ y+16(FP), R11
 
-	// A = BP
-
-	// t[0] = R14
-	// t[1] = R15
-	// t[2] = CX
-	// t[3] = BX
-
+	// A -> BP
+	// t[0] -> R14
+	// t[1] -> R15
+	// t[2] -> CX
+	// t[3] -> BX
 	// clear the flags
 	XORQ AX, AX
 	MOVQ 0(R11), DX
