@@ -28,16 +28,16 @@ func (f *FFAmd64) LabelRegisters(name string, r ...amd64.Register) {
 	case 0:
 		return
 	case 1:
-		f.Comment(fmt.Sprintf("%s = %s", name, string(r[0])))
+		f.Comment(fmt.Sprintf("%s -> %s", name, string(r[0])))
 	default:
 		for i := 0; i < len(r); i++ {
-			f.Comment(fmt.Sprintf("%s[%d] = %s", name, i, string(r[i])))
+			f.Comment(fmt.Sprintf("%s[%d] -> %s", name, i, string(r[i])))
 		}
 	}
-	f.WriteLn("")
+	// f.WriteLn("")
 }
 
-func (f *FFAmd64) reduceElement(t, scratch []amd64.Register) {
+func (f *FFAmd64) ReduceElement(t, scratch []amd64.Register) {
 	if len(t) != len(scratch) {
 		panic("invalid call")
 	}

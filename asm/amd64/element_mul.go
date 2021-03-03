@@ -20,12 +20,12 @@ import (
 	"github.com/consensys/bavard/amd64"
 )
 
-// mulADX uses AX, DX and BP
+// MulADX uses AX, DX and BP
 // sets x * y into t, without modular reduction
 // x() will have more accesses than y()
 // (caller should store x in registers, if possible)
 // if no (tmp) register is available, this uses one PUSH/POP on the stack in the hot loop.
-func (f *FFAmd64) mulADX(registers *amd64.Registers, x, y func(int) string, t []amd64.Register) []amd64.Register {
+func (f *FFAmd64) MulADX(registers *amd64.Registers, x, y func(int) string, t []amd64.Register) []amd64.Register {
 	// registers
 	var tr amd64.Register // temporary register
 	A := amd64.BP
@@ -297,7 +297,7 @@ func (f *FFAmd64) generateMul(forceADX bool) {
 
 		}
 
-		f.mulADX(&registers, xat, yat, t)
+		f.MulADX(&registers, xat, yat, t)
 		gc()
 
 		// ---------------------------------------------------------------------------------------------

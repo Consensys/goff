@@ -37,6 +37,6 @@ func (f *FFAmd64) generateReduce() {
 // Reduce scratch can be on the stack or a set of registers.
 func (f *FFAmd64) Reduce(registers *amd64.Registers, t []amd64.Register) {
 	scratch := f.PopN(registers)
-	f.reduceElement(t, scratch)
+	f.ReduceElement(t, scratch)
 	f.Push(registers, scratch...)
 }
