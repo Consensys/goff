@@ -843,7 +843,7 @@ func (z *Element) Inverse(x *Element) *Element {
 			v[0], borrow = bits.Sub64(v[0], u[0], 0)
 			v[1], borrow = bits.Sub64(v[1], u[1], borrow)
 			v[2], borrow = bits.Sub64(v[2], u[2], borrow)
-			v[3], borrow = bits.Sub64(v[3], u[3], borrow)
+			v[3], _ = bits.Sub64(v[3], u[3], borrow)
 
 			// s = s - r
 			s[0], borrow = bits.Sub64(s[0], r[0], 0)
@@ -866,7 +866,7 @@ func (z *Element) Inverse(x *Element) *Element {
 			u[0], borrow = bits.Sub64(u[0], v[0], 0)
 			u[1], borrow = bits.Sub64(u[1], v[1], borrow)
 			u[2], borrow = bits.Sub64(u[2], v[2], borrow)
-			u[3], borrow = bits.Sub64(u[3], v[3], borrow)
+			u[3], _ = bits.Sub64(u[3], v[3], borrow)
 
 			// r = r - s
 			r[0], borrow = bits.Sub64(r[0], s[0], 0)
