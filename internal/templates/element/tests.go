@@ -254,6 +254,11 @@ func init() {
 		staticTestValues = append(staticTestValues, a)
 	}
 
+	for i:=0; i <=3 ; i++ {
+		staticTestValues = append(staticTestValues, {{.ElementName}}{uint64(i)})
+		staticTestValues = append(staticTestValues, {{.ElementName}}{0, uint64(i)})
+	}
+
 	{
 		a := q{{.ElementName}}
 		a[{{.NbWordsLastIndex}}]--
@@ -344,6 +349,44 @@ func Test{{toTitle .ElementName}}Bytes(t *testing.T) {
 	))
 
 	properties.TestingRun(t, gopter.ConsoleReporter(false))
+}
+
+func Test{{toTitle .ElementName}}InverseExp(t *testing.T) {
+	// inverse must be equal to exp^-2
+	exp := Modulus()
+	exp.Sub(exp, new(big.Int).SetUint64(2))
+
+	parameters := gopter.DefaultTestParameters()
+	if testing.Short() {
+		parameters.MinSuccessfulTests = nbFuzzShort
+	} else {
+		parameters.MinSuccessfulTests = nbFuzz
+	}
+
+	properties := gopter.NewProperties(parameters)
+
+	genA := gen()
+
+	properties.Property("inv == exp^-2", prop.ForAll(
+		func(a testPair{{.ElementName}}) bool {
+			var b {{.ElementName}}
+			b.Set(&a.element)
+			a.element.Inverse(&a.element)
+			b.Exp(b, exp)
+			
+			return a.element.Equal(&b)
+		},
+		genA,
+	))
+
+	properties.TestingRun(t, gopter.ConsoleReporter(false))
+	// if we have ADX instruction enabled, test both path in assembly
+	if supportAdx {
+		t.Log("disabling ADX")
+		supportAdx = false
+		properties.TestingRun(t, gopter.ConsoleReporter(false))
+		supportAdx = true 
+	}
 }
 
 func Test{{toTitle .ElementName}}MulByConstants(t *testing.T) {

@@ -43,9 +43,9 @@ func (z *{{.ElementName}}) Inverse(x *{{.ElementName}}) *{{.ElementName}} {
 	v := *x
 
 	var carry, borrow, t, t2 uint64
-	var bigger, uIsOne, vIsOne bool
+	var bigger bool
 
-	for !uIsOne && !vIsOne {
+	for  {
 		for v[0]&1 == 0 {
 			{{ template "div2" dict "all" . "V" "v"}}
 			if s[0]&1 == 1 {
@@ -63,30 +63,25 @@ func (z *{{.ElementName}}) Inverse(x *{{.ElementName}}) *{{.ElementName}} {
 		{{ template "bigger" dict "all" . "V1" "v" "V2" "u"}}
 		if bigger  {
 			{{ template "sub_noborrow" dict "all" . "V1" "v" "V2" "u" }}
-			{{ template "bigger" dict "all" . "V1" "r" "V2" "s"}}
-			if bigger {
+			{{ template "sub_noborrow" dict "all" . "V1" "s" "V2" "r" }}
+			if borrow == 1 {
 				{{ template "add_q" dict "all" . "V1" "s" }}
 			}
-			{{ template "sub_noborrow" dict "all" . "V1" "s" "V2" "r" }}
 		} else {
 			{{ template "sub_noborrow" dict "all" . "V1" "u" "V2" "v" }}
-			{{ template "bigger" dict "all" . "V1" "s" "V2" "r"}}
-			if bigger {
+			{{ template "sub_noborrow" dict "all" . "V1" "r" "V2" "s" }}
+			if borrow == 1 {
 				{{ template "add_q" dict "all" . "V1" "r" }}
 			}
-			{{ template "sub_noborrow" dict "all" . "V1" "r" "V2" "s" }}
 		}
-		uIsOne = (u[0] == 1) && ({{- range $i := reverse .NbWordsIndexesNoZero}}u[{{$i}}] {{if eq $i 1}}{{else}} | {{end}}{{end}} ) == 0
-		vIsOne = (v[0] == 1) && ({{- range $i := reverse .NbWordsIndexesNoZero}}v[{{$i}}] {{if eq $i 1}}{{else}} | {{end}}{{end}} ) == 0
+		if (u[0] == 1) && ({{- range $i := reverse .NbWordsIndexesNoZero}}u[{{$i}}] {{if eq $i 1}}{{else}} | {{end}}{{end}} ) == 0 {
+			return z.Set(&r)
+		}
+		if (v[0] == 1) && ({{- range $i := reverse .NbWordsIndexesNoZero}}v[{{$i}}] {{if eq $i 1}}{{else}} | {{end}}{{end}} ) == 0 {
+			return z.Set(&s)
+		}
 	}
 
-	if uIsOne {
-		z.Set(&r)
-	} else {
-		z.Set(&s)
-	}
-
-	return z
 }
 
 {{ end }}
@@ -116,11 +111,7 @@ func (z *{{.ElementName}}) Inverse(x *{{.ElementName}}) *{{.ElementName}} {
 	// {{$.V1}} = {{$.V1}} - {{$.V2}}
 	{{$.V1}}[0], borrow = bits.Sub64({{$.V1}}[0], {{$.V2}}[0], 0)
 	{{- range $i := .all.NbWordsIndexesNoZero}}
-		{{- if eq $i $.all.NbWordsLastIndex}}
-			{{$.V1}}[{{$i}}], _ = bits.Sub64({{$.V1}}[{{$i}}], {{$.V2}}[{{$i}}], borrow)
-		{{- else}}
-			{{$.V1}}[{{$i}}], borrow = bits.Sub64({{$.V1}}[{{$i}}], {{$.V2}}[{{$i}}], borrow)
-		{{- end}}
+		{{$.V1}}[{{$i}}], borrow = bits.Sub64({{$.V1}}[{{$i}}], {{$.V2}}[{{$i}}], borrow)
 	{{- end}}
 {{ end }}
 
