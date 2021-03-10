@@ -24,13 +24,14 @@ src="banner_goff.png">
 
 ### Go version
 
-`goff` is tested with the last 2 major releases of Go (1.14 and 1.15).
+`goff` is tested with the last 2 major releases of Go (1.15 and 1.16).
 
 ### Install `goff`
 
 ```bash
 # dependencies
 go get golang.org/x/tools/cmd/goimports
+go get github.com/klauspost/asmfmt/cmd/asmfmt
 
 # goff
 go get github.com/consensys/goff
@@ -83,17 +84,16 @@ Running
 goff -m 21888242871...94645226208583 -o ./bn256/ -p bn256 -e Element
 ```
 
-outputs three `.go` files in `./bn256/`
-* `element.go`
-* `element_test.go`
-* `arith.go`
+outputs the `.go` and `.s` files in `./bn256/`
+
+
 
 The generated type has an API that's similar with `big.Int`
 
 Example API signature
 ```go 
 // Mul z = x * y mod q
-func (z *Element) Mul(x, y *Element) *Element {
+func (z *Element) Mul(x, y *Element) *Element 
 ```
 
 and can be used like so:
@@ -113,6 +113,16 @@ b.Exp(b, 42)
 b.Neg(b)
 ```
 
+### Build tags
+
+`goff` generate optimized assembly for `amd64` target. 
+
+For the `Mul` operation, using `ADX` instructions and `ADOX/ADCX` result in a significant performance gain. 
+
+The "default" target `amd64` checks if the running architecture supports these instruction, and reverts to generic path if not. This check adds a branch and forces the function to reserve some bytes on the frame to store the argument to call `_mulGeneric` .
+
+`goff` output can be compiled with `amd64_adx` flag which omits this check. Will crash if the platform running the binary doesn't support the `ADX` instructions (roughly, before 2016). 
+
 ### Benchmarks
 
 
@@ -120,7 +130,7 @@ b.Neg(b)
 # for BN256 or BLS377
 cd examples/bls377 # or cd examples/bn256
 
-go test -c
+go test -c (optionally -tags=amd64_adx)
 
 ./bls377.test -test.run=NONE -test.bench="." -test.count=10 -test.benchtime=1s -test.cpu=1 . | tee bls377.txt
 
