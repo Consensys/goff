@@ -24,8 +24,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/consensys/goff/field"
-	"github.com/consensys/goff/generator"
+	"github.com/consensys/gurvy/field"
+	"github.com/consensys/gurvy/field/generator"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +33,7 @@ var rootCmd = &cobra.Command{
 	Use:     "goff",
 	Short:   "goff generates arithmetic operations for any moduli",
 	Run:     cmdGenerate,
-	Version: field.Version,
+	Version: Version,
 }
 
 // flags
@@ -57,7 +57,7 @@ func init() {
 
 func cmdGenerate(cmd *cobra.Command, args []string) {
 	fmt.Println()
-	fmt.Println("running goff version", field.Version)
+	fmt.Println("running goff version", Version)
 	fmt.Println()
 
 	// parse flags
