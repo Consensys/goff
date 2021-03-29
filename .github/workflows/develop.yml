@@ -2,11 +2,9 @@ on:
   push:
     branches:
       - '**'
-      - '!master'
   pull_request:
     branches:
       - '**'
-      - '!master'
 name: CI (develop)
 jobs:
   staticcheck:
@@ -41,43 +39,13 @@ jobs:
     - name: gosec
       run: |
         go get -u github.com/securego/gosec/cmd/gosec
-        gosec ./examples/...
+        gosec ./...
     - name: build
       run: go build
     - name: check version
       run: goffVersion=$(./goff --version | cut -d ' ' -f 3-);gitVersion=$(git describe --abbrev=0);if [[ $goffVersion != $gitVersion ]]; then echo "goff version doesn't match git last semver tag"; exit 1; fi;
   
-  test:
-    strategy:
-      matrix:
-        go-version: [1.15.x, 1.16.x]
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
-    needs:
-      - staticcheck
-    steps:
-    - name: install Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: ${{ matrix.go-version }}
-    - name: checkout code
-      uses: actions/checkout@v2
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-          ~/Library/Caches/go-build
-          %LocalAppData%\go-build
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    - name: Test
-      run: |
-        go test -v -short ./examples/...
-        go test -v -race -short ./examples/...
-        go test -v -tags=noadx -short ./examples/...
-        GOARCH=386 go test -v -short ./examples/...
+
   
   slack-workflow-status:
     if: always()
