@@ -1,21 +1,22 @@
 # Fast finite field arithmetic in Golang
-[![Gitter](https://badges.gitter.im/consensys-gnark/community.svg)](https://gitter.im/consensys-gnark/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) [![License](https://img.shields.io/badge/license-Apache%202-blue)](LICENSE)  [![Go Report Card](https://goreportcard.com/badge/github.com/consensys/goff)](https://goreportcard.com/badge/github.com/consensys/goff)
+[![License](https://img.shields.io/badge/license-Apache%202-blue)](LICENSE)  [![Go Report Card](https://goreportcard.com/badge/github.com/consensys/goff)](https://goreportcard.com/badge/github.com/consensys/goff)
 
-`goff` (go **f**inite **f**ield) is a fast field arithmetic library in Go.
+`goff` (go **f**inite **f**ield) is a unix-like tool that generates fast field arithmetic in Go.
 
 We introduced `goff` [in this article](https://hackmd.io/@zkteam/goff): the project came from the need to have performant field operations in Go.
 For most moduli, `goff` outperforms `math/big` and optimized libraries written in C++ or Rust.
 
-In particular, `goff` modular multiplication is blazingly fast. ["Faster big-integer modular multiplication for most moduli"](https://hackmd.io/@zkteam/modular_multiplication) explains the algorithmic optimization we discovered and implemented, and presents some [benchmarks](https://github.com/ConsenSys/gurvy#benchmarks).
+In particular, `goff` modular multiplication is blazingly fast. ["Faster big-integer modular multiplication for most moduli"](https://hackmd.io/@zkteam/modular_multiplication) explains the algorithmic optimization we discovered and implemented, and presents some [benchmarks](https://github.com/ConsenSys/gnark-crypto#benchmarks).
 
 Actively developed and maintained by the team (zkteam@consensys.net) behind:
 * [`gnark`: a framework to execute (and verify) algorithms in zero-knowledge](https://github.com/consensys/gnark) 
-* [`gurvy`: elliptic curve cryptography (+pairing) library](https://github.com/consensys/gurvy)
 
 ## Warning
 **`goff` has not been audited and is provided as-is, use at your own risk. In particular, `goff` makes no security guarantees such as constant time implementation or side-channel attack resistance.**
 
 `goff` generates code optimized for 64bits architectures. It generates optimized assembly for moduli matching the `NoCarry` condition on `amd64` which support `ADX/MULX` instructions. Other targets have a fallback generic Go code. 
+
+__Since v0.4.0, `goff`'s code has been migrated into [`gnark-crypto`](https://github.com/consensys/gnark-crypto). This repo contains the unix-like tool only.__
 
 <img style="display: block;margin: auto;" width="80%"
 src="banner_goff.png">
@@ -41,20 +42,26 @@ go get github.com/consensys/goff
 
 ### Generated API
 
-Example [API doc](https://pkg.go.dev/github.com/consensys/goff/examples/bn256)
+Example [API doc](https://pkg.go.dev/github.com/consensys/gnark-crypto/ecc/bn254/fr)
 
 ### API -- go.mod (recommended)
 
 At the root of your repo:
 ```bash
-# goff
-go get github.com/consensys/goff
+# note that code has been migrated in gnark-crypto since v0.4.0
+go get github.com/consensys/gnark-crypto
 ``` 
 
 then in a `main.go`  (that can be called using a `go:generate` workflow):
 
-```
-goff.GenerateFF(packageName, structName, modulus, destinationPath, false)
+```go
+import (
+  "github.com/consensys/gnark-crypto/field/generator"
+  "github.com/consensys/gnark-crypto/field"
+
+fp, _ = field.NewField("fp", "Element", fpModulus)
+
+generator.GenerateFF(fp, "fp"))
 ```
 
 
@@ -63,7 +70,7 @@ goff.GenerateFF(packageName, structName, modulus, destinationPath, false)
 ```bash
 goff
 
-running goff version v0.3.4
+running goff version v0.4.0
 
 Usage:
   goff [flags]
@@ -81,7 +88,7 @@ Flags:
 
 Running 
 ```bash
-goff -m 21888242871...94645226208583 -o ./bn256/ -p bn256 -e Element
+goff -m 21888242871946452262085832188824287194645226208583 -o ./bn256/ -p bn256 -e Element
 ```
 
 outputs the `.go` and `.s` files in `./bn256/`
@@ -122,20 +129,6 @@ For the `Mul` operation, using `ADX` instructions and `ADOX/ADCX` result in a si
 The "default" target `amd64` checks if the running architecture supports these instruction, and reverts to generic path if not. This check adds a branch and forces the function to reserve some bytes on the frame to store the argument to call `_mulGeneric` .
 
 `goff` output can be compiled with `amd64_adx` flag which omits this check. Will crash if the platform running the binary doesn't support the `ADX` instructions (roughly, before 2016). 
-
-### Benchmarks
-
-
-```bash
-# for BN256 or BLS377
-cd examples/bls377 # or cd examples/bn256
-
-go test -c (optionally -tags=amd64_adx)
-
-./bls377.test -test.run=NONE -test.bench="." -test.count=10 -test.benchtime=1s -test.cpu=1 . | tee bls377.txt
-
-benchstat bls377.txt 
-```
 
 
 ## Contributing

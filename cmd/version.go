@@ -15,4 +15,4 @@
 package cmd
 
 // Version goff version
-const Version = "v0.3.12"
+const Version = "v0.4.0"

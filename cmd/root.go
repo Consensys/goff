@@ -24,8 +24,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/consensys/gurvy/field"
-	"github.com/consensys/gurvy/field/generator"
+	"github.com/consensys/gnark-crypto/field"
+	"github.com/consensys/gnark-crypto/field/generator"
 	"github.com/spf13/cobra"
 )
 
