@@ -68,7 +68,7 @@ func cmdGenerate(cmd *cobra.Command, args []string) {
 	}
 
 	// generate code
-	F, err := field.NewField(fPackageName, fElementName, fModulus)
+	F, err := field.NewField(fPackageName, fElementName, fModulus, false)
 	if err != nil {
 		fmt.Printf("\n%s\n", err.Error())
 		os.Exit(-1)
