@@ -3,12 +3,12 @@
 
 `goff` (go **f**inite **f**ield) is a unix-like tool that generates fast field arithmetic in Go.
 
-We introduced `goff` [in this article](https://hackmd.io/@zkteam/goff): the project came from the need to have performant field operations in Go.
+We introduced `goff` [in this article](https://hackmd.io/@gnark/goff): the project came from the need to have performant field operations in Go.
 For most moduli, `goff` outperforms `math/big` and optimized libraries written in C++ or Rust.
 
-In particular, `goff` modular multiplication is blazingly fast. ["Faster big-integer modular multiplication for most moduli"](https://hackmd.io/@zkteam/modular_multiplication) explains the algorithmic optimization we discovered and implemented, and presents some [benchmarks](https://github.com/ConsenSys/gnark-crypto#benchmarks).
+In particular, `goff` modular multiplication is blazingly fast. ["Faster big-integer modular multiplication for most moduli"](https://hackmd.io/@gnark/modular_multiplication) explains the algorithmic optimization we discovered and implemented, and presents some [benchmarks](https://github.com/ConsenSys/gnark-crypto#benchmarks).
 
-Actively developed and maintained by the team (zkteam@consensys.net) behind:
+Actively developed and maintained by the team (gnark@consensys.net) behind:
 * [`gnark`: a framework to execute (and verify) algorithms in zero-knowledge](https://github.com/consensys/gnark) 
 
 ## Warning
